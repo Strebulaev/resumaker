@@ -1,0 +1,143 @@
+$schema: http://json-schema.org/draft-07/schema#
+type: object
+properties:
+  person:
+    type: object
+    properties:
+      name:
+        type: string
+      gender:
+        type: string
+        enum: [male, female, unknown]
+      desiredPositions:
+        type: array
+        items: string
+      contact:
+        type: object
+        properties:
+          phone:
+            type: string
+            pattern: '^\+[0-9]{11}$'
+          email:
+            type: string
+            format: email
+        additionalProperties:
+          type: string
+          format: uri
+        required: [phone, email]
+      location:
+        type: object
+        properties:
+          country:
+            type: string
+          city:
+            type: string
+          relocation:
+            type: boolean
+          remote:
+            type: boolean
+          business_trips:
+            type: boolean
+        required: [city, relocation, remote, business_trips]
+      languages:
+        type: array
+        items:
+          type: object
+          properties:
+            language:
+              type: string
+            level:
+              type: string
+              pattern: "^[A-C][1-2]$"
+          required: [language, level]
+      skills:
+        type: array
+        items:
+          type: object
+          properties:
+            area:
+              type: string
+            name:
+              type: string
+            level:
+              type: integer
+              minimum: 1
+              maximum: 10
+            date:
+              type: string
+              format: date
+          required: [area, name, level, date]
+      education:
+        type: array
+        items:
+          type: object
+          properties:
+            institution:
+              type: string
+            degree:
+              type: string
+            specialty:
+              type: string
+            year:
+              type: integer
+          required: [institution, degree, specialty, year]
+      hobby:
+        type: array
+        items:
+          type: string
+      literature:
+        type: array
+        items:
+          type: string
+      experience:
+        type: array
+        items:
+          type: object
+          properties:
+            company:
+              type: string
+            position:
+              type: string
+            from-date:
+              type: date
+            to-date:
+              type: date
+            tasks:
+              type: array
+              items:
+                type: string
+            stack:
+              type: array
+              items:
+                type: string
+            achievements:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  initial_value:
+                    type: number
+                  final_value:
+                    type: number
+                  uom:
+                    type: string
+                    enum: [day, percent]
+                  type:
+                    type: string
+                    enum: [increased, decreased]
+                required: [name, initial_value, final_value]
+          required: [company, position, from-date, tasks, stack, achievements]
+    required:
+      [
+        name,
+        gender,
+        contact,
+        location,
+        languages,
+        skills,
+        education,
+        experience,
+      ]
+required: [person]

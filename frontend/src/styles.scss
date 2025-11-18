@@ -1,0 +1,271 @@
+@use "tailwindcss";
+@use "primeicons/primeicons.css";
+@use 'sass:color';
+
+.p-field {
+    margin-bottom: 1.25rem;
+  }
+  .p-card {
+    margin-bottom: 1.5rem;
+    
+    .p-card-body {
+      padding: 1.5rem;
+    }
+    
+    .p-card-content {
+      padding: 0;
+    }
+  }
+  .p-dropdown {
+    width: 100%;
+  }
+  textarea {
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 80px;
+  }
+
+.vacancy-url-field {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .url-input-container {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    
+    input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      
+      &:focus {
+        outline: none;
+        border-color: #2196F3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+      }
+    }
+    
+    button {
+      flex-shrink: 0;
+      height: 2.5rem;
+    }
+  }
+  
+  small {
+    display: block;
+    margin-top: 0.5rem;
+    color: #6c757d;
+    font-size: 0.8rem;
+  }
+}
+
+.vacancy-info-panel {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #2196F3;
+  margin-bottom: 1.5rem;
+  
+  h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1976d2;
+    font-size: 1.1rem;
+  }
+  
+  .vacancy-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      
+      strong {
+        font-size: 0.8rem;
+        color: #546e7a;
+        margin-bottom: 0.25rem;
+      }
+      
+      span {
+        font-size: 0.9rem;
+        color: #37474f;
+      }
+    }
+  }
+  
+  .skills-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    
+    .skill-tag {
+      background: #ffffff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      color: #455a64;
+      border: 1px solid #90caf9;
+    }
+  }
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+  .vacancy-url-field {
+    .url-input-container {
+      flex-direction: column;
+      align-items: stretch;
+      
+      button {
+        width: 100%;
+      }
+    }
+  }
+  
+  .vacancy-info-panel {
+    .vacancy-meta {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* Состояния загрузки */
+.vacancy-loading {
+  opacity: 0.7;
+  pointer-events: none;
+  
+  .url-input-container {
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.p-dialog {
+  &.p-component {
+    z-index: 10000 !important;
+  }
+
+  .p-dialog-header {
+    position: relative;
+    z-index: 10001;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+    
+    .p-dialog-title {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .p-dialog-header-close {
+      position: absolute !important;
+      top: 1rem !important;
+      right: 1rem !important;
+      z-index: 10002 !important;
+      width: 2rem !important;
+      height: 2rem !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: none !important;
+      background: transparent !important;
+      color: #6b7280 !important;
+      border-radius: 50% !important;
+      transition: all 0.2s ease !important;
+      
+      &:hover {
+        background: #f3f4f6 !important;
+        color: #374151 !important;
+      }
+      
+      &:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 2px #3b82f6 !important;
+      }
+      
+      .p-dialog-header-close-icon {
+        font-size: 1.25rem !important;
+        line-height: 1 !important;
+      }
+    }
+  }
+
+  .p-dialog-content {
+    position: relative;
+    z-index: 10000;
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .p-dialog-footer {
+    position: relative;
+    z-index: 10000;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+  }
+}
+
+// Ensure dialog backdrop is properly layered
+.p-dialog-mask {
+  z-index: 9999 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  
+  &.p-component-overlay {
+    z-index: 9999 !important;
+  }
+}
+
+// Fix for specific dialog content issues
+.vacancy-details,
+.resume-details,
+.plan-content {
+  position: relative;
+  z-index: 1;
+}
+
+// Prevent content from overlapping close button
+.p-dialog .p-dialog-content > * {
+  position: relative;
+  z-index: 1;
+}

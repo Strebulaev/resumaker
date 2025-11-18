@@ -1,0 +1,22 @@
+<div class="error-toast-container">
+  <div *ngFor="let error of errors" 
+       class="error-toast"
+       [class]="getToastClasses(error)"
+       [class.fade-out]="error.fadingOut">
+    <div class="error-content">
+      <div class="error-icon">
+        <i [class]="getIconClass(error)"></i>
+      </div>
+      <div class="error-details">
+        <div class="error-message">{{ error.message }}</div>
+        <div class="error-source" *ngIf="error.source && showSource(error)">
+          Источник: {{ error.source }}
+        </div>
+      </div>
+      <button class="close-btn" (click)="removeError(error)">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+    <div class="progress-bar" [style.width]="error.progress + '%'"></div>
+  </div>
+</div>

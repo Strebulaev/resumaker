@@ -1,0 +1,81 @@
+<div class="ai-config-modal">
+    <h2>Настройка AI провайдеров</h2>
+    
+    <div class="providers-grid">
+      <div *ngFor="let provider of providers" 
+           class="provider-card"
+           [class.configured]="provider.isConfigured"
+           [class.current]="isCurrentProvider(provider.id)">
+        
+        <div class="provider-header">
+          <h3>{{ provider.name }}</h3>
+          <div class="provider-status">
+            <span *ngIf="provider.isConfigured" class="status-badge configured">
+              ✓ Настроен
+            </span>
+            <span *ngIf="isCurrentProvider(provider.id)" class="status-badge current">
+              ● Активный
+            </span>
+          </div>
+        </div>
+  
+        <div class="provider-config" *ngIf="editingProvider === provider.id">
+          <div class="config-field">
+            <label>API Key:</label>
+            <input type="password" 
+                   [(ngModel)]="provider.apiKey"
+                   placeholder="Введите ваш API ключ">
+          </div>
+          
+          <div class="config-field">
+            <label>Base URL:</label>
+            <input type="text" 
+                   [(ngModel)]="provider.baseUrl"
+                   [placeholder]="provider.baseUrl">
+          </div>
+  
+          <div class="config-actions">
+            <button pButton 
+                    label="Сохранить" 
+                    (click)="saveProviderConfig(provider)"
+                    class="p-button-success">
+            </button>
+            <button pButton 
+                    label="Отмена" 
+                    (click)="cancelEdit()"
+                    class="p-button-secondary">
+            </button>
+            <button *ngIf="provider.isConfigured"
+                    pButton 
+                    label="Проверить подключение"
+                    (click)="testConnection(provider.id)"
+                    class="p-button-info">
+            </button>
+          </div>
+        </div>
+  
+        <div class="provider-actions" *ngIf="editingProvider !== provider.id">
+          <button pButton 
+                  [label]="provider.isConfigured ? 'Изменить' : 'Настроить'"
+                  (click)="editProvider(provider.id)"
+                  class="p-button-outlined">
+          </button>
+          
+          <button *ngIf="provider.isConfigured && !isCurrentProvider(provider.id)"
+                  pButton 
+                  label="Использовать"
+                  (click)="setCurrentProvider(provider.id)"
+                  class="p-button-success">
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <div class="modal-actions">
+      <button pButton 
+              label="Закрыть" 
+              (click)="closeModal()"
+              class="p-button-secondary">
+      </button>
+    </div>
+  </div>

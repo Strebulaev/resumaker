@@ -1,0 +1,74 @@
+<div class="about-container">
+  <div class="about-header">
+    <h1>{{ 'ABOUT.TITLE' | translate }}</h1>
+    <p class="about-subtitle">{{ 'ABOUT.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="about-content">
+    <div class="features-section">
+      <h2>{{ 'ABOUT.FEATURES_TITLE' | translate }}</h2>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-file"></i>
+          </div>
+          <h3>{{ 'ABOUT.FEATURES.AI_RESUME' | translate }}</h3>
+          <p>{{ 'ABOUT.FEATURES.AI_RESUME_DESC' | translate }}</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-envelope"></i>
+          </div>
+          <h3>{{ 'ABOUT.FEATURES.COVER_LETTERS' | translate }}</h3>
+          <p>{{ 'ABOUT.FEATURES.COVER_LETTERS_DESC' | translate }}</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-briefcase"></i>
+          </div>
+          <h3>{{ 'ABOUT.FEATURES.HH_INTEGRATION' | translate }}</h3>
+          <p>{{ 'ABOUT.FEATURES.HH_INTEGRATION_DESC' | translate }}</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-download"></i>
+          </div>
+          <h3>{{ 'ABOUT.FEATURES.EXPORT' | translate }}</h3>
+          <p>{{ 'ABOUT.FEATURES.EXPORT_DESC' | translate }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h2>{{ 'ABOUT.CTA_TITLE' | translate }}</h2>
+      <p>{{ 'ABOUT.CTA_DESCRIPTION' | translate }}</p>
+      
+      <div class="action-buttons">
+        <button pButton 
+                [label]="'BUTTON.GENERATE_RESUME' | translate" 
+                routerLink="/resume-generation"
+                icon="pi pi-file"
+                class="p-button-primary">
+        </button>
+        
+        <button pButton 
+                [label]="'MAIN_MENU.JOB_PLATFORMS.name' | translate" 
+                routerLink="/auth/callback"
+                icon="pi pi-briefcase"
+                class="p-button-outlined">
+        </button>
+
+        <button pButton 
+                [label]="'BUTTON.PROFILE' | translate" 
+                routerLink="/profile/view"
+                icon="pi pi-user"
+                class="p-button-secondary">
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

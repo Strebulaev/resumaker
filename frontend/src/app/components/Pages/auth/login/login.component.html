@@ -1,0 +1,17 @@
+<div class="login-container">
+  <div class="card">
+    <h2>{{ 'AUTH.LOGIN.HEADER' | translate }}</h2>
+    @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
+    }
+    <button
+      (click)="signInWithGoogle()"
+      [disabled]="loading"
+      class="google-btn"
+    >
+      <i class="pi pi-google"></i>
+      {{ 'AUTH.LOGIN.VIA_GOOGLE' | translate }}
+      <span *ngIf="loading" class="spinner"></span>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,234 @@
+<div class="cover-letter-container">
+  <p-card [header]="'COVER_LETTER.TITLE' | translate">
+    <form [formGroup]="coverLetterForm" (ngSubmit)="generateCoverLetter()">
+      <!-- Выбор резюме из HH -->
+      <div class="field" *ngIf="userResumes.length > 0">
+        <label for="hh_resume">{{ 'COVER_LETTER.SELECT_RESUME' | translate }}</label>
+        <p-select 
+          id="hh_resume"
+          [options]="userResumes" 
+          optionLabel="title"
+          formControlName="selected_resume"
+          [placeholder]="'COVER_LETTER.SELECT_RESUME_PLACEHOLDER' | translate"
+          (onChange)="selectedResume = $event.value">
+          <ng-template let-resume pTemplate="item">
+            <div class="resume-option">
+              <div class="resume-title">{{ resume.title }}</div>
+              <div class="resume-skills">
+                {{ resume.skills?.slice(0, 3).join(', ') }}...
+              </div>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="field">
+        <label>{{ 'COVER_LETTER.UPLOAD_RESUME' | translate }}</label>
+        <app-translated-file-input
+          [accept]="'.txt,.pdf,.doc,.docx,.rtf'"
+          (fileSelected)="onFileSelect($event)"
+          [showFileTypes]="true">
+        </app-translated-file-input>
+        
+        @if (uploadedResumeFile) {
+          <div class="file-info">
+            <span>{{ 'FILE_UPLOADED' | translate }}: {{ uploadedResumeFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
+                    (click)="uploadedResumeFile = null; resumeContent = ''">
+            </button>
+          </div>
+        }
+      </div>
+      
+      <!-- Обновите поле resume_id -->
+      <div class="field">
+        <label for="resume_id">{{ 'COVER_LETTER.RESUME_ID' | translate }}</label>
+        <input 
+          id="resume_id" 
+          type="text" 
+          pInputText 
+          formControlName="resume_id"
+          [placeholder]="'COVER_LETTER.RESUME_ID_PLACEHOLDER' | translate">
+        <small>{{ 'COVER_LETTER.RESUME_ID_HINT' | translate }}</small>
+      </div>
+
+      <div class="field">
+        <label for="vacancy_id">{{ 'COVER_LETTER.VACANCY_ID' | translate }} *</label>
+        <input 
+          id="vacancy_id" 
+          type="text" 
+          pInputText 
+          formControlName="vacancy_id"
+          [placeholder]="'COVER_LETTER.VACANCY_ID_PLACEHOLDER' | translate"
+          [class]="{'ng-invalid ng-dirty': coverLetterForm.get('vacancy_id')?.invalid && coverLetterForm.get('vacancy_id')?.touched}">
+      </div>
+      <div class="vacancy-url-field">
+        <label>{{ 'COVER_LETTER.VACANCY_URL' | translate }}</label>
+        <div class="url-input-container">
+          <input 
+            type="url" 
+            [(ngModel)]="vacancyUrl" 
+            [ngModelOptions]="{standalone: true}"
+            placeholder="https://hh.ru/vacancy/12345678"
+            (blur)="loadVacancyInfo()"
+            [disabled]="isLoading">
+          <button 
+            pButton 
+            icon="pi pi-download" 
+            (click)="loadVacancyInfo()"
+            [disabled]="isLoading || !vacancyUrl"
+            class="p-button-outlined">
+          </button>
+        </div>
+        <small>{{ 'COVER_LETTER.VACANCY_URL_HINT' | translate }}</small>
+      </div>
+      <div class="field">
+        <label for="style">{{ 'COVER_LETTER.STYLE' | translate }}</label>
+        <p-select 
+          id="style"
+          [options]="styleOptions" 
+          formControlName="style"
+          [placeholder]="'COVER_LETTER.STYLE_PLACEHOLDER' | translate">
+        </p-select>
+      </div>
+
+      <div class="field">
+        <label for="tone">{{ 'COVER_LETTER.TONE' | translate }}</label>
+        <p-select 
+          id="tone"
+          [options]="toneOptions" 
+          formControlName="tone"
+          [placeholder]="'COVER_LETTER.TONE_PLACEHOLDER' | translate">
+        </p-select>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          pButton 
+          type="submit" 
+          [label]="'COVER_LETTER.GENERATE' | translate" 
+          icon="pi pi-file-edit"
+          [disabled]="isLoading || coverLetterForm.invalid">
+        </button>
+
+        <button 
+          pButton 
+          type="button" 
+          [label]="'BUTTON.SETTINGS' | translate" 
+          icon="pi pi-cog"
+          class="p-button-secondary"
+          (click)="showTemplateDialog = true">
+        </button>
+      </div>
+    </form>
+
+    <!-- Результат генерации -->
+    <div *ngIf="generatedLetter" class="result-section">
+      <h3>{{ 'COVER_LETTER.GENERATED_LETTER' | translate }}</h3>
+      
+      <div class="letter-meta">
+        <span>{{ 'COVER_LETTER.STYLE' | translate }}: {{ getStyleLabel(generatedLetter.style) }}</span>
+        <span>{{ 'COVER_LETTER.TONE' | translate }}: {{ getToneLabel(generatedLetter.tone) }}</span>
+        <span>{{ 'GENERATED_AT' | translate }}: {{ generatedLetter.generated_at | date:'medium' }}</span>
+      </div>
+
+      <div class="letter-content">
+        <textarea 
+          pInputTextarea 
+          [rows]="15" 
+          [(ngModel)]="generatedLetter.content"
+          [ngModelOptions]="{standalone: true}"
+          style="width: 100%">
+        </textarea>
+      </div>
+
+      <div class="letter-actions">
+          <button 
+              pButton 
+              [label]="'BUTTON.SEND_TO_HH' | translate" 
+              icon="pi pi-send"
+              [disabled]="isSending"
+              (click)="sendToHH()">
+              <p-progressSpinner *ngIf="isSending" 
+                              [style]="{'width': '20px', 'height': '20px'}" 
+                              strokeWidth="4"
+                              styleClass="absolute">
+              </p-progressSpinner>
+          </button>
+
+        <button 
+          pButton 
+          [label]="'BUTTON.EDIT' | translate" 
+          icon="pi pi-pencil"
+          class="p-button-secondary"
+          (click)="editLetter()">
+        </button>
+
+        <button 
+          pButton 
+          [label]="'BUTTON.SAVE_TEMPLATE' | translate" 
+          icon="pi pi-save"
+          class="p-button-help"
+          (click)="saveAsTemplate()">
+        </button>
+
+        <button 
+          pButton 
+          [label]="'BUTTON.COPY' | translate" 
+          icon="pi pi-copy"
+          class="p-button-info"
+          (click)="copyToClipboard()">
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-section">
+      <p-progressSpinner></p-progressSpinner>
+      <p>{{ 'COVER_LETTER.GENERATING' | translate }}</p>
+    </div>
+  </p-card>
+
+  <p-dialog 
+    [header]="'COVER_LETTER.EDIT_DIALOG_TITLE' | translate" 
+    [(visible)]="showTemplateDialog" 
+    [modal]="true"
+    [style]="{ width: '70vw' }">
+    
+    <div *ngIf="generatedLetter">
+      <textarea 
+        pInputTextarea 
+        [rows]="15" 
+        [(ngModel)]="generatedLetter.content"
+        style="width: 100%">
+      </textarea>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button 
+        pButton 
+        [label]="'BUTTON.SAVE_CHANGES' | translate" 
+        icon="pi pi-check"
+        (click)="showTemplateDialog = false">
+      </button>
+      <button 
+        pButton 
+        [label]="'BUTTON.CANCEL' | translate" 
+        icon="pi pi-times"
+        class="p-button-secondary"
+        (click)="showTemplateDialog = false">
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog 
+  header="Настройка AI провайдеров" 
+  [(visible)]="showAIConfigModal" 
+  [modal]="true"
+  [style]="{ width: '70vw', maxWidth: '900px' }">
+  
+    <app-ai-config-modal 
+      (closed)="showAIConfigModal = false">
+    </app-ai-config-modal>
+  </p-dialog>
+
+</div>

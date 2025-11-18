@@ -1,0 +1,467 @@
+<div class="vacancy-search-container">
+  <div class="search-header">
+    <h2>{{ 'VACANCY.TITLE' | translate }}</h2>
+    <p>{{ 'VACANCY.SUBTITLE' | translate }}</p>
+  </div>
+
+  <!-- Навигация между секциями -->
+  <div class="section-navigation">
+    <div class="nav-buttons">
+      <button 
+        [class]="['nav-button', activeSection === 'search' ? 'active' : '']"
+        (click)="showSection('search')">
+        <i class="pi pi-search"></i>
+        Поиск вакансий
+      </button>
+      <button 
+        [class]="['nav-button', activeSection === 'favorites' ? 'active' : '']"
+        (click)="showSection('favorites')">
+        <i class="pi pi-heart"></i>
+        Избранные
+        <span class="badge" *ngIf="favoriteVacancies.length > 0">
+          {{ favoriteVacancies.length }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Секция поиска вакансий -->
+  <div *ngIf="activeSection === 'search'" class="search-section">
+    <div class="search-controls">
+      <p-card [header]="'VACANCY.FILTERS' | translate" class="filters-card">
+        <form [formGroup]="searchForm" (ngSubmit)="searchVacancies()">
+          <div class="filters-grid">
+            <div class="filter-group">
+              <label>{{ 'SEARCH.KEYWORDS' | translate }}</label>
+              <input type="text" pInputText formControlName="text" 
+                     [placeholder]="'SEARCH.KEYWORDS_PLACEHOLDER' | translate">
+            </div>
+
+            <div class="filter-group">
+              <label>{{ 'SEARCH.SALARY' | translate }}</label>
+              <input type="number" pInputText formControlName="salary" 
+                     [placeholder]="'SEARCH.SALARY_PLACEHOLDER' | translate">
+            </div>
+
+            <div class="filter-group">
+              <label>{{ 'SEARCH.REGION' | translate }}</label>
+              <input type="text" pInputText formControlName="area" 
+                     [placeholder]="'SEARCH.REGION_PLACEHOLDER' | translate">
+            </div>
+
+            <div class="filter-group">
+              <label>{{ 'SEARCH.EXPERIENCE' | translate }}</label>
+              <p-select formControlName="experience" [options]="experienceOptions" 
+                       optionLabel="label" optionValue="value"
+                       [placeholder]="'SEARCH.EXPERIENCE_PLACEHOLDER' | translate">
+              </p-select>
+            </div>
+
+            <div class="filter-group">
+              <label>{{ 'SEARCH.EMPLOYMENT' | translate }}</label>
+              <p-select formControlName="employment" [options]="employmentOptions" 
+                       optionLabel="label" optionValue="value"
+                       [placeholder]="'SEARCH.EMPLOYMENT_PLACEHOLDER' | translate">
+              </p-select>
+            </div>
+
+            <div class="filter-group">
+              <label>{{ 'SEARCH.SCHEDULE' | translate }}</label>
+              <p-select formControlName="schedule" [options]="scheduleOptions" 
+                       optionLabel="label" optionValue="value"
+                       [placeholder]="'SEARCH.SCHEDULE_PLACEHOLDER' | translate">
+              </p-select>
+            </div>
+
+            <div class="filter-group">
+              <label>{{ 'SEARCH.PLATFORMS' | translate }}</label>
+              <p-multiSelect formControlName="platforms" [options]="platformOptions" 
+                            optionLabel="label" optionValue="value"
+                            [placeholder]="'SEARCH.PLATFORMS_PLACEHOLDER' | translate">
+              </p-multiSelect>
+            </div>
+
+            <div class="filter-group checkbox-group">
+              <p-checkbox formControlName="only_with_salary" [binary]="true"
+                         inputId="only_with_salary">
+              </p-checkbox>
+              <label for="only_with_salary" class="checkbox-label">
+                {{ 'SEARCH.ONLY_WITH_SALARY' | translate }}
+              </label>
+            </div>
+
+            <div class="filter-group checkbox-group">
+              <p-checkbox formControlName="remote" [binary]="true"
+                         inputId="remote">
+              </p-checkbox>
+              <label for="remote" class="checkbox-label">
+                {{ 'SEARCH.REMOTE' | translate }}
+              </label>
+            </div>
+          </div>
+
+          <div class="search-actions">
+            <button pButton type="submit" 
+                    [label]="'SEARCH.SEARCH_BUTTON' | translate" 
+                    [disabled]="isLoading"
+                    icon="pi pi-search"
+                    class="p-button-primary search-button">
+            </button>
+
+            <button pButton type="button" 
+                    [label]="'SEARCH.RESET' | translate" 
+                    (click)="resetFilters()"
+                    icon="pi pi-refresh"
+                    class="p-button-secondary">
+            </button>
+          </div>
+        </form>
+      </p-card>
+
+      <p-card [header]="'VACANCY.QUICK_DOWNLOAD' | translate" class="quick-search-card">
+        <form [formGroup]="urlForm" (ngSubmit)="loadVacancyFromUrl()">
+          <div class="url-input-group">
+            <input type="url" pInputText formControlName="vacancyUrl" 
+                   [placeholder]="'VACANCY.LINK_PLACEHOLDER' | translate"
+                   style="flex: 1; margin-right: 0.5rem;">
+            <button pButton type="submit" 
+                    [label]="'VACANCY.LOAD' | translate" 
+                    [disabled]="isLoading || urlForm.invalid"
+                    icon="pi pi-download"
+                    class="p-button-help">
+            </button>
+          </div>
+          
+          <small class="url-hint">
+            {{ 'VACANCY.LINK_SUPPORTED' | translate }}: 
+            {{ 'VACANCY.PLATFORM_HH' | translate }}, 
+            {{ 'VACANCY.PLATFORM_SUPERJOB' | translate }}
+          </small>
+        </form>
+      </p-card>
+    </div>
+
+    <div class="results-section" *ngIf="vacancies.length > 0 || isLoading">
+      <div class="results-header">
+        <h3>
+          {{ 'RESULTS.FOUND' | translate }}: 
+          <span class="results-count">{{ vacancies.length }}</span>
+        </h3>
+        
+        <div class="results-controls">
+          <span class="sort-label">{{ 'RESULTS.SORT_BY' | translate }}:</span>
+          <p-select [options]="sortOptions" optionLabel="label" optionValue="value"
+                   formControlName="sortBy" (onChange)="sortVacancies()"
+                   [placeholder]="'RESULTS.SORT_PLACEHOLDER' | translate"
+                   style="margin-left: 0.5rem;">
+          </p-select>
+        </div>
+      </div>
+
+      <div class="vacancy-list">
+        <div *ngFor="let vacancy of sortedVacancies" class="vacancy-card">
+          <div class="vacancy-header">
+            <div class="vacancy-title-section">
+              <h4 class="vacancy-title">{{ vacancy.name }}</h4>
+              <div class="vacancy-actions-top">
+                <button pButton 
+                        [icon]="vacancy.isFavorite ? 'pi pi-heart-fill' : 'pi pi-heart'" 
+                        [class]="vacancy.isFavorite ? 'p-button-danger' : 'p-button-secondary'"
+                        (click)="toggleFavorite(vacancy)"
+                        class="p-button-sm"
+                        [pTooltip]="vacancy.isFavorite ? 'Удалить из избранного' : 'Добавить в избранное'">
+                </button>
+              </div>
+            </div>
+            
+            <div class="vacancy-salary" *ngIf="vacancy.salary">
+              <span class="salary-amount">
+                {{ getSalaryText(vacancy) }}
+              </span>
+              <span class="salary-currency">{{ vacancy.salary.currency }}</span>
+            </div>
+          </div>
+
+          <div class="vacancy-company">
+            <span class="company-name">{{ vacancy.employer.name }}</span>
+            <span class="company-location" *ngIf="vacancy.address?.city">
+              • {{ vacancy.address?.city }}
+            </span>
+          </div>
+
+          <div class="vacancy-description">
+            <p>{{ cleanHtml(vacancy.description.substring(0, 200) || '') }}...</p>
+          </div>
+
+          <div class="vacancy-meta">
+            <span class="meta-item" *ngIf="vacancy.experience">
+              <i class="pi pi-briefcase"></i>
+              {{ vacancy.experience.name }}
+            </span>
+            
+            <span class="meta-item" *ngIf="vacancy.employment">
+              <i class="pi pi-clock"></i>
+              {{ vacancy.employment.name }}
+            </span>
+
+            <span class="meta-item" *ngIf="vacancy.published_at">
+              <i class="pi pi-calendar"></i>
+              {{ formatDate(vacancy.published_at) }}
+            </span>
+          </div>
+
+          <div class="vacancy-skills" *ngIf="vacancy.key_skills.length > 0">
+            <div class="skills-label">{{ 'VACANCY.SKILLS' | translate }}:</div>
+            <div class="skills-list">
+              <span *ngFor="let skill of vacancy.key_skills.slice(0, 5)" 
+                    class="skill-tag">
+                {{ skill.name }}
+              </span>
+              <span *ngIf="vacancy.key_skills.length > 5" class="more-skills">
+                +{{ vacancy.key_skills.length - 5 }} {{ 'VACANCY.MORE' | translate }}
+              </span>
+            </div>
+          </div>
+
+          <div class="vacancy-actions">
+            <button pButton 
+                    [label]="'DETAILS.VIEW' | translate" 
+                    (click)="showVacancyDetails(vacancy)"
+                    icon="pi pi-eye"
+                    class="p-button-info">
+            </button>
+            
+            <button pButton 
+                    [label]="'VACANCY.EXPORT' | translate" 
+                    (click)="exportVacancy(vacancy)"
+                    icon="pi pi-download"
+                    class="p-button-secondary">
+            </button>
+            
+            <a *ngIf="vacancy.alternate_url" 
+               [href]="vacancy.alternate_url" 
+               target="_blank" 
+               class="p-button p-button-outlined source-link">
+              <i class="pi pi-external-link"></i>
+              {{ 'DETAILS.VIEW_SOURCE' | translate }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button pButton 
+                [label]="'PAGINATION.PREVIOUS' | translate" 
+                (click)="prevPage()"
+                [disabled]="currentPage === 1"
+                icon="pi pi-chevron-left"
+                class="p-button-text">
+        </button>
+        
+        <span class="page-info">
+          {{ 'PAGINATION.PAGE' | translate }} {{ currentPage }} {{ 'PAGINATION.OF' | translate }} {{ totalPages }}
+        </span>
+        
+        <button pButton 
+                [label]="'PAGINATION.NEXT' | translate" 
+                (click)="nextPage()"
+                [disabled]="currentPage === totalPages"
+                icon="pi pi-chevron-right"
+                iconPos="right"
+                class="p-button-text">
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="vacancies.length === 0 && !isLoading && searchPerformed" class="no-results">
+      <div class="no-results-content">
+        <i class="pi pi-search" style="font-size: 3rem; color: #6c757d;"></i>
+        <h4>{{ 'RESULTS.NO_RESULTS' | translate }}</h4>
+        <p>{{ 'RESULTS.NO_RESULTS_HINT' | translate }}</p>
+        <button pButton 
+                [label]="'SEARCH.RESET_FILTERS' | translate" 
+                (click)="resetFilters()"
+                icon="pi pi-refresh"
+                class="p-button-outlined">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Секция избранных вакансий -->
+  <div *ngIf="activeSection === 'favorites'" class="favorites-section">
+    <div class="favorites-header">
+      <h3>Избранные вакансии ({{ favoriteVacancies.length }})</h3>
+      
+      <div class="favorites-actions" *ngIf="favoriteVacancies.length > 0">
+        <!-- Выбор резюме -->
+        <div class="resume-selector">
+          <label>Резюме для отправки:</label>
+          <p-select 
+            [options]="userResumes" 
+            optionLabel="title"
+            [(ngModel)]="selectedResume"
+            [placeholder]="'Выберите резюме'"
+            [ngModelOptions]="{standalone: true}"
+            style="min-width: 200px; margin-left: 0.5rem;">
+          </p-select>
+        </div>
+
+        <!-- Кнопка массовой генерации -->
+        <button pButton 
+                label="Сгенерировать письма для всех"
+                (click)="generateAllCoverLetters()"
+                [disabled]="isGeneratingAllLetters || !selectedResume"
+                icon="pi pi-envelope"
+                class="p-button-success"
+                style="margin-left: 1rem;">
+          <p-progressSpinner *ngIf="isGeneratingAllLetters" 
+                           [style]="{'width': '20px', 'height': '20px'}" 
+                           strokeWidth="4"
+                           styleClass="ml-2">
+          </p-progressSpinner>
+        </button>
+      </div>
+    </div>
+
+    <!-- Список избранных вакансий -->
+    <div class="favorites-list" *ngIf="favoriteVacancies.length > 0">
+      <div *ngFor="let vacancy of favoriteVacancies" class="favorite-vacancy-card">
+        <div class="favorite-vacancy-header">
+          <h4>{{ vacancy.name }}</h4>
+          <button pButton 
+                  icon="pi pi-times" 
+                  class="p-button-text p-button-danger"
+                  (click)="removeFromFavorites(vacancy)"
+                  pTooltip="Удалить из избранного">
+          </button>
+        </div>
+
+        <div class="favorite-vacancy-info">
+          <p><strong>Компания:</strong> {{ vacancy.employer.name }}</p>
+          <p><strong>Зарплата:</strong> {{ getSalaryText(vacancy) || 'Не указана' }}</p>
+          <p><strong>Город:</strong> {{ vacancy.address?.city || 'Не указан' }}</p>
+          <p><strong>Платформа:</strong> {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}</p>
+        </div>
+
+        <!-- Сгенерированное сопроводительное письмо -->
+        <div class="cover-letter-section" *ngIf="vacancy.coverLetter">
+          <h5>Сопроводительное письмо:</h5>
+          <div class="cover-letter-content">
+            <textarea pInputTextarea 
+                      [rows]="6" 
+                      [(ngModel)]="vacancy.coverLetter"
+                      [ngModelOptions]="{standalone: true}"
+                      style="width: 100%">
+            </textarea>
+          </div>
+          <div class="cover-letter-actions">
+            <button pButton 
+                    label="Отправить отклик"
+                    (click)="sendCoverLetter(vacancy)"
+                    [disabled]="vacancy.isSending"
+                    icon="pi pi-send"
+                    class="p-button-primary">
+              <p-progressSpinner *ngIf="vacancy.isSending" 
+                               [style]="{'width': '20px', 'height': '20px'}" 
+                               strokeWidth="4"
+                               styleClass="ml-2">
+              </p-progressSpinner>
+            </button>
+          </div>
+        </div>
+
+        <!-- Статус генерации -->
+        <div *ngIf="vacancy.isGeneratingLetter" class="generating-status">
+          <p-progressSpinner [style]="{'width': '30px', 'height': '30px'}"></p-progressSpinner>
+          <span>Генерация письма...</span>
+        </div>
+
+        <!-- Кнопка генерации для отдельной вакансии -->
+        <div *ngIf="!vacancy.coverLetter && !vacancy.isGeneratingLetter" class="generate-single-letter">
+          <button pButton 
+                  label="Сгенерировать письмо"
+                  (click)="generateCoverLetterForSingle(vacancy)"
+                  [disabled]="!selectedResume"
+                  icon="pi pi-file-edit"
+                  class="p-button-outlined">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Сообщение об отсутствии избранных -->
+    <div *ngIf="favoriteVacancies.length === 0" class="no-favorites">
+      <div class="no-favorites-content">
+        <i class="pi pi-heart" style="font-size: 3rem; color: #6c757d;"></i>
+        <h4>Нет избранных вакансий</h4>
+        <p>Добавьте вакансии в избранное, чтобы работать с ними</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Диалог деталей вакансии -->
+  <p-dialog [header]="selectedVacancy?.name" 
+           [visible]="showDetailsDialog" 
+           (onHide)="closeDetailsDialog()"
+           [modal]="true" 
+           [style]="{ width: '60vw', maxHeight: '80vh' }"
+           [breakpoints]="{ '960px': '75vw', '640px': '90vw' }">
+    
+    <div *ngIf="selectedVacancy" class="vacancy-details">
+      <div class="detail-section">
+        <h5>{{ 'DETAILS.COMPANY' | translate }}</h5>
+        <p>{{ selectedVacancy.employer.name }}</p>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedVacancy.salary">
+        <h5>{{ 'DETAILS.SALARY' | translate }}</h5>
+        <p>{{ getSalaryText(selectedVacancy) }} {{ selectedVacancy.salary.currency }}</p>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedVacancy.address">
+        <h5>{{ 'DETAILS.LOCATION' | translate }}</h5>
+        <p>{{ getAddressText(selectedVacancy.address) }}</p>
+      </div>
+
+      <div class="detail-section">
+        <h5>{{ 'DETAILS.DESCRIPTION' | translate }}</h5>
+        <div class="description-content" [innerHTML]="formatDescription(selectedVacancy.description)"></div>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedVacancy.key_skills.length > 0">
+        <h5>{{ 'DETAILS.REQUIREMENTS' | translate }}</h5>
+        <div class="skills-detail">
+          <span *ngFor="let skill of selectedVacancy.key_skills" class="skill-tag large">
+            {{ skill.name }}
+          </span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <button pButton 
+                [label]="'VACANCY.EXPORT' | translate" 
+                (click)="exportVacancy(selectedVacancy)"
+                icon="pi pi-download"
+                class="p-button-primary">
+        </button>
+        
+        <a *ngIf="selectedVacancy.alternate_url" 
+           [href]="selectedVacancy.alternate_url" 
+           target="_blank" 
+           class="p-button p-button-outlined"
+           style="margin-left: 0.5rem;">
+          <i class="pi pi-external-link"></i>
+          {{ 'DETAILS.VIEW_ORIGINAL' | translate }}
+        </a>
+      </div>
+    </div>
+  </p-dialog>
+
+  <p-dialog [visible]="isLoading" [modal]="true" [closable]="false" [style]="{ width: '300px' }">
+    <div class="loading-dialog">
+      <p-progressSpinner></p-progressSpinner>
+      <p>{{ 'LOADING.SEARCH' | translate }}</p>
+    </div>
+  </p-dialog>
+</div>

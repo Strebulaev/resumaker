@@ -1,0 +1,144 @@
+@if(loading) {
+  <div class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <p>{{ 'LOADING.PROFILE' | translate }}</p>
+  </div>
+  } @else if (supabase.currentUser && userProfile) {
+  <div class="profile-container">
+    <div class="profile-header">
+      <p-avatar [image]="userAvatar" size="xlarge" shape="circle"></p-avatar>
+      <h2>{{ userProfile.name }}</h2>
+      <p>{{ userProfile.contact.email }}</p>
+      <p>{{ userProfile.contact.phone || ('PROFILE.CONTACT_INFO.PHONE_PLACEHOLDER' | translate) }}</p>
+    </div>
+  
+    <!-- Вкладки для переключения между информацией и резюме -->
+    <div class="profile-tabs">
+      <button 
+        [class]="['tab', activeTab === 'info' ? 'active' : '']"
+        (click)="activeTab = 'info'">
+        <i class="pi pi-user"></i>
+        {{ 'PROFILE.INFO' | translate }}
+      </button>
+      
+      <button 
+        [class]="['tab', activeTab === 'resumes' ? 'active' : '']"
+        (click)="activeTab = 'resumes'">
+        <i class="pi pi-briefcase"></i>
+        {{ 'PROFILE.RESUMES' | translate }}
+      </button>
+    </div>
+  
+    <!-- Основная информация профиля -->
+    <div *ngIf="activeTab === 'info'" class="profile-info">
+      <div class="profile-details">
+        <!-- Личная информация -->
+        <div class="profile-section">
+          <h3>{{ 'PROFILE.PERSONAL_INFO.TITLE' | translate }}</h3>
+          <p><strong>{{ 'PROFILE.PERSONAL_INFO.GENDER' | translate }}:</strong> {{ getGenderLabel(userProfile.gender) }}</p>
+          <p><strong>{{ 'PROFILE.PERSONAL_INFO.DESIRED_POSITIONS' | translate }}:</strong> {{ userProfile.desiredPositions?.join(', ') || ('PROFILE.PERSONAL_INFO.NOT_SPECIFIED' | translate) }}</p>
+        </div>
+  
+        <!-- Местоположение -->
+        <div class="profile-section">
+          <h3>{{ 'PROFILE.LOCATION.TITLE' | translate }}</h3>
+          <p><strong>{{ 'PROFILE.LOCATION.CITY' | translate }}:</strong> {{ userProfile.location.city }}</p>
+          <p><strong>{{ 'PROFILE.LOCATION.COUNTRY' | translate }}:</strong> {{ userProfile.location.country || ('PROFILE.LOCATION.NOT_SPECIFIED' | translate) }}</p>
+          <p><strong>{{ 'PROFILE.LOCATION.RELOCATION' | translate }}:</strong> {{ userProfile.location.relocation ? ('YES' | translate) : ('NO' | translate) }}</p>
+          <p><strong>{{ 'PROFILE.LOCATION.REMOTE' | translate }}:</strong> {{ userProfile.location.remote ? ('YES' | translate) : ('NO' | translate) }}</p>
+          <p><strong>{{ 'PROFILE.LOCATION.BUSINESS_TRIPS' | translate }}:</strong> {{ userProfile.location.business_trips ? ('YES' | translate) : ('NO' | translate) }}</p>
+        </div>
+  
+        <!-- Контакты -->
+        <div class="profile-section">
+          <h3>{{ 'PROFILE.CONTACT_INFO.TITLE' | translate }}</h3>
+          <p><strong>LinkedIn:</strong> {{ userProfile.contact['linkedin'] || ('PROFILE.CONTACT_INFO.NOT_SPECIFIED' | translate) }}</p>
+          <p><strong>GitHub:</strong> {{ userProfile.contact['github'] || ('PROFILE.CONTACT_INFO.NOT_SPECIFIED' | translate) }}</p>
+        </div>
+  
+        <!-- Языки -->
+        <div class="profile-section" *ngIf="userProfile.languages && userProfile.languages.length">
+          <h3>{{ 'PROFILE.LANGUAGES.TITLE' | translate }}</h3>
+          <div *ngFor="let lang of userProfile.languages">
+            <p>{{ lang.language }} - {{ lang.level }}</p>
+          </div>
+        </div>
+  
+        <!-- Навыки -->
+        <div class="profile-section" *ngIf="userProfile.skills && userProfile.skills.length">
+          <h3>{{ 'PROFILE.SKILLS.TITLE' | translate }}</h3>
+          <div *ngFor="let skill of userProfile.skills">
+            <p>{{ skill.area }}: {{ skill.name }} ({{ skill.level }}/10)</p>
+          </div>
+        </div>
+  
+        <!-- Образование -->
+        <div class="profile-section" *ngIf="userProfile.education && userProfile.education.length">
+          <h3>{{ 'PROFILE.EDUCATION.TITLE' | translate }}</h3>
+          <div *ngFor="let edu of userProfile.education">
+            <p>{{ edu.institution }} - {{ edu.degree }}, {{ edu.specialty }} ({{ edu.year }})</p>
+          </div>
+        </div>
+  
+        <!-- Опыт работы -->
+        <div class="profile-section" *ngIf="userProfile.experience && userProfile.experience.length">
+          <h3>{{ 'PROFILE.EXPERIENCE.TITLE' | translate }}</h3>
+          <div *ngFor="let exp of userProfile.experience" class="experience-item">
+            <h4>{{ exp.company }} - {{ exp.position }}</h4>
+            <p>{{ exp.startDate }} - {{ exp.endDate || ('PROFILE.EXPERIENCE.CURRENT' | translate) }}</p>
+            <p><strong>{{ 'PROFILE.EXPERIENCE.STACK' | translate }}:</strong> {{ exp.stack.join(', ') }}</p>
+            <div *ngIf="exp.tasks && exp.tasks.length">
+              <strong>{{ 'PROFILE.EXPERIENCE.TASKS' | translate }}:</strong>
+              <ul>
+                <li *ngFor="let task of exp.tasks">{{ task }}</li>
+              </ul>
+            </div>
+            <div *ngIf="exp.achievements && exp.achievements.length">
+              <strong>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.TITLE' | translate }}:</strong>
+              <ul>
+                <li *ngFor="let ach of exp.achievements">
+                  {{ ach.name }}: {{ ach.initial_value }} → {{ ach.final_value }} {{ ach.uom || '' }}
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Хобби -->
+        <div class="profile-section" *ngIf="userProfile.hobby && userProfile.hobby.length">
+          <h3>{{ 'PROFILE.HOBBY' | translate }}</h3>
+          <p>{{ userProfile.hobby.join(', ') }}</p>
+        </div>
+  
+        <!-- Литература -->
+        <div class="profile-section" *ngIf="userProfile.literature && userProfile.literature.length">
+          <h3>{{ 'PROFILE.LITERATURE' | translate }}</h3>
+          <p>{{ userProfile.literature.join(', ') }}</p>
+        </div>
+      </div>
+  
+      <div class="profile-actions">
+        <button pButton [label]="'PROFILE.PERSONAL_INFO.EDIT' | translate" icon="pi pi-pencil" 
+                routerLink="/profile/edit" class="p-button-primary"></button>
+        <button pButton [label]="'BUTTON.LOGOUT' | translate" icon="pi pi-sign-out" class="p-button-danger" 
+                (click)="signOut()"></button>
+      </div>
+    </div>
+  
+    <!-- Управление резюме -->
+    <div *ngIf="activeTab === 'resumes'" class="profile-resumes">
+      <app-resume-management></app-resume-management>
+    </div>
+  </div>
+  } @else if (supabase.currentUser && !userProfile) {
+  <div class="profile-empty">
+    <p>{{ 'PROFILE.VIEW.EMPTY' | translate }}</p>
+    <button pButton [label]="'PROFILE.PERSONAL_INFO.EDIT' | translate" icon="pi pi-user-edit" 
+            routerLink="/profile/edit" class="p-button-primary"></button>
+  </div>
+  } @else {
+  <div class="not-authorized">
+    <p>{{ 'PROFILE.PROFILE_VIEW.LOGIN_PROMPT' | translate }}</p>
+    <a routerLink="/login">{{ 'AUTH.GO_TO_LOGIN' | translate }}</a>
+  </div>
+  }

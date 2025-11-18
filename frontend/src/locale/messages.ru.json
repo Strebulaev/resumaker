@@ -1,0 +1,661 @@
+{
+  "MAIN_MENU": {
+    "PROFILE": {
+      "name": "Профиль",
+      "VIEW": "Просмотр профиля",
+      "EDIT": "Редактировать профиль",
+      "GENERATE_RESUME": "Сгенерировать резюме",
+      "GENERATE_COVER_LETTER": "Сопроводительное письмо"
+    },
+    "RESUME": {
+      "name": "Резюме",
+      "GENERATE_RESUME": "Генерация резюме"
+    },
+    "ABOUT": {
+      "name": "О сервисе"
+    },
+    "JOB_PLATFORMS": {
+      "name": "Платформы для работы"
+    },
+    "INTERVIEW": {
+      "name": "Подготовка к собеседованию"
+    },
+    "VACANCY_SEARCH": {
+      "name": "Поиск вакансий"
+    }
+  },
+  "AUTH": {
+    "LOGIN": {
+      "HEADER": "Пожалуйста, войдите в систему",
+      "VIA_GOOGLE": "Войти через Google"
+    },
+    "GO_TO_LOGIN": "Перейти на страницу входа"
+  },
+  "ABOUT": {
+    "TITLE": "О сервисе Rezulution",
+    "SUBTITLE": "Современная платформа для создания профессиональных резюме и сопроводительных писем",
+    "FEATURES_TITLE": "Наши возможности",
+    "FEATURES": {
+      "AI_RESUME": "AI-генерация резюме",
+      "AI_RESUME_DESC": "Автоматическое создание профессиональных резюме с использованием искусственного интеллекта",
+      "COVER_LETTERS": "Сопроводительные письма",
+      "COVER_LETTERS_DESC": "Персонализированные письма для каждой вакансии с учетом требований работодателя",
+      "HH_INTEGRATION": "Интеграция с HH.ru",
+      "HH_INTEGRATION_DESC": "Прямая публикация резюме и отправка откликов на популярной платформе",
+      "EXPORT": "Экспорт в форматы",
+      "EXPORT_DESC": "Скачивание в PDF, DOCX и других популярных форматах"
+    },
+    "CTA_TITLE": "Начните прямо сейчас",
+    "CTA_DESCRIPTION": "Создайте профессиональное резюме за несколько минут и начните получать предложения о работе"
+  },
+  "PLATFORMS": {
+    "HH": "HH.ru",
+    "SUPERJOB": "SuperJob",
+    "HABR": "Habr Career",
+    "ALL": "Все платформы"
+  },
+  "PROFILE": {
+    "INFO": "Информация",
+    "RESUMES": "Резюме",
+    "COMPLETION": "Заполнение профиля",
+    "PERSONAL_INFO": {
+      "TITLE": "Личная информация",
+      "NAME": "ФИО",
+      "GENDER": "Пол",
+      "GENDER_OPTIONS": {
+        "MALE": "Мужской",
+        "FEMALE": "Женский",
+        "UNKNOWN": "Не указывать",
+        "NOT_SPECIFIED": "Не указано"
+      },
+      "DESIRED_POSITIONS": "Желаемые должности",
+      "ADD_POSITION": "Добавить должность",
+      "VIEW": "Просмотр профиля",
+      "EDIT": "Редактировать профиль"
+    },
+    "CONTACT_INFO": {
+      "TITLE": "Контактная информация",
+      "PHONE": "Телефон",
+      "EMAIL": "Email",
+      "LINKEDIN": "LinkedIn",
+      "GITHUB": "GitHub",
+      "PHONE_VALIDATION": "Формат: +71234567890",
+      "PHONE_PLACEHOLDER": "+79123456789",
+      "NOT_SPECIFIED": "Не указан"
+    },
+    "LOCATION": {
+      "TITLE": "Местоположение",
+      "COUNTRY": "Страна",
+      "CITY": "Город",
+      "RELOCATION": "Готов к переезду",
+      "REMOTE": "Готов работать удалённо",
+      "BUSINESS_TRIPS": "Готов к командировкам",
+      "RELOCATION_DESC": "Готовность к переезду в другой город/страну",
+      "REMOTE_DESC": "Возможность работать удаленно",
+      "BUSINESS_TRIPS_DESC": "Готовность к командировкам",
+      "COUNTRY_PLACEHOLDER": "Например: Россия",
+      "CITY_PLACEHOLDER": "Например: Москва",
+      "NOT_SPECIFIED": "Не указана"
+    },
+    "LANGUAGES": {
+      "TITLE": "Языки",
+      "LANGUAGE": "Язык",
+      "LEVEL": "Уровень владения",
+      "ADD_LANGUAGE": "Добавить язык",
+      "LEVELS": {
+        "A1": "Начальный",
+        "A2": "Элементарный",
+        "B1": "Средний",
+        "B2": "Выше среднего",
+        "C1": "Продвинутый",
+        "C2": "В совершенстве"
+      },
+      "LANGUAGE_PLACEHOLDER": "Например: Английский",
+      "LEVEL_PLACEHOLDER": "Выберите уровень"
+    },
+    "SKILLS": {
+      "TITLE": "Навыки",
+      "AREA": "Область",
+      "SKILL": "Навык",
+      "LEVEL": "Уровень (1-10)",
+      "DATE": "Дата последнего использования",
+      "ADD_SKILL": "Добавить навык",
+      "AREA_PLACEHOLDER": "Например: Программирование",
+      "SKILL_PLACEHOLDER": "Например: JavaScript",
+      "DATE_PLACEHOLDER": "ГГГГ-ММ-ДД"
+    },
+    "EDUCATION": {
+      "TITLE": "Образование",
+      "INSTITUTION": "Учебное заведение",
+      "DEGREE": "Степень",
+      "SPECIALTY": "Специальность",
+      "YEAR": "Год окончания",
+      "ADD_EDUCATION": "Добавить образование",
+      "INSTITUTION_PLACEHOLDER": "Например: МГУ",
+      "DEGREE_PLACEHOLDER": "Например: Бакалавр",
+      "SPECIALTY_PLACEHOLDER": "Например: Компьютерные науки",
+      "YEAR_PLACEHOLDER": "Например: 2020"
+    },
+    "EXPERIENCE": {
+      "TITLE": "Опыт работы",
+      "COMPANY": "Компания",
+      "POSITION": "Должность",
+      "START_DATE": "Дата начала",
+      "END_DATE": "Дата окончания",
+      "CURRENT": "Работаю в настоящее время",
+      "TASKS": "Обязанности",
+      "ADD_TASK": "Добавить обязанность",
+      "STACK": "Используемые технологии",
+      "ADD_TECH": "Добавить технологию",
+      "ADD_EXPERIENCE": "Добавить опыт работы",
+      "ACHIEVEMENTS": {
+        "TITLE": "Достижения",
+        "NAME": "Название достижения",
+        "INITIAL": "Начальное значение",
+        "FINAL": "Конечное значение",
+        "UNIT": "Единица измерения",
+        "TYPE": "Тип изменения",
+        "ADD_ACHIEVEMENT": "Добавить достижение",
+        "NAME_PLACEHOLDER": "Описание достижения",
+        "UNIT_PLACEHOLDER": "Например: %, дней, руб.",
+        "TYPE_PLACEHOLDER": "Например: увеличение, уменьшение"
+      },
+      "COMPANY_PLACEHOLDER": "Название компании",
+      "POSITION_PLACEHOLDER": "Должность",
+      "TASK_PLACEHOLDER": "Описание обязанности",
+      "TECH_PLACEHOLDER": "Название технологии"
+    },
+    "HOBBY": "Хобби",
+    "ADD_HOBBY": "Добавить хобби",
+    "LITERATURE": "Любимая литература",
+    "ADD_LITERATURE": "Добавить литературу",
+    "HOBBY_PLACEHOLDER": "Например: Фотография",
+    "LITERATURE_PLACEHOLDER": "Название книги или автора",
+    "ACTIONS": {
+      "SAVE": "Сохранить профиль",
+      "SAVE_SUCCESS": "Профиль успешно сохранён",
+      "SAVE_ERROR": "Ошибка сохранения профиля",
+      "EXPORT_YAML": "Экспорт в YAML",
+      "EXPORT_TXT": "Экспорт в TXT",
+      "IMPORT_YAML": "Импорт из YAML",
+      "RESET": "Сбросить изменения",
+      "RESET_CONFIRM": "Вы уверены, что хотите сбросить все изменения?",
+      "DOWNLOAD": "Скачать",
+      "CLOSE": "Закрыть"
+    },
+    "VALIDATION": {
+      "REQUIRED": "Обязательное поле",
+      "INVALID_EMAIL": "Пожалуйста, введите корректный email",
+      "INVALID_PHONE": "Телефон должен быть в формате +79123456789",
+      "INVALID_DATE": "Пожалуйста, введите корректную дату (ГГГГ-ММ-ДД)",
+      "FORM_ERROR": "Пожалуйста, исправьте ошибки валидации",
+      "INVALID_URL": "Пожалуйста, введите корректный URL"
+    },
+    "PREVIEW_TITLE": "Предпросмотр",
+    "PROFILE_VIEW": {
+      "LOGIN_PROMPT": "Пожалуйста, войдите для просмотра профиля"
+    },
+    "COMPLETE": "Заполнено",
+    "IN_PROGRESS": "В процессе"
+  },
+  "FILE_UPLOADED": "Файл загружен",
+  "GENERATED_AT": "Сгенерировано",
+  "BUTTON": {
+    "SAVE": "Сохранить",
+    "DELETE": "Удалить",
+    "LOGIN": "Войти",
+    "LOGOUT": "Выйти",
+    "PROFILE": "Перейти в профиль",
+    "RESUME_GENERATION_IN_PROCESS": "Создание резюме в процессе",
+    "GENERATE_RESUME": "Генерация резюме",
+    "PUBLISH_TO_HH": "Опубликовать на HH.ru",
+    "GENERATE_COVER_LETTER": "Сгенерировать письмо",
+    "SETTINGS": "Настройки шаблонов",
+    "SEND_TO_HH": "Отправить на HH.ru",
+    "SAVE_TEMPLATE": "Сохранить шаблон",
+    "SAVE_CHANGES": "Сохранить изменения",
+    "EDIT": "Редактировать",
+    "CANCEL": "Отмена",
+    "CONFIRM": "Подтвердить",
+    "UPLOAD": "Загрузить",
+    "DOWNLOAD": "Скачать",
+    "COPY": "Копировать",
+    "SEND": "Отправить",
+    "BACK": "Назад",
+    "NEXT": "Далее",
+    "BACK_HOME": "Вернуться на главную",
+    "RESET": "Сбросить",
+    "GENERATE": "Сгенерировать",
+    "REMOVE": "Удалить"
+  },
+  "TOOLTIP": {
+    "SIGNOUT_BUTTON": "Выход из системы",
+    "EDIT_PROFILE": "Редактировать профиль",
+    "VIEW_PROFILE": "Просмотреть профиль",
+    "GENERATE_RESUME": "Сгенерировать новое резюме",
+    "SAVE_RESUME": "Сохранить резюме",
+    "DELETE_RESUME": "Удалить резюме"
+  },
+  "HOME": {
+    "WELCOME": "Добро пожаловать в Rezulution!",
+    "SUBTITLE": "Создавайте профессиональные резюме за минуты",
+    "FEATURES": {
+      "AI": "AI-генерация",
+      "EXPORT": "Множество форматов",
+      "INTEGRATION": "Интеграция с HH.ru"
+    },
+    "GET_STARTED": "Начать работу",
+    "WELCOME_BACK": "С возвращением!"
+  },
+  "RESUME_GENERATION": {
+    "HEADER": "Генерация резюме",
+    "SUBTITLE": "Создайте профессиональное резюме на основе вашего профиля",
+    "COVER_LETTER_SECTION": "Сопроводительное письмо",
+    "COVER_LETTER_PLACEHOLDER": "Введите текст сопроводительного письма или оставьте пустым для автоматической генерации контекста",
+    "USE_COVER_LETTER": "Использовать сопроводительное письмо",
+    "PUBLISH_SUCCESS": "Резюме успешно опубликовано на HH.ru",
+    "PUBLISH_ERROR": "Ошибка публикации резюме",
+    "GENERATING": "Идет генерация резюме...",
+    "SAVE_SUCCESS": "Резюме сохранено",
+    "DELETE_SUCCESS": "Резюме удалено",
+    "ERROR": "Ошибка генерации резюме",
+    "COVER_LETTER_OPTIONAL": "Сопроводительное письмо (опционально)",
+    "COVER_LETTER_HINT": "Добавьте сопроводительное письмо для дополнительного контекста при генерации резюме",
+    "VACANCY_URL": "Ссылка на вакансию",
+    "VACANCY_URL_HINT": "Вставьте ссылку на вакансию HH.ru для адаптации резюме под конкретную должность",
+    "PUBLISHING": "Публикация на HH.ru...",
+    "VIEW_ON_HH": "Посмотреть на HH.ru",
+    "COVER_LETTER": "Сопроводительное письмо",
+    "VACANCY_INFO": "Информация о вакансии",
+    "UPLOAD_COVER_LETTER": "Загрузить сопроводительное письмо",
+    "UPLOAD_VACANCY": "Загрузить описание вакансии",
+    "REMOVE_FILE": "Удалить файл"
+  },
+  "JOB_PLATFORMS": {
+    "TITLE": "Интеграция с платформами",
+    "CONNECT_HH": "Подключить HH.ru",
+    "CONNECT_SUPERJOB": "Подключить SuperJob",
+    "CONNECT_HABR": "Подключить Habr Career",
+    "CONNECTING": "Подключение к HH.ru...",
+    "SUCCESS": "Успешно подключено к HH.ru!",
+    "ERROR": "Ошибка подключения к HH.ru",
+    "DISCONNECT": "Отключить",
+    "STATUS_CONNECTED": "✓ Подключено",
+    "STATUS_DISCONNECTED": "Не подключено",
+    "PLATFORM_INFO": "Подключите ваш аккаунт HH.ru для:",
+    "BENEFITS": {
+      "IMPORT": "Импорт резюме",
+      "SEARCH": "Поиск вакансий",
+      "APPLY": "Отправка откликов",
+      "PUBLISH": "Публикация резюме"
+    },
+    "HH": {
+      "DESCRIPTION": "Крупнейшая российская платформа для поиска работы"
+    },
+    "SUPERJOB": {
+      "DESCRIPTION": "Одна из ведущих платформ для поиска работы в России"
+    },
+    "HABR": {
+      "DESCRIPTION": "IT-платформа для поиска работы и развития карьеры"
+    }
+  },
+  "COVER_LETTER": {
+    "TITLE": "Генерация сопроводительного письма",
+    "SELECT_RESUME": "Выберите резюме из HH.ru",
+    "SELECT_RESUME_PLACEHOLDER": "Выберите резюме...",
+    "RESUME_ID": "ID резюме в системе",
+    "UPLOAD_RESUME": "Загрузить резюме",
+    "RESUME_ID_PLACEHOLDER": "Введите ID вашего резюме",
+    "VACANCY_ID": "ID вакансии на HH.ru",
+    "VACANCY_ID_PLACEHOLDER": "Например: 12345678",
+    "VACANCY_URL": "Ссылка на вакансию",
+    "VACANCY_URL_HINT": "Вставьте ссылку на вакансию HH.ru для получения детальной информации",
+    "STYLE": "Стиль письма",
+    "STYLE_PLACEHOLDER": "Выберите стиль",
+    "TONE": "Тон письма",
+    "TONE_PLACEHOLDER": "Выберите тон",
+    "GENERATE": "Сгенерировать письмо",
+    "GENERATING": "Генерация письма...",
+    "GENERATE_SUCCESS": "Письмо успешно сгенерировано",
+    "GENERATE_ERROR": "Ошибка генерации письма",
+    "SEND_SUCCESS": "Письмо отправлено на HH.ru!",
+    "SEND_ERROR": "Ошибка отправки на HH.ru",
+    "COPY_SUCCESS": "Текст скопирован в буфер обмена!",
+    "COPY_ERROR": "Ошибка копирования",
+    "SAVE_TEMPLATE_SUCCESS": "Шаблон сохранен!",
+    "SAVE_TEMPLATE_ERROR": "Ошибка сохранения шаблона",
+    "GENERATED_LETTER": "Сгенерированное письмо",
+    "RESUME_ID_HINT": "Оставьте пустым, если загружаете файл резюме",
+    "EDIT_DIALOG_TITLE": "Редактирование письма",
+    "STYLES": {
+      "FORMAL": "Формальный",
+      "CREATIVE": "Креативный",
+      "TECHNICAL": "Технический"
+    },
+    "TONES": {
+      "PROFESSIONAL": "Профессиональный",
+      "ENTHUSIASTIC": "Энтузиастичный",
+      "CONSERVATIVE": "Консервативный"
+    },
+    "USE_COVER_LETTER": "Использовать сопроводительное письмо",
+    "FILE_TYPES": "Поддерживаемые форматы: TXT, PDF, DOC, DOCX, RTF",
+    "RESUME_OPTION": {
+      "TITLE": "Название резюме",
+      "SKILLS": "Ключевые навыки"
+    }
+  },
+  "INTERVIEW_PREP": {
+    "TITLE": "Подготовка к собеседованию",
+    "RESUME_SECTION": "Резюме",
+    "VACANCY_SECTION": "Описание вакансии",
+    "COMPANY_SECTION": "Информация о компании",
+    "PERSONAL_CONTEXT_SECTION": "Персональный контекст и цели",
+    "COVER_LETTER_SECTION": "Сопроводительное письмо (опционально)",
+    "INTERNAL_CONTEXT_SECTION": "Внутренний контекст (опционально)",
+    "UPLOAD_FILE": "Загрузить файл",
+    "OR_TEXT": "Или вставьте текст",
+    "GENERATE_PLAN": "Сгенерировать план подготовки",
+    "GENERATING": "Генерация плана подготовки...",
+    "PLAN_TITLE": "План подготовки к собеседованию",
+    "DOWNLOAD_PLAN": "Скачать план",
+    "COPY_PLAN": "Копировать план",
+    "FILE_TYPES_ALL": "Поддерживаемые форматы: TXT, PDF, DOC, DOCX, RTF, MD, YAML, JSON",
+    "SUCCESS": "Файл успешно обработан",
+    "ERROR": "Ошибка обработки файла",
+    "VACANCY_URL": "Ссылка на вакансию",
+    "VACANCY_URL_HINT": "Вставьте ссылку на вакансию HH.ru для получения детальной информации"
+  },
+  "RESUME": {
+    "MANAGEMENT_TITLE": "Управление резюме",
+    "MANAGEMENT_SUBTITLE": "Ваши резюме на платформах для поиска работы",
+    "NO_HH_RESUMES": "Резюме на HH.ru не найдены",
+    "NO_SUPERJOB_RESUMES": "Резюме на SuperJob не найдены",
+    "CONNECT_HH_HINT": "Подключите аккаунт HH.ru чтобы увидеть ваши резюме",
+    "CONNECT_SUPERJOB_HINT": "Подключите аккаунт SuperJob чтобы увидеть ваши резюме",
+    "DELETE_CONFIRM": "Вы уверены, что хотите удалить это резюме?",
+    "DELETE_SUCCESS": "Резюме успешно удалено",
+    "OPEN_IN_PLATFORM": "Открыть на платформе",
+    "STATUS": "Статус",
+    "CREATED": "Создано",
+    "UPDATED": "Обновлено",
+    "VIEWS": "Просмотры",
+    "SKILLS": "Навыки",
+    "EXPERIENCE": "Опыт работы",
+    "PLATFORM": "Платформа",
+    "DELETE": "Удалить"
+  },
+  "ERROR": {
+    "GENERIC": "Произошла ошибка",
+    "LOAD_RESUMES": "Ошибка загрузки резюме",
+    "DELETE_RESUME": "Ошибка удаления резюме",
+    "NETWORK": "Ошибка сети",
+    "VALIDATION": "Ошибка валидации",
+    "UNAUTHORIZED": "Требуется авторизация",
+    "NOT_FOUND": "Не найдено",
+    "SERVER": "Ошибка сервера",
+    "INVALID_URL": "Неверный формат ссылки",
+    "NO_TOKEN": "Требуется авторизация",
+    "API_ERROR": "Ошибка API",
+    "PAGE_NOT_EXIST": "Страница, которую вы ищете, не существует."
+  },
+  "SUCCESS": {
+    "OPERATION_COMPLETED": "Операция выполнена успешно",
+    "SAVED": "Сохранено успешно",
+    "UPDATED": "Обновлено успешно",
+    "DOWNLOADED": "Успешно загружено",
+    "EXPORTED": "Успешно экспортировано",
+    "DELETED": "Удалено успешно"
+  },
+  "FILE": {
+    "TYPES": "Поддерживаемые форматы: TXT, PDF, DOC, DOCX, RTF",
+    "TYPES_ALL": "Поддерживаемые форматы: TXT, PDF, DOC, DOCX, RTF, MD, YAML, JSON",
+    "SELECT": "Выберите файл",
+    "NO_FILE_CHOSEN": "Файл не выбран",
+    "UPLOAD": "Загрузить файл",
+    "CLEAR": "Удалить файл",
+    "SUPPORTED_FORMATS": "Поддерживаемые форматы",
+    "ALL_FORMATS": "Все форматы",
+    "UPLOAD_SUCCESS": "Файл успешно загружен",
+    "UPLOAD_ERROR": "Ошибка загрузки файла",
+    "REMOVE_SUCCESS": "Файл удален"
+  },
+  "COMPANY": {
+    "INFO": "Информация о компании",
+    "NAME": "Название компании"
+  },
+  "SKILLS": {
+    "KEY": "Ключевые навыки",
+    "REQUIREMENTS": "Требования",
+    "RESPONSIBILITIES": "Обязанности"
+  },
+  "VACANCY": {
+    "CURRENCY": {
+      "RUR": "Рубли (RUR)",
+      "USD": "Доллары (USD)",
+      "EUR": "Евро (EUR)"
+    },
+    "FORMATS": {
+      "TXT": "Текст (TXT)",
+      "JSON": "JSON", 
+      "YAML": "YAML"
+    },
+    "TITLE": "Поиск вакансий",
+    "SUBTITLE": "Найдите идеальную работу на нескольких платформах",
+    "FILTERS": "Фильтры",
+    "SKILLS": "Навыки",
+    "MORE": "ещё",
+    "VIEW_ORIGINAL": "Посмотреть оригинал",
+    "SEARCH": "Поиск вакансий",
+    "DOWNLOAD": "Скачать вакансию",
+    "BY_URL": "Скачать по ссылке",
+    "LINK_PLACEHOLDER": "Ссылка на вакансию HH.ru",
+    "LINK_HINT": "Поддерживаемые форматы: https://hh.ru/vacancy/12345678",
+    "LOAD": "Загрузить вакансию",
+    "EXPORT": "Экспорт вакансии",
+    "INCLUDE_SALARY": "Включать зарплату",
+    "INCLUDE_CONTACTS": "Включать контакты",
+    "INCLUDE_ADDRESS": "Включать адрес",
+    "INCLUDE_DESCRIPTION": "Включать описание",
+    "INCLUDE_REQUIREMENTS": "Включать требования",
+    "INCLUDE_RESPONSIBILITIES": "Включать обязанности",
+    "FORMAT": "Формат",
+    "LINK": "Ссылка",
+    "DESCRIPTION_GROUP": "Описание",
+    "METADATA": "Метаданные",
+    "EMPLOYER_INFO": "Информация о работодателе",
+    "SNIPPET": "Сниппет",
+    "COUNTERS": "Счетчики",
+    "VACANCY_INFO": "Информация о вакансии",
+    "UPLOAD_VACANCY_DESC": "Загрузите файл с описанием вакансии",
+    "PLATFORM_HH": "https://hh.ru/vacancy/id",
+    "PLATFORM_SUPERJOB": "https://www.superjob.ru/vakansii/nazvanie-vacancy-id.html",
+    "QUICK_DOWNLOAD": "Быстрая загрузка по ссылке",
+    "LINK_SUPPORTED": "Поддерживаемые платформы",
+    "VACANCY_URL": "Ссылка на вакансию"
+  },
+  "SEARCH": {
+    "ALL_PLATFORMS": "Искать на всех платформах",
+    "PLATFORM_SELECT": "Выберите платформы для поиска",
+    "KEYWORDS": "Ключевые слова",
+    "KEYWORDS_PLACEHOLDER": "Должность или навыки",
+    "SALARY": "Зарплата",
+    "SALARY_PLACEHOLDER": "Сумма",
+    "REGION": "Регион (ID)",
+    "REGION_PLACEHOLDER": "Введите ID региона",
+    "REGION_HINT": "1 - Москва, 2 - СПб, 3 - Екатеринбург, 4 - Новосибирск",
+    "EXPERIENCE": "Опыт работы",
+    "EXPERIENCE_PLACEHOLDER": "Выберите опыт",
+    "EMPLOYMENT": "Тип занятости",
+    "EMPLOYMENT_PLACEHOLDER": "Выберите тип занятости",
+    "SCHEDULE": "График работы",
+    "SCHEDULE_PLACEHOLDER": "Выберите график",
+    "PLATFORMS": "Платформы",
+    "PLATFORMS_PLACEHOLDER": "Выберите платформы",
+    "PROFESSIONAL_ROLE_PLACEHOLDER": "ID роли",
+    "SORT_PLACEHOLDER": "Выберите сортировку",
+    "RESULTS_PLACEHOLDER": "20",
+    "PAGE_PLACEHOLDER": "0",
+    "SALARY_FROM": "Зарплата от",
+    "CURRENCY": "Валюта",
+    "WITH_SALARY_ONLY": "Только с зарплатой",
+    "PROFESSIONAL_ROLE": "Профессиональная роль (ID)",
+    "SORT_BY": "Сортировка по",
+    "RESULTS_PER_PAGE": "Результатов на странице",
+    "PAGE": "Страница",
+    "SEARCH_BUTTON": "Поиск",
+    "ONLY_WITH_SALARY": "Только с зарплатой",
+    "REMOTE": "Удаленная работа",
+    "RESET": "Сбросить"
+  },
+  "EXPORT": {
+    "SETTINGS": "Настройки экспорта",
+    "BASIC_INFO": "Основная информация",
+    "ADDITIONAL": "Дополнительно",
+    "RESET": "Сбросить настройки",
+    "METADATA": "Включать метаданные",
+    "EMPLOYER_INFO": "Включать информацию о работодателе",
+    "COUNTERS": "Включать счетчики",
+    "VACANCY_INFO": "Информация о вакансии",
+    "TITLE": "Название",
+    "COMPANY": "Компания",
+    "PLATFORM": "Платформа",
+    "SALARY": "Зарплата",
+    "FROM": "от",
+    "TO": "до",
+    "PUBLISHED": "Опубликована"
+  },
+  "RESULTS": {
+    "FOUND": "Найдено",
+    "VACANCIES": "вакансий",
+    "NO_RESULTS": "Результатов не найдено",
+    "NO_RESULTS_HINT": "Попробуйте изменить критерии поиска или сбросить фильтры",
+    "SORT_BY": "Сортировать по",
+    "SORT_PLACEHOLDER": "Выберите сортировку"
+  },
+  "DETAILS": {
+    "VIEW": "Подробнее",
+    "ON_HH": "На HH.ru",
+    "VIEW_SOURCE": "Посмотреть вакансию",
+    "COMPANY": "Компания",
+    "SALARY": "Зарплата",
+    "LOCATION": "Местоположение",
+    "DESCRIPTION": "Описание",
+    "REQUIREMENTS": "Требования",
+    "ORIGINAL_LINK": "Оригинальная ссылка"
+  },
+  "EXAMPLE": {
+    "SUPPORTED": "Поддерживаемые форматы ссылок"
+  },
+  "LOADING": {
+    "VACANCY": "Загрузка вакансии...",
+    "SEARCH": "Поиск...",
+    "DETAILS": "Загрузка деталей...",
+    "PROFILE": "Загрузка профиля..."
+  },
+  "VIEW": {
+    "EMPTY": "Профиль не заполнен"
+  },
+  "FILTERS": {
+    "EXPERIENCE": {
+      "NO_EXPERIENCE": "Без опыта",
+      "BETWEEN_1_AND_3": "От 1 года до 3 лет",
+      "BETWEEN_3_AND_6": "От 3 до 6 лет",
+      "MORE_THAN_6": "Более 6 лет"
+    },
+    "EMPLOYMENT": {
+      "FULL": "Полная занятость",
+      "PART": "Частичная занятость",
+      "PROJECT": "Проектная работа",
+      "VOLUNTEER": "Волонтерство",
+      "PROBATION": "Стажировка"
+    },
+    "SCHEDULE": {
+      "FULL_DAY": "Полный день",
+      "SHIFT": "Сменный график",
+      "FLEXIBLE": "Гибкий график",
+      "REMOTE": "Удаленная работа",
+      "FLY_IN_FLY_OUT": "Вахтовый метод"
+    },
+    "ORDER_BY": {
+      "RELEVANCE": "По релевантности",
+      "SALARY_DESC": "По убыванию зарплата",
+      "SALARY_ASC": "По возрастанию зарплаты",
+      "PUBLICATION_TIME": "По дате публикации",
+      "DISTANCE": "По расстоянию"
+    }
+  },
+  "LANGUAGE": {
+    "SELECT": "Выбрать язык",
+    "CHOOSE": "Выберите язык"
+  },
+  "SORT": {
+    "RELEVANCE": "Релевантности",
+    "DATE_DESC": "Дате (сначала новые)",
+    "DATE_ASC": "Дате (сначала старые)",
+    "SALARY_DESC": "Зарплате (по убыванию)",
+    "SALARY_ASC": "Зарплате (по возрастанию)"
+  },
+  "SALARY": {
+    "NOT_SPECIFIED": "Не указана",
+    "FROM": "от",
+    "TO": "до"
+  },
+  "PAGINATION": {
+    "PAGE": "Страница",
+    "OF": "из",
+    "PREVIOUS": "Назад",
+    "NEXT": "Вперед"
+  },
+  "MESSAGE": {
+    "VACANCY_LOADED": "Вакансия успешно загружена",
+    "LOAD_ERROR": "Ошибка загрузки вакансии",
+    "SEARCH_ERROR": "Ошибка поиска",
+    "SEARCH_ERROR_DETAIL": "Попробуйте позже или проверьте интернет-соединение",
+    "EXPORT_SUCCESS": "Успешно экспортировано"
+  },
+  "EXPERIENCE": {
+    "NO_EXPERIENCE": "Без опыта",
+    "LESS_1_YEAR": "Менее 1 года",
+    "1_3_YEARS": "1-3 года",
+    "3_6_YEARS": "3-6 лет",
+    "MORE_6_YEARS": "Более 6 лет"
+  },
+  "EMPLOYMENT": {
+    "FULL": "Полная занятость",
+    "PART": "Частичная занятость",
+    "PROJECT": "Проектная работа",
+    "VOLUNTEER": "Волонтерство",
+    "INTERNSHIP": "Стажировка"
+  },
+  "SCHEDULE": {
+    "FULL_DAY": "Полный день",
+    "SHIFT": "Сменный график",
+    "FLEXIBLE": "Гибкий график",
+    "REMOTE": "Удаленная работа",
+    "FLY_IN_FLY_OUT": "Вахтовый метод"
+  },
+  "PLATFORM": {
+    "HH": "HH.ru",
+    "SUPERJOB": "SuperJob",
+    "UNKNOWN": "Неизвестная платформа"
+  },
+  "FILTER": "Фильтр",
+  "ACTIONS": "Действия",
+  "STATUS": "Статус",
+  "DATE": "Дата",
+  "TIME": "Время",
+  "CREATED_AT": "Создано",
+  "UPDATED_AT": "Обновлено",
+  "DESCRIPTION": "Описание",
+  "PREVIEW": "Предпросмотр",
+  "CONFIRMATION": "Подтверждение",
+  "CANCEL": "Отмена",
+  "YES": "Да",
+  "NO": "Нет",
+  "OK": "OK",
+  "APPLY": "Применить",
+  "RESET": "Сбросить",
+  "CLOSE": "Закрыть",
+  "DELETE_CONFIRMATION": "Вы уверены, что хотите удалить это?",
+  "UNSAVED_CHANGES": "У вас есть несохраненные изменения. Вы уверены, что хотите уйти?"
+}

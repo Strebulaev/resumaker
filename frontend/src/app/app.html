@@ -1,0 +1,45 @@
+<p-menubar [model]="items">
+  @if(supabase.currentUser) {
+  <ng-template pTemplate="end">
+    <div class="user-info">
+      <div class="language-selector">
+        <button 
+          pButton 
+          icon="pi pi-globe" 
+          class="p-button-text language-trigger"
+          (click)="toggleLanguageDropdown()"
+          [pTooltip]="'LANGUAGE.SELECT' | translate"
+          tooltipPosition="left">
+        </button>
+
+        <div class="language-dropdown" [class.show]="showLanguageDropdown">
+          <div class="dropdown-header">
+            <span>{{ 'LANGUAGE.CHOOSE' | translate }}</span>
+          </div>
+          <div class="language-list">
+            @for(lang of availableLanguages; track lang.code) {
+              <div 
+                class="language-item" 
+                [class.active]="currentLang === lang.code"
+                (click)="changeLanguage(lang.code)"
+                [pTooltip]="lang.countryCode"
+                tooltipPosition="left">
+                <i [class]="lang.flag" class="flag-icon"></i>
+                <span class="language-name">{{ lang.name }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <p-avatar [image]="userAvatar" size="normal" shape="circle" styleClass="mr-2"></p-avatar>
+      <span class="mr-3">{{ userName }}</span>
+      <p-button pButton icon="pi pi-sign-out" class="p-button-rounded p-button-text" (click)="signOut()"
+        [pTooltip]="'TOOLTIP.SIGNOUT_BUTTON' | translate" tooltipPosition="left"></p-button>
+    </div>
+  </ng-template>
+  }
+</p-menubar>
+
+<router-outlet />
+<app-error-toast></app-error-toast>

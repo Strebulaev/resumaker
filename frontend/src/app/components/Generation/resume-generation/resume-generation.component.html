@@ -1,0 +1,194 @@
+<!-- Файл: C:\Users\Serezhka\Documents\CollectiveProjects\resume\frontend\src\app\resume-generation\resume-generation.component.html -->
+<div class="resume-container">
+  <h2>{{ 'RESUME_GENERATION.HEADER' | translate }}</h2>
+
+  <!-- Поле для сопроводительного письма -->
+  <div class="cover-letter-section">
+    <h3>{{ 'RESUME_GENERATION.COVER_LETTER_OPTIONAL' | translate }}</h3>
+    <div class="input-field">
+      <label>{{ 'RESUME_GENERATION.COVER_LETTER' | translate }}</label>
+      <textarea 
+        pInputTextarea 
+        [(ngModel)]="coverLetterContent" 
+        [ngModelOptions]="{standalone: true}"
+        [rows]="5" 
+        [placeholder]="'RESUME_GENERATION.COVER_LETTER_PLACEHOLDER' | translate"
+        style="width: 100%">
+      </textarea>
+    </div>
+    
+    <div class="file-upload-field">
+      <app-translated-file-input
+        [accept]="'.txt,.pdf,.doc,.docx,.rtf'"
+        (fileSelected)="onCoverLetterFileSelect($event)"
+        [showFileTypes]="true">
+      </app-translated-file-input>
+      
+      @if (coverLetterFile) {
+        <div class="file-info">
+          <span>{{ coverLetterFile.name }}</span>
+          <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
+                  (click)="removeCoverLetterFile()">
+          </button>
+        </div>
+      }
+    </div>
+    <small>{{ 'RESUME_GENERATION.COVER_LETTER_HINT' | translate }}</small>
+  </div>
+
+  <!-- Поле для вакансии -->
+  <div class="vacancy-section">
+    <h3>{{ 'VACANCY.VACANCY_INFO' | translate }}</h3>
+    <div class="input-field">
+      <label>{{ 'VACANCY.VACANCY_URL' | translate }}</label>
+      <input 
+        type="url" 
+        pInputText
+        [(ngModel)]="vacancyUrl" 
+        [ngModelOptions]="{standalone: true}"
+        [placeholder]="'VACANCY.LINK_PLACEHOLDER' | translate"
+        style="width: 100%">
+    </div>
+    
+    <div class="file-upload-field">
+      <app-translated-file-input
+        [accept]="'.txt,.pdf,.doc,.docx,.rtf,.json,.yaml,.yml'"
+        (fileSelected)="onVacancyFileSelect($event)"
+        [showFileTypes]="true">
+      </app-translated-file-input>
+      
+      @if (vacancyFile) {
+        <div class="file-info">
+          <span>{{ vacancyFile.name }}</span>
+          <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
+                  (click)="removeVacancyFile()">
+          </button>
+        </div>
+      }
+    </div>
+    <small>{{ 'VACANCY.LINK_HINT' | translate }}</small>
+  </div>
+
+  <!-- Кнопка генерации -->
+  <div class="generate-button-container">
+    <button pButton 
+            (click)="generateResume()" 
+            [disabled]="isLoading" 
+            class="generate-btn"
+            icon="pi pi-file">
+      @if (isLoading) {
+        {{ 'BUTTON.RESUME_GENERATION_IN_PROCESS' | translate }}
+      } @else {
+        {{ 'BUTTON.GENERATE_RESUME' | translate }}
+      }
+    </button>
+  </div>
+
+  <div class="ai-config-section">
+    <button pButton 
+            label="Настроить AI"
+            icon="pi pi-cog"
+            (click)="showAIConfigModal = true"
+            class="p-button-outlined">
+    </button>
+    
+    <small *ngIf="aiGuard.getCurrentProviderName()" class="current-provider">
+      Текущий провайдер: {{ aiGuard.getCurrentProviderName() }}
+    </small>
+  </div>
+
+  <!-- Действия с результатом -->
+  @if (generatedResume) {
+    <div class="result-actions">
+      <button pButton 
+              (click)="saveResume()" 
+              [disabled]="isLoading" 
+              class="save-btn"
+              icon="pi pi-save">
+        {{ 'BUTTON.SAVE' | translate }}
+      </button>
+
+      <button pButton 
+              (click)="deleteResume()" 
+              [disabled]="isLoading" 
+              class="delete-btn"
+              icon="pi pi-trash">
+        {{ 'BUTTON.DELETE' | translate }}
+      </button>
+
+      <button pButton 
+              (click)="openHHAuthModal()" 
+              [disabled]="isLoading" 
+              class="publish-btn"
+              icon="pi pi-send">
+        {{ 'BUTTON.PUBLISH_TO_HH' | translate }}
+      </button>
+    </div>
+  }
+
+  @if (error) {
+    <div class="error">{{ error }}</div>
+  }
+
+  @if (generatedResume) {
+    <div class="resume-content">
+      <markdown [data]="generatedResume"></markdown>
+    </div>
+  }
+
+  <!-- Модальное окно публикации на HH -->
+  <p-dialog 
+    header="Публикация на HH.ru" 
+    [(visible)]="hhAuthModalVisible" 
+    [modal]="true"
+    [style]="{ width: '50vw' }"
+    [closable]="!isPublishing">
+    
+    @if (isPublishing) {
+      <div class="publishing-status">
+        <p-progressSpinner></p-progressSpinner>
+        <p>{{ 'RESUME_GENERATION.PUBLISHING' | translate }}</p>
+      </div>
+    }
+    
+    @if (publishStatus === 'success' && hhResumeUrl) {
+      <div class="publish-success">
+        <p>{{ 'RESUME_GENERATION.PUBLISH_SUCCESS' | translate }}</p>
+        <a [href]="hhResumeUrl" target="_blank">{{ 'RESUME_GENERATION.VIEW_ON_HH' | translate }}</a>
+      </div>
+    }
+    
+    @if (publishStatus === 'error') {
+      <div class="publish-error">
+        <p>{{ 'RESUME_GENERATION.PUBLISH_ERROR' | translate }}</p>
+        <p>{{ 'RESUME_GENERATION.PUBLISH_ERROR_DETAIL' | translate }}</p>
+      </div>
+    }
+    
+    <ng-template pTemplate="footer">
+      @if (publishStatus === 'idle') {
+        <button pButton 
+          label="Опубликовать" 
+          (click)="publishToHH()"
+          [disabled]="isPublishing"></button>
+      }
+      <button pButton 
+        label="Закрыть" 
+        class="p-button-secondary" 
+        (click)="hhAuthModalVisible = false"
+        [disabled]="isPublishing"></button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog 
+  header="Настройка AI провайдеров" 
+  [(visible)]="showAIConfigModal" 
+  [modal]="true"
+  [style]="{ width: '70vw', maxWidth: '900px' }">
+  
+    <app-ai-config-modal 
+      (closed)="showAIConfigModal = false">
+    </app-ai-config-modal>
+  </p-dialog>
+
+</div>

@@ -1,0 +1,106 @@
+person:
+  name: Дмитрий Волков
+  gender: male
+  desiredPositions:
+    - Backend-разработчик .NET
+    - Game Designer
+  contact:
+    phone: "+79151234567"
+    email: dmitry.volkov@example.com
+    linkedin: https://linkedin.com/in/dmitry-volkov
+    github: https://github.com/dvolkov-dev
+  location:
+    country: Россия
+    city: Москва
+    relocation: true
+    remote: true
+    business_trips: false
+  languages:
+    - language: русский
+      level: C2
+    - language: английский
+      level: B2
+  skills:
+    - area: Backend-разработка
+      name: C#
+      level: 9
+      date: 2024-01-15
+    - area: Backend-разработка
+      name: .NET Core
+      level: 8
+      date: 2024-02-20
+    - area: Базы данных
+      name: SQL (PostgreSQL, MS SQL)
+      level: 8
+      date: 2023-11-10
+    - area: Game Development
+      name: Unity
+      level: 7
+      date: 2023-09-05
+    - area: Game Design
+      name: Narrative Design
+      level: 7
+      date: 2023-08-12
+    - area: DevOps
+      name: Docker
+      level: 6
+      date: 2023-05-22
+  education:
+    - institution: Московский политехнический университет
+      degree: Бакалавр
+      specialty: Программная инженерия
+      year: 2020
+    - institution: Школа игрового дизайна Scream School
+      degree: Сертификат
+      specialty: Геймдизайн
+      year: 2022
+  hobby:
+    - Разработка инди-игр
+    - Настольные RPG
+    - Игра на гитаре
+  literature:
+    - CLR via C#
+    - Искусство геймдизайна. Книга линз
+    - Чистая архитектура
+  experience:
+    - company: ООО "ТехноСофт"
+      position: Backend Developer
+      from-date: 2021-03-01
+      to-date: 2023-06-30
+      tasks:
+        - Разработка микросервисной архитектуры
+        - Оптимизация SQL-запросов
+        - Интеграция с платежными системами
+      stack:
+        - .NET Core
+        - PostgreSQL
+        - RabbitMQ
+      achievements:
+        - name: Время обработки запросов
+          initial_value: 1200
+          final_value: 450
+          uom: day
+          type: decreased
+        - name: Нагрузочная способность
+          initial_value: 500
+          final_value: 1500
+          uom: percent
+          type: increased
+    - company: Freelance
+      position: Game Designer/Developer
+      from-date: 2020-01-01
+      to-date: 2021-02-28
+      tasks:
+        - Проектирование игровых механик
+        - Создание нарративных структур
+        - Программирование на C# в Unity
+      stack:
+        - Unity
+        - C#
+        - Blender
+      achievements:
+        - name: Оценка игры на платформе
+          initial_value: 3.2
+          final_value: 4.7
+          uom: percent
+          type: increased

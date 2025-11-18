@@ -1,0 +1,209 @@
+.file-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-input-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-input-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  width: fit-content;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  i {
+    font-size: 1.1rem;
+  }
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #e9ecef;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #e3f2fd;
+    border-color: #2196f3;
+  }
+}
+
+.file-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+  flex: 1;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 500;
+  background: #ffffff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.no-file {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 14px;
+  padding: 8px;
+}
+
+.clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border: 2px solid #dc3545;
+  border-radius: 50%;
+  color: #dc3545;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  
+  &:hover {
+    background: #dc3545;
+    color: white;
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.file-types-hint {
+  margin-top: 4px;
+  
+  small {
+    color: #6c757d;
+    font-size: 12px;
+    font-style: italic;
+  }
+}
+
+// Анимация появления файла
+@keyframes fileAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.file-info {
+  animation: fileAppear 0.3s ease-out;
+}
+
+// Адаптивность
+@media (max-width: 768px) {
+  .file-input-label {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .file-name {
+    text-align: center;
+  }
+  
+  .clear-button {
+    align-self: center;
+  }
+}
+
+// Состояния для разных типов файлов
+.file-info {
+  &[data-file-type="pdf"] {
+    border-left: 4px solid #e74c3c;
+    background: linear-gradient(135deg, #ffeaea 0%, #fff6f6 100%);
+  }
+  
+  &[data-file-type="image"] {
+    border-left: 4px solid #3498db;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f5fbff 100%);
+  }
+  
+  &[data-file-type="document"] {
+    border-left: 4px solid #2ecc71;
+    background: linear-gradient(135deg, #e8f5e8 0%, #f7fdf7 100%);
+  }
+  
+  &[data-file-type="archive"] {
+    border-left: 4px solid #f39c12;
+    background: linear-gradient(135deg, #fff3cd 0%, #fffdf5 100%);
+  }
+}
+
+// Эффект перетаскивания
+.file-input-label.drag-over {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+// Иконки для разных состояний
+.file-input-label::before {
+  content: '📎';
+  font-size: 1.2em;
+}
+
+.file-input-label:hover::before {
+  content: '🚀';
+}
+
+.file-input-label.drag-over::before {
+  content: '⬇️';
+  animation: bounce 0.5s infinite alternate;
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-3px); }
+}

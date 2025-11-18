@@ -1,0 +1,13 @@
+.angular/cache
+.vercel
+.angular
+.vscode
+.env
+files.txt
+together.py
+VF.py
+frontend/node_modules
+frontend/api-client
+frontend/.vercel
+frontend/.angular
+frontend/dist

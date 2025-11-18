@@ -1,0 +1,665 @@
+{
+  "MAIN_MENU": {
+    "PROFILE": {
+      "name": "Profile",
+      "VIEW": "View profile",
+      "EDIT": "Edit profile",
+      "GENERATE_RESUME": "Generate Resume",
+      "GENERATE_COVER_LETTER": "Cover Letter"
+    },
+    "RESUME": {
+      "name": "Resume",
+      "GENERATE_RESUME": "Generate resume"
+    },
+    "ABOUT": {
+      "name": "About"
+    },
+    "JOB_PLATFORMS": {
+      "name": "Job Platforms"
+    },
+    "INTERVIEW": {
+      "name": "Interview Preparation"
+    },
+    "VACANCY_SEARCH": {
+      "name": "Vacancy search",
+      "TITLE": "Vacancy Search",
+      "SUBTITLE": "Find the perfect job across multiple platforms"
+    }
+  },
+  "AUTH": {
+    "LOGIN": {
+      "HEADER": "Please log in",
+      "VIA_GOOGLE": "Login via Google"
+    },
+    "GO_TO_LOGIN": "Go to login page"
+  },
+  "ABOUT": {
+    "TITLE": "About Rezulution",
+    "SUBTITLE": "Modern platform for creating professional resumes and cover letters",
+    "FEATURES_TITLE": "Our Features",
+    "FEATURES": {
+      "AI_RESUME": "AI Resume Generation",
+      "AI_RESUME_DESC": "Automatic creation of professional resumes using artificial intelligence",
+      "COVER_LETTERS": "Cover Letters",
+      "COVER_LETTERS_DESC": "Personalized letters for each vacancy considering employer requirements",
+      "HH_INTEGRATION": "HH.ru Integration",
+      "HH_INTEGRATION_DESC": "Direct resume publishing and application sending on popular platform",
+      "EXPORT": "Export Formats",
+      "EXPORT_DESC": "Download in PDF, DOCX and other popular formats"
+    },
+    "CTA_TITLE": "Get Started Now",
+    "CTA_DESCRIPTION": "Create a professional resume in minutes and start receiving job offers"
+  },
+  "PLATFORMS": {
+    "HH": "HH.ru",
+    "SUPERJOB": "SuperJob",
+    "HABR": "Habr Career",
+    "ALL": "All platforms"
+  },
+  "PROFILE": {
+    "INFO": "Information",
+    "RESUMES": "Resumes",
+    "COMPLETION": "Profile completion",
+    "PERSONAL_INFO": {
+      "TITLE": "Personal Information",
+      "NAME": "Full name",
+      "GENDER": "Gender",
+      "GENDER_OPTIONS": {
+        "MALE": "Male",
+        "FEMALE": "Female",
+        "UNKNOWN": "Prefer not to say"
+      },
+      "DESIRED_POSITIONS": "Desired positions",
+      "ADD_POSITION": "Add position",
+      "VIEW": "View profile",
+      "EDIT": "Edit profile",
+      "NOT_SPECIFIED": "Not specified"
+    },
+    "CONTACT_INFO": {
+      "TITLE": "Contact Information",
+      "PHONE": "Phone",
+      "EMAIL": "Email",
+      "LINKEDIN": "LinkedIn",
+      "GITHUB": "GitHub",
+      "PHONE_VALIDATION": "Phone must be in format +79123456789",
+      "PHONE_PLACEHOLDER": "+79123456789",
+      "NOT_SPECIFIED": "Not specified"
+    },
+    "LOCATION": {
+      "TITLE": "Location",
+      "COUNTRY": "Country",
+      "CITY": "City",
+      "RELOCATION": "Ready to relocate",
+      "REMOTE": "Ready for remote work",
+      "BUSINESS_TRIPS": "Ready for business trips",
+      "RELOCATION_DESC": "Willingness to move to another city/country",
+      "REMOTE_DESC": "Possibility to work remotely",
+      "BUSINESS_TRIPS_DESC": "Willingness to travel",
+      "COUNTRY_PLACEHOLDER": "e.g., Russia",
+      "CITY_PLACEHOLDER": "e.g., Moscow",
+      "NOT_SPECIFIED": "Not specified"
+    },
+    "LANGUAGES": {
+      "TITLE": "Languages",
+      "LANGUAGE": "Language",
+      "LEVEL": "Proficiency level",
+      "ADD_LANGUAGE": "Add language",
+      "LEVELS": {
+        "A1": "Beginner",
+        "A2": "Elementary",
+        "B1": "Intermediate",
+        "B2": "Upper-Intermediate",
+        "C1": "Advanced",
+        "C2": "Proficiency"
+      },
+      "LANGUAGE_PLACEHOLDER": "e.g., English",
+      "LEVEL_PLACEHOLDER": "Select level"
+    },
+    "SKILLS": {
+      "TITLE": "Skills",
+      "AREA": "Area",
+      "SKILL": "Skill",
+      "LEVEL": "Level (1-10)",
+      "DATE": "Last used date",
+      "ADD_SKILL": "Add skill",
+      "AREA_PLACEHOLDER": "e.g., Programming",
+      "SKILL_PLACEHOLDER": "e.g., JavaScript",
+      "DATE_PLACEHOLDER": "YYYY-MM-DD"
+    },
+    "EDUCATION": {
+      "TITLE": "Education",
+      "INSTITUTION": "Institution",
+      "DEGREE": "Degree",
+      "SPECIALTY": "Specialty",
+      "YEAR": "Graduation year",
+      "ADD_EDUCATION": "Add education",
+      "INSTITUTION_PLACEHOLDER": "e.g., Moscow State University",
+      "DEGREE_PLACEHOLDER": "e.g., Bachelor",
+      "SPECIALTY_PLACEHOLDER": "e.g., Computer Science",
+      "YEAR_PLACEHOLDER": "e.g., 2020"
+    },
+    "EXPERIENCE": {
+      "TITLE": "Work Experience",
+      "COMPANY": "Company",
+      "POSITION": "Position",
+      "START_DATE": "Start date",
+      "END_DATE": "End date",
+      "CURRENT": "Currently working",
+      "TASKS": "Responsibilities",
+      "ADD_TASK": "Add responsibility",
+      "STACK": "Technologies used",
+      "ADD_TECH": "Add technology",
+      "ADD_EXPERIENCE": "Add experience",
+      "ACHIEVEMENTS": {
+        "TITLE": "Achievements",
+        "NAME": "Achievement name",
+        "INITIAL": "Initial value",
+        "FINAL": "Final value",
+        "UNIT": "Unit of measure",
+        "TYPE": "Change type",
+        "ADD_ACHIEVEMENT": "Add achievement",
+        "NAME_PLACEHOLDER": "Achievement description",
+        "UNIT_PLACEHOLDER": "e.g., %, days, RUB",
+        "TYPE_PLACEHOLDER": "e.g., increase, decrease"
+      },
+      "COMPANY_PLACEHOLDER": "Company name",
+      "POSITION_PLACEHOLDER": "Position",
+      "TASK_PLACEHOLDER": "Responsibility description",
+      "TECH_PLACEHOLDER": "Technology name"
+    },
+    "HOBBY": "Hobbies",
+    "ADD_HOBBY": "Add hobby",
+    "LITERATURE": "Favorite literature",
+    "ADD_LITERATURE": "Add literature",
+    "HOBBY_PLACEHOLDER": "e.g., Photography",
+    "LITERATURE_PLACEHOLDER": "Book or author name",
+    "ACTIONS": {
+      "SAVE": "Save profile",
+      "SAVE_SUCCESS": "Profile saved successfully",
+      "SAVE_ERROR": "Error saving profile",
+      "EXPORT_YAML": "Export to YAML",
+      "EXPORT_TXT": "Export to TXT",
+      "IMPORT_YAML": "Import from YAML",
+      "RESET": "Reset changes",
+      "RESET_CONFIRM": "Are you sure you want to reset all changes?",
+      "DOWNLOAD": "Download",
+      "CLOSE": "Close"
+    },
+    "VALIDATION": {
+      "REQUIRED": "This field is required",
+      "INVALID_EMAIL": "Please enter a valid email",
+      "INVALID_PHONE": "Phone must be in format +79123456789",
+      "INVALID_DATE": "Please enter a valid date (YYYY-MM-DD)",
+      "FORM_ERROR": "Please fix validation errors",
+      "INVALID_URL": "Please enter a valid URL"
+    },
+    "PREVIEW_TITLE": "Preview",
+    "PROFILE_VIEW": {
+      "LOGIN_PROMPT": "Please login to view your profile"
+    },
+    "COMPLETE": "Complete",
+    "IN_PROGRESS": "In progress"
+  },
+  "FILE_UPLOADED": "File uploaded",
+  "GENERATED_AT": "Generated at",
+  "BUTTON": {
+    "SAVE": "Save",
+    "DELETE": "Delete",
+    "LOGIN": "Login",
+    "LOGOUT": "Logout",
+    "PROFILE": "Go to profile",
+    "RESUME_GENERATION_IN_PROCESS": "Resume generation in process...",
+    "GENERATE_RESUME": "Generate resume",
+    "PUBLISH_TO_HH": "Publish to HH.ru",
+    "GENERATE_COVER_LETTER": "Generate letter",
+    "SETTINGS": "Settings templates",
+    "SEND_TO_HH": "Send to HH.ru",
+    "SAVE_TEMPLATE": "Save template",
+    "SAVE_CHANGES": "Save changes",
+    "EDIT": "Edit",
+    "CANCEL": "Cancel",
+    "CONFIRM": "Confirm",
+    "UPLOAD": "Upload",
+    "DOWNLOAD": "Download",
+    "COPY": "Copy",
+    "SEND": "Send",
+    "BACK": "Back",
+    "NEXT": "Next",
+    "BACK_HOME": "Back to home",
+    "RESET": "Reset",
+    "GENERATE": "Generate",
+    "REMOVE": "Remove"
+  },
+  "TOOLTIP": {
+    "SIGNOUT_BUTTON": "Logout",
+    "EDIT_PROFILE": "Edit profile",
+    "VIEW_PROFILE": "View profile",
+    "GENERATE_RESUME": "Generate new resume",
+    "SAVE_RESUME": "Save resume",
+    "DELETE_RESUME": "Delete resume"
+  },
+  "HOME": {
+    "WELCOME": "Welcome to Rezulution!",
+    "SUBTITLE": "Create professional resumes in minutes",
+    "FEATURES": {
+      "AI": "AI Generation",
+      "EXPORT": "Multiple formats",
+      "INTEGRATION": "HH.ru Integration"
+    },
+    "GET_STARTED": "Get Started",
+    "WELCOME_BACK": "Welcome back!"
+  },
+  "RESUME_GENERATION": {
+    "HEADER": "Resume Generation",
+    "SUBTITLE": "Create a professional resume based on your profile",
+    "COVER_LETTER_SECTION": "Cover letter",
+    "COVER_LETTER_PLACEHOLDER": "Enter cover letter text or leave blank for automatic context generation",
+    "USE_COVER_LETTER": "Use cover letter",
+    "PUBLISH_SUCCESS": "Resume successfully published on HH.ru",
+    "PUBLISH_ERROR": "Error publishing resume",
+    "GENERATING": "Generating resume...",
+    "SAVE_SUCCESS": "Resume saved",
+    "DELETE_SUCCESS": "Resume deleted",
+    "ERROR": "Resume generation error",
+    "COVER_LETTER_OPTIONAL": "Cover Letter (Optional)",
+    "COVER_LETTER_HINT": "Add a cover letter to provide additional context for resume generation",
+    "VACANCY_URL": "Vacancy URL",
+    "VACANCY_URL_HINT": "Paste vacancy link to tailor resume to specific job",
+    "PUBLISHING": "Publishing to HH.ru...",
+    "VIEW_ON_HH": "View on HH.ru",
+    "COVER_LETTER": "Cover Letter",
+    "VACANCY_INFO": "Vacancy Information", 
+    "UPLOAD_COVER_LETTER": "Upload Cover Letter",
+    "UPLOAD_VACANCY": "Upload Vacancy Description",
+    "REMOVE_FILE": "Remove File"
+  },
+  "JOB_PLATFORMS": {
+    "TITLE": "Job Platforms Integration",
+    "CONNECT_HH": "Connect HH.ru",
+    "CONNECT_SUPERJOB": "Connect SuperJob",
+    "CONNECT_HABR": "Connect Habr Career",
+    "CONNECTING": "Connecting to HH.ru...",
+    "SUCCESS": "Successfully connected to HH.ru!",
+    "ERROR": "Error connecting to HH.ru",
+    "DISCONNECT": "Disconnect",
+    "STATUS_CONNECTED": "✓ Connected",
+    "STATUS_DISCONNECTED": "Not connected",
+    "PLATFORM_INFO": "Connect your HH.ru account for:",
+    "BENEFITS": {
+      "IMPORT": "Resume import",
+      "SEARCH": "Vacancy search",
+      "APPLY": "Application sending",
+      "PUBLISH": "Resume publishing"
+    },
+    "HH": {
+      "DESCRIPTION": "The largest Russian platform for job search"
+    },
+    "SUPERJOB": {
+      "DESCRIPTION": "One of the leading job search platforms in Russia"
+    },
+    "HABR": {
+      "DESCRIPTION": "IT platform for job search and career development"
+    }
+  },
+  "COVER_LETTER": {
+    "TITLE": "Cover Letter Generation",
+    "SELECT_RESUME": "Select Resume from HH.ru",
+    "SELECT_RESUME_PLACEHOLDER": "Select resume...",
+    "RESUME_ID": "Resume ID in the system",
+    "UPLOAD_RESUME": "Upload resume",
+    "RESUME_ID_PLACEHOLDER": "Enter your resume ID",
+    "VACANCY_ID": "Vacancy ID on HH.ru",
+    "VACANCY_ID_PLACEHOLDER": "For example: 12345678",
+    "VACANCY_URL": "Vacancy URL",
+    "VACANCY_URL_HINT": "Paste vacancy link to get detailed information",
+    "STYLE": "Letter style",
+    "STYLE_PLACEHOLDER": "Select style",
+    "TONE": "Letter tone",
+    "TONE_PLACEHOLDER": "Select tone",
+    "GENERATE": "Generate letter",
+    "GENERATING": "Generating letter...",
+    "GENERATE_SUCCESS": "Letter generated successfully",
+    "GENERATE_ERROR": "Letter generation error",
+    "SEND_SUCCESS": "Letter sent to HH.ru!",
+    "SEND_ERROR": "Error sending to HH.ru",
+    "COPY_SUCCESS": "Text copied to clipboard!",
+    "COPY_ERROR": "Copy error",
+    "SAVE_TEMPLATE_SUCCESS": "Template saved!",
+    "SAVE_TEMPLATE_ERROR": "Error saving template",
+    "GENERATED_LETTER": "Generated letter",
+    "RESUME_ID_HINT": "Leave blank if uploading a resume file",
+    "EDIT_DIALOG_TITLE": "Editing a letter",
+    "STYLES": {
+      "FORMAL": "Formal",
+      "CREATIVE": "Creative", 
+      "TECHNICAL": "Technical"
+    },
+    "TONES": {
+      "PROFESSIONAL": "Professional",
+      "ENTHUSIASTIC": "Enthusiastic",
+      "CONSERVATIVE": "Conservative"
+    },
+    "USE_COVER_LETTER": "Use cover letter",
+    "FILE_TYPES": "Supported formats: TXT, PDF, DOC, DOCX, RTF",
+    "RESUME_OPTION": {
+      "TITLE": "Resume title",
+      "SKILLS": "Key skills"
+    }
+  },
+  "INTERVIEW_PREP": {
+    "TITLE": "Interview Preparation",
+    "RESUME_SECTION": "Resume",
+    "VACANCY_SECTION": "Vacancy description",
+    "COMPANY_SECTION": "Company information",
+    "PERSONAL_CONTEXT_SECTION": "Personal context and goals",
+    "COVER_LETTER_SECTION": "Cover letter (optional)",
+    "INTERNAL_CONTEXT_SECTION": "Internal context (optional)",
+    "UPLOAD_FILE": "Upload file",
+    "OR_TEXT": "Or paste text",
+    "GENERATE_PLAN": "Generate preparation plan",
+    "GENERATING": "Generating preparation plan...",
+    "PLAN_TITLE": "Interview preparation plan",
+    "DOWNLOAD_PLAN": "Download plan",
+    "COPY_PLAN": "Copy plan",
+    "FILE_TYPES_ALL": "Supported formats: TXT, PDF, DOC, DOCX, RTF, MD, YAML, JSON",
+    "SUCCESS": "File processed successfully",
+    "ERROR": "File processing error",
+    "VACANCY_URL": "Vacancy URL",
+    "VACANCY_URL_HINT": "Paste vacancy link to get detailed information"
+  },
+  "RESUME": {
+    "MANAGEMENT_TITLE": "Resume Management",
+    "MANAGEMENT_SUBTITLE": "Your resumes on job platforms",
+    "NO_HH_RESUMES": "No resumes found on HH.ru",
+    "NO_SUPERJOB_RESUMES": "No resumes found on SuperJob",
+    "CONNECT_HH_HINT": "Connect your HH.ru account to see your resumes",
+    "CONNECT_SUPERJOB_HINT": "Connect your SuperJob account to see your resumes",
+    "DELETE_CONFIRM": "Are you sure you want to delete this resume?",
+    "DELETE_SUCCESS": "Resume deleted successfully",
+    "OPEN_IN_PLATFORM": "Open on platform",
+    "STATUS": "Status",
+    "CREATED": "Created",
+    "UPDATED": "Updated",
+    "VIEWS": "Views",
+    "SKILLS": "Skills",
+    "DELETE": "Delete",
+    "EXPERIENCE": "Experience",
+    "PLATFORM": "Platform"
+  },
+  "ERROR": {
+    "LOAD_RESUMES": "Error loading resumes",
+    "DELETE_RESUME": "Error deleting resume",
+    "GENERIC": "An error occurred",
+    "NETWORK": "Network error",
+    "VALIDATION": "Validation error",
+    "UNAUTHORIZED": "Authorization required",
+    "NOT_FOUND": "Not found",
+    "INVALID_URL": "Invalid URL format",
+    "NO_TOKEN": "Authorization required",
+    "API_ERROR": "API error",
+    "SERVER": "Server error",
+    "PAGE_NOT_EXIST": "The page you are looking for does not exist."
+  },
+  "SUCCESS": {
+    "OPERATION_COMPLETED": "Operation completed successfully",
+    "SAVED": "Saved successfully",
+    "UPDATED": "Updated successfully",
+    "DOWNLOADED": "Downloaded successfully",
+    "EXPORTED": "Exported successfully",
+    "DELETED": "Deleted successfully"
+  },
+  "FILE": {
+    "UPLOAD": "Upload file",
+    "SELECT": "Select file",
+    "TYPES": "Supported formats: TXT, PDF, DOC, DOCX, RTF",
+    "TYPES_ALL": "Supported formats: TXT, PDF, DOC, DOCX, RTF, MD, YAML, JSON",
+    "NO_FILE_CHOSEN": "No file chosen",
+    "CLEAR": "Clear file",
+    "SUPPORTED_FORMATS": "Supported formats",
+    "ALL_FORMATS": "All formats",
+    "UPLOAD_SUCCESS": "File uploaded successfully",
+    "UPLOAD_ERROR": "File upload error",
+    "REMOVE_SUCCESS": "File removed"
+  },
+  "COMPANY": {
+    "INFO": "Company information",
+    "NAME": "Company name"
+  },
+  "SKILLS": {
+    "KEY": "Key skills",
+    "REQUIREMENTS": "Requirements",
+    "RESPONSIBILITIES": "Responsibilities"
+  },
+  "VACANCY": {
+    "CURRENCY": {
+      "RUR": "Rubles (RUR)",
+      "USD": "Dollars (USD)", 
+      "EUR": "Euros (EUR)"
+    },
+    "FORMATS": {
+      "TXT": "Text (TXT)",
+      "JSON": "JSON",
+      "YAML": "YAML"
+    },
+    "TITLE": "Vacancy Search",
+    "SUBTITLE": "Find your perfect job across multiple platforms",
+    "FILTERS": "Filters",
+    "SEARCH": "Vacancy Search",
+    "DOWNLOAD": "Download Vacancy",
+    "BY_URL": "Download by URL",
+    "LINK_PLACEHOLDER": "Vacancy link",
+    "LINK_HINT": "Supported formats: https://hh.ru/vacancy/12345678",
+    "LOAD": "Load Vacancy",
+    "EXPORT": "Export Vacancy",
+    "INCLUDE_SALARY": "Include salary",
+    "INCLUDE_CONTACTS": "Include contacts",
+    "INCLUDE_ADDRESS": "Include address",
+    "INCLUDE_DESCRIPTION": "Include description",
+    "INCLUDE_REQUIREMENTS": "Include requirements",
+    "INCLUDE_RESPONSIBILITIES": "Include responsibilities",
+    "FORMAT": "Format",
+    "LINK": "Link",
+    "DESCRIPTION_GROUP": "Description",
+    "METADATA": "Metadata",
+    "EMPLOYER_INFO": "Employer info",
+    "SNIPPET": "Snippet",
+    "COUNTERS": "Counters",
+    "VACANCY_INFO": "Vacancy Information",
+    "UPLOAD_VACANCY_DESC": "Upload vacancy description file",
+    "SKILLS": "Skills",
+    "MORE": "more",
+    "VIEW_ORIGINAL": "View original",
+    "PLATFORM_HH": "https://hh.ru/vacancy/id",
+    "PLATFORM_SUPERJOB": "https://www.superjob.ru/vakansii/nazvanie-vacancy-id.html",
+    "QUICK_DOWNLOAD": "Quick Download by URL",
+    "LINK_SUPPORTED": "Supported platforms",
+    "VACANCY_URL": "Vacancy URL"
+  },
+  "SEARCH": {
+    "ALL_PLATFORMS": "Search on all platforms",
+    "PLATFORM_SELECT": "Select platforms to search",
+    "KEYWORDS": "Keywords",
+    "KEYWORDS_PLACEHOLDER": "Position or skills",
+    "SALARY": "Salary",
+    "SALARY_PLACEHOLDER": "Amount",
+    "REGION": "Region (ID)",
+    "REGION_PLACEHOLDER": "Enter region ID",
+    "REGION_HINT": "1 - Moscow, 2 - St. Petersburg, 3 - Yekaterinburg, 4 - Novosibirsk",
+    "EXPERIENCE": "Experience",
+    "EXPERIENCE_PLACEHOLDER": "Select experience",
+    "EMPLOYMENT": "Employment type",
+    "EMPLOYMENT_PLACEHOLDER": "Select employment type",
+    "SCHEDULE": "Schedule",
+    "SCHEDULE_PLACEHOLDER": "Select schedule",
+    "PLATFORMS": "Platforms",
+    "PLATFORMS_PLACEHOLDER": "Select platforms",
+    "PROFESSIONAL_ROLE_PLACEHOLDER": "Role ID",
+    "SORT_PLACEHOLDER": "Select sorting",
+    "RESULTS_PLACEHOLDER": "20",
+    "PAGE_PLACEHOLDER": "0",
+    "SALARY_FROM": "Salary from",
+    "CURRENCY": "Currency",
+    "WITH_SALARY_ONLY": "With salary only",
+    "PROFESSIONAL_ROLE": "Professional role (ID)",
+    "SORT_BY": "Sort by",
+    "RESULTS_PER_PAGE": "Results per page",
+    "PAGE": "Page",
+    "SEARCH_BUTTON": "Search",
+    "ONLY_WITH_SALARY": "Only with salary",
+    "REMOTE": "Remote work",
+    "RESET": "Reset"
+  },
+  "EXPORT": {
+    "SETTINGS": "Export Settings",
+    "BASIC_INFO": "Basic Information",
+    "ADDITIONAL": "Additional",
+    "RESET": "Reset Settings",
+    "METADATA": "Include metadata",
+    "EMPLOYER_INFO": "Include employer info",
+    "COUNTERS": "Include counters",
+    "VACANCY_INFO": "Vacancy Information",
+    "TITLE": "Title",
+    "COMPANY": "Company",
+    "PLATFORM": "Platform",
+    "SALARY": "Salary",
+    "FROM": "from",
+    "TO": "to",
+    "PUBLISHED": "Published"
+  },
+  "RESULTS": {
+    "VACANCIES": "vacancies",
+    "FOUND": "Found",
+    "NO_RESULTS": "No results found",
+    "NO_RESULTS_HINT": "Try changing search criteria or reset filters",
+    "SORT_BY": "Sort by",
+    "SORT_PLACEHOLDER": "Select sorting"
+  },
+  "DETAILS": {
+    "VIEW": "View Details",
+    "ON_HH": "On HH.ru",
+    "VIEW_SOURCE": "View vacancy",
+    "COMPANY": "Company",
+    "SALARY": "Salary",
+    "LOCATION": "Location",
+    "DESCRIPTION": "Description",
+    "REQUIREMENTS": "Requirements",
+    "ORIGINAL_LINK": "Original link"
+  },
+  "SALARY": {
+    "NOT_SPECIFIED": "Not specified",
+    "FROM": "from",
+    "TO": "to"
+  },
+  "PAGINATION": {
+    "PAGE": "Page",
+    "OF": "of",
+    "PREVIOUS": "Previous",
+    "NEXT": "Next"
+  },
+  "MESSAGE": {
+    "VACANCY_LOADED": "Vacancy loaded successfully",
+    "LOAD_ERROR": "Error loading vacancy",
+    "SEARCH_ERROR": "Search error",
+    "SEARCH_ERROR_DETAIL": "Try again later or check your internet connection",
+    "EXPORT_SUCCESS": "Successfully exported"
+  },
+  "EXPERIENCE": {
+    "NO_EXPERIENCE": "No experience",
+    "LESS_1_YEAR": "Less than 1 year",
+    "1_3_YEARS": "1-3 years",
+    "3_6_YEARS": "3-6 years",
+    "MORE_6_YEARS": "More than 6 years"
+  },
+  "EMPLOYMENT": {
+    "FULL": "Full employment",
+    "PART": "Part-time",
+    "PROJECT": "Project work",
+    "VOLUNTEER": "Volunteering",
+    "INTERNSHIP": "Internship"
+  },
+  "SCHEDULE": {
+    "FULL_DAY": "Full day",
+    "SHIFT": "Shift work",
+    "FLEXIBLE": "Flexible schedule",
+    "REMOTE": "Remote work",
+    "FLY_IN_FLY_OUT": "Rotational work"
+  },
+  "PLATFORM": {
+    "HH": "HH.ru",
+    "CONNECT_HH": "Connect to HH",
+    "SUPERJOB": "SuperJob",
+    "CONNECT_SUPERJOB": "Connect to SuperJob",
+    "UNKNOWN": "Unknown platform"
+  },
+  "EXAMPLE": {
+    "SUPPORTED": "Supported link formats"
+  },
+  "LOADING": {
+    "VACANCY": "Loading vacancy...",
+    "PROFILE": "Loading profile...",
+    "SEARCH": "Searching...",
+    "DETAILS": "Loading details..."
+  },
+  "VIEW": {
+    "EMPTY": "Profile not filled out"
+  },
+  "FILTERS": {
+    "EXPERIENCE": {
+      "NO_EXPERIENCE": "No experience",
+      "BETWEEN_1_AND_3": "From 1 to 3 years",
+      "BETWEEN_3_AND_6": "From 3 to 6 years", 
+      "MORE_THAN_6": "More than 6 years"
+    },
+    "EMPLOYMENT": {
+      "FULL": "Full employment",
+      "PART": "Part-time employment",
+      "PROJECT": "Project work",
+      "VOLUNTEER": "Volunteering",
+      "PROBATION": "Internship"
+    },
+    "SCHEDULE": {
+      "FULL_DAY": "Full day",
+      "SHIFT": "Shift schedule",
+      "FLEXIBLE": "Flexible schedule",
+      "REMOTE": "Remote work",
+      "FLY_IN_FLY_OUT": "Rotational method"
+    },
+    "ORDER_BY": {
+      "RELEVANCE": "By relevance",
+      "SALARY_DESC": "By descending salary",
+      "SALARY_ASC": "By ascending salary",
+      "PUBLICATION_TIME": "By publication date",
+      "DISTANCE": "By distance"
+    }
+  },
+  "LANGUAGE": {
+    "SELECT": "Select language",
+    "CHOOSE": "Choose language"
+  },
+  "SORT": {
+    "RELEVANCE": "Relevance",
+    "DATE_DESC": "Date (newest first)",
+    "DATE_ASC": "Date (oldest first)",
+    "SALARY_DESC": "Salary (high to low)",
+    "SALARY_ASC": "Salary (low to high)"
+  },
+  "FILTER": "Filter",
+  "ACTIONS": "Actions",
+  "STATUS": "Status",
+  "DATE": "Date",
+  "TIME": "Time",
+  "CREATED_AT": "Created at",
+  "UPDATED_AT": "Updated at",
+  "DESCRIPTION": "Description",
+  "PREVIEW": "Preview",
+  "CONFIRMATION": "Confirmation",
+  "CANCEL": "Cancel",
+  "YES": "Yes",
+  "NO": "No",
+  "OK": "OK",
+  "APPLY": "Apply",
+  "RESET": "Reset",
+  "CLOSE": "Close",
+  "DELETE_CONFIRMATION": "Are you sure you want to delete this?",
+  "UNSAVED_CHANGES": "You have unsaved changes. Are you sure you want to leave?"
+}

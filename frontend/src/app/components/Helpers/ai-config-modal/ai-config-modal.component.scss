@@ -1,0 +1,111 @@
+.ai-config-modal {
+    padding: 1rem;
+    max-width: 900px;
+    
+    h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+  }
+  
+  .providers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .provider-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    
+    &.configured {
+      border-color: #4caf50;
+      background-color: #f8fff8;
+    }
+    
+    &.current {
+      border-color: #2196f3;
+      background-color: #f3f8ff;
+      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    }
+  }
+  
+  .provider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    
+    h3 {
+      margin: 0;
+      color: #333;
+    }
+  }
+  
+  .provider-status {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    
+    &.configured {
+      background-color: #4caf50;
+      color: white;
+    }
+    
+    &.current {
+      background-color: #2196f3;
+      color: white;
+    }
+  }
+  
+  .config-field {
+    margin-bottom: 1rem;
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #555;
+    }
+    
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      
+      &:focus {
+        outline: none;
+        border-color: #2196f3;
+      }
+    }
+  }
+  
+  .config-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .provider-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1rem;
+  }

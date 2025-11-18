@@ -1,0 +1,110 @@
+<div class="job-platforms-container">
+  <h2>{{ 'JOB_PLATFORMS.TITLE' | translate }}</h2>
+  
+  <div class="platforms-grid">
+    <!-- HH.ru карточка -->
+    <div class="platform-card hh-card">
+      <div class="platform-header">
+        <div class="logo-container">
+          <img src="hh-logo.png" alt="hh.ru" class="hh-logo">
+        </div>
+        <div class="connection-status" [class.connected]="isHHConnected">
+          {{ isHHConnected ? ('JOB_PLATFORMS.STATUS_CONNECTED' | translate) : ('JOB_PLATFORMS.STATUS_DISCONNECTED' | translate) }}
+        </div>
+      </div>
+      
+      <div class="platform-content">
+        <div class="platform-description">
+          <p>{{ 'JOB_PLATFORMS.HH.DESCRIPTION' | translate }}</p>
+        </div>
+
+        <div class="platform-actions">
+          <button 
+            (click)="isHHConnected ? disconnectFromHH() : connectToHH()" 
+            [disabled]="isLoading"
+            [class]="isHHConnected ? 'disconnect-button' : 'connect-button'">
+            {{ isLoading ? ('JOB_PLATFORMS.CONNECTING' | translate) : 
+               (isHHConnected ? ('JOB_PLATFORMS.DISCONNECT' | translate) : ('JOB_PLATFORMS.CONNECT_HH' | translate)) }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SuperJob карточка -->
+    <div class="platform-card superjob-card">
+      <div class="platform-header">
+        <div class="logo-container">
+          <img src="superjob-logo.png" alt="superjob.ru" class="superjob-logo">
+        </div>
+        <div class="connection-status" [class.connected]="isSuperJobConnected">
+          {{ isSuperJobConnected ? ('JOB_PLATFORMS.STATUS_CONNECTED' | translate) : ('JOB_PLATFORMS.STATUS_DISCONNECTED' | translate) }}
+        </div>
+      </div>
+      
+      <div class="platform-content">
+        <div class="platform-description">
+          <p>{{ 'JOB_PLATFORMS.SUPERJOB.DESCRIPTION' | translate }}</p>
+        </div>
+
+        <div class="platform-actions">
+          <button 
+            (click)="isSuperJobConnected ? disconnectFromSuperJob() : connectToSuperJob()" 
+            [disabled]="isLoading"
+            [class]="isSuperJobConnected ? 'disconnect-button' : 'connect-button'">
+            {{ isLoading ? ('JOB_PLATFORMS.CONNECTING' | translate) : 
+               (isSuperJobConnected ? ('JOB_PLATFORMS.DISCONNECT' | translate) : ('JOB_PLATFORMS.CONNECT_SUPERJOB' | translate)) }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Habr Career карточка -->
+    <!-- <div class="platform-card habr-card">
+      <div class="platform-header">
+        <div class="logo-container">
+          <img src="habr-logo.png" alt="career.habr.com" class="habr-logo">
+        </div>
+        <div class="connection-status" [class.connected]="isHabrConnected">
+          {{ isHabrConnected ? ('JOB_PLATFORMS.STATUS_CONNECTED' | translate) : ('JOB_PLATFORMS.STATUS_DISCONNECTED' | translate) }}
+        </div>
+      </div>
+      
+      <div class="platform-content">
+        <div class="platform-description">
+          <p>{{ 'JOB_PLATFORMS.HABR.DESCRIPTION' | translate }}</p>
+        </div>
+
+        <div class="platform-actions">
+          <button 
+            (click)="isHabrConnected ? disconnectFromHabr() : connectToHabr()" 
+            [disabled]="isLoading"
+            [class]="isHabrConnected ? 'disconnect-button' : 'connect-button'">
+            {{ isLoading ? ('JOB_PLATFORMS.CONNECTING' | translate) : 
+               (isHabrConnected ? ('JOB_PLATFORMS.DISCONNECT' | translate) : ('JOB_PLATFORMS.CONNECT_HABR' | translate)) }}
+          </button>
+        </div>
+      </div>
+    </div> -->
+  </div>
+  
+  @if (successMessage) {
+    <div class="message success">
+      {{ successMessage }}
+      <button class="close-button" (click)="closeMessage()">×</button>
+    </div>
+  }
+  
+  @if (errorMessage) {
+    <div class="message error">
+      {{ errorMessage }}
+      <button class="close-button" (click)="closeMessage()">×</button>
+    </div>
+  }
+
+  @if (isLoading) {
+    <div class="loading-overlay">
+      <p-progressSpinner></p-progressSpinner>
+      <p>{{ 'LOADING' | translate }}</p>
+    </div>
+  }
+</div>

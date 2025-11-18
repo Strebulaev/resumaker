@@ -1,0 +1,536 @@
+<div class="profile-edit-container">
+    @if (loading) {
+    <p-progressBar mode="indeterminate"></p-progressBar>
+    }
+
+    <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <!-- Progress Bar -->
+        <div class="completion-bar">
+            <label>{{ 'PROFILE.COMPLETION' | translate }}</label>
+            
+            <p-progressBar [value]="getCompletionPercentage()" 
+                           [showValue]="false">
+            </p-progressBar>
+            
+            <div class="completion-percentage">
+              <span class="percentage-text">{{ getCompletionPercentage() }}%</span>
+              
+              <span class="status-text" 
+                    [class.complete]="getCompletionPercentage() === 100">
+                {{ getCompletionPercentage() === 100 ? 
+                   ('PROFILE.COMPLETE' | translate) : 
+                   ('PROFILE.IN_PROGRESS' | translate) }}
+              </span>
+            </div>
+          </div>
+        <!-- Personal Information Section -->
+        <p-panel [header]="'PROFILE.PERSONAL_INFO.TITLE' | translate" [toggleable]="true">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="name">{{ 'PROFILE.PERSONAL_INFO.NAME' | translate }} *</label>
+                    <input id="name" type="text" pInputText formControlName="name"
+                        [class]="{'p-invalid': profileForm.get('name')?.invalid && profileForm.get('name')?.touched}">
+                    @if (profileForm.get('name')?.invalid && profileForm.get('name')?.touched) {
+                    <small class="p-error">
+                        {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                    </small>
+                    }
+                </div>
+
+                <div class="field">
+                    <label for="gender">{{ 'PROFILE.PERSONAL_INFO.GENDER' | translate }}</label>
+                    <p-select 
+                    [options]="genderOptions" 
+                    optionLabel="label" 
+                    optionValue="value"
+                    formControlName="gender"
+                    [placeholder]="'PROFILE.PERSONAL_INFO.GENDER' | translate">
+                  </p-select>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>{{ 'PROFILE.PERSONAL_INFO.DESIRED_POSITIONS' | translate }}</label>
+                <div formArrayName="desiredPositions" class="array-container">
+                    @for (pos of desiredPositions.controls; track i; let i = $index) {
+                    <div class="array-item">
+                        <input type="text" pInputText [formControlName]="i"
+                            [class]="{'p-invalid': pos.invalid && pos.touched}">
+                        <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                            (click)="removeDesiredPosition(i)">
+                        </button>
+                        @if (pos.invalid && pos.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+                    }
+                    <button type="button" pButton icon="pi pi-plus" class="p-button-text"
+                        (click)="addDesiredPosition()">
+                        {{ 'PROFILE.PERSONAL_INFO.ADD_POSITION' | translate }}
+                    </button>
+                </div>
+            </div>
+        </p-panel>
+
+        <!-- Contact Information Section -->
+        <p-panel [header]="'PROFILE.CONTACT_INFO.TITLE' | translate" [toggleable]="true">
+            <div formGroupName="contact" class="form-grid"> <!-- Добавлено formGroupName="contact" -->
+              <div class="field">
+                <label for="email">{{ 'PROFILE.CONTACT_INFO.EMAIL' | translate }} *</label>
+                <input id="email" type="email" pInputText formControlName="email"
+                       [class]="{'p-invalid': contactEmail?.invalid && contactEmail?.touched}">
+                @if (contactEmail?.errors?.['required'] && contactEmail?.touched) {
+                <small class="p-error">
+                  {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                </small>
+                }
+                @if (contactEmail?.errors?.['email'] && contactEmail?.touched) {
+                <small class="p-error">
+                  {{ 'PROFILE.VALIDATION.INVALID_EMAIL' | translate }}
+                </small>
+                }
+              </div>
+          
+              <div class="field">
+                <label for="phone">{{ 'PROFILE.CONTACT_INFO.PHONE' | translate }}</label>
+                <input id="phone" type="tel" pInputText formControlName="phone"
+                       [class]="{'p-invalid': contactPhone?.invalid && contactPhone?.touched}">
+                @if (contactPhone?.invalid && contactPhone?.touched) {
+                <small class="p-error">
+                  {{ 'PROFILE.CONTACT_INFO.PHONE_VALIDATION' | translate }}
+                </small>
+                }
+              </div>
+          
+              <div class="field">
+                <label for="linkedin">{{ 'PROFILE.CONTACT_INFO.LINKEDIN' | translate }}</label>
+                <input id="linkedin" type="url" pInputText formControlName="linkedin">
+              </div>
+          
+              <div class="field">
+                <label for="github">{{ 'PROFILE.CONTACT_INFO.GITHUB' | translate }}</label>
+                <input id="github" type="url" pInputText formControlName="github">
+              </div>
+            </div>
+          </p-panel>
+
+          <p-panel [header]="'PROFILE.LOCATION.TITLE' | translate" [toggleable]="true">
+            <div formGroupName="location" class="form-grid"> <!-- Добавлено formGroupName="location" -->
+              <div class="field">
+                <label for="country">{{ 'PROFILE.LOCATION.COUNTRY' | translate }}</label>
+                <input id="country" type="text" pInputText formControlName="country"> <!-- Убрано location. -->
+              </div>
+          
+              <div class="field">
+                <label for="city">{{ 'PROFILE.LOCATION.CITY' | translate }} *</label>
+                <input id="city" type="text" pInputText formControlName="city"
+                       [class]="{'p-invalid': locationCity?.invalid && locationCity?.touched}">
+                @if (locationCity?.invalid && locationCity?.touched) {
+                <small class="p-error">
+                  {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                </small>
+                }
+              </div>
+          
+              <div class="field checkbox-field">
+                <p-checkbox [binary]="true" formControlName="relocation"
+                            [inputId]="'relocation'">
+                </p-checkbox>
+                <label for="relocation" class="checkbox-label">
+                  {{ 'PROFILE.LOCATION.RELOCATION' | translate }}
+                </label>
+                <small class="checkbox-description">
+                  {{ 'PROFILE.LOCATION.RELOCATION_DESC' | translate }}
+                </small>
+              </div>
+          
+              <div class="field checkbox-field">
+                <p-checkbox [binary]="true" formControlName="remote"
+                            [inputId]="'remote'">
+                </p-checkbox>
+                <label for="remote" class="checkbox-label">
+                  {{ 'PROFILE.LOCATION.REMOTE' | translate }}
+                </label>
+                <small class="checkbox-description">
+                  {{ 'PROFILE.LOCATION.REMOTE_DESC' | translate }}
+                </small>
+              </div>
+          
+              <div class="field checkbox-field">
+                <p-checkbox [binary]="true" formControlName="business_trips"
+                            [inputId]="'business_trips'">
+                </p-checkbox>
+                <label for="business_trips" class="checkbox-label">
+                  {{ 'PROFILE.LOCATION.BUSINESS_TRIPS' | translate }}
+                </label>
+                <small class="checkbox-description">
+                  {{ 'PROFILE.LOCATION.BUSINESS_TRIPS_DESC' | translate }}
+                </small>
+              </div>
+            </div>
+          </p-panel>
+
+        <!-- Languages Section -->
+        <p-panel [header]="'PROFILE.LANGUAGES.TITLE' | translate" [toggleable]="true">
+            <div formArrayName="languages" class="array-container">
+                @for (lang of languages.controls; track i; let i = $index) {
+                <div [formGroupName]="i" class="array-item form-grid">
+                    <div class="field">
+                        <label>{{ 'PROFILE.LANGUAGES.LANGUAGE' | translate }} *</label>
+                        <input type="text" pInputText formControlName="language"
+                            [class]="{'p-invalid': lang.get('language')?.invalid && lang.get('language')?.touched}">
+                        @if (lang.get('language')?.invalid && lang.get('language')?.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.LANGUAGES.LEVEL' | translate }} *</label>
+                        <p-select [options]="languageLevels" formControlName="level"
+                            [placeholder]="'PROFILE.LANGUAGES.LEVEL' | translate">
+                        </p-select>
+                    </div>
+
+                    <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                        (click)="removeLanguage(i)">
+                    </button>
+                </div>
+                }
+                <button type="button" pButton icon="pi pi-plus" class="p-button-text" (click)="addLanguage()">
+                    {{ 'PROFILE.LANGUAGES.ADD_LANGUAGE' | translate }}
+                </button>
+            </div>
+        </p-panel>
+
+        <!-- Skills Section -->
+        <p-panel [header]="'PROFILE.SKILLS.TITLE' | translate" [toggleable]="true">
+            <div formArrayName="skills" class="array-container">
+                @for (skill of skills.controls; track i; let i = $index) {
+                <div [formGroupName]="i" class="array-item form-grid">
+                    <div class="field">
+                        <label>{{ 'PROFILE.SKILLS.AREA' | translate }} *</label>
+                        <input type="text" pInputText formControlName="area"
+                            [class]="{'p-invalid': skill.get('area')?.invalid && skill.get('area')?.touched}">
+                        @if (skill.get('area')?.invalid && skill.get('area')?.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.SKILLS.SKILL' | translate }} *</label>
+                        <input type="text" pInputText formControlName="name"
+                            [class]="{'p-invalid': skill.get('name')?.invalid && skill.get('name')?.touched}">
+                        @if (skill.get('name')?.invalid && skill.get('name')?.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.SKILLS.LEVEL' | translate }} *</label>
+                        <p-inputNumber [min]="1" [max]="10" formControlName="level"
+                            [class]="{'p-invalid': skill.get('level')?.invalid && skill.get('level')?.touched}">
+                        </p-inputNumber>
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.SKILLS.DATE' | translate }} *</label>
+                        <p-datepicker
+                            formControlName="date" 
+                            dateFormat="yy-mm-dd" 
+                            [showIcon]="true">
+                        </p-datepicker>
+                    </div>
+
+                    <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                        (click)="removeSkill(i)">
+                    </button>
+                </div>
+                }
+                <button type="button" pButton icon="pi pi-plus" class="p-button-text" (click)="addSkill()">
+                    {{ 'PROFILE.SKILLS.ADD_SKILL' | translate }}
+                </button>
+            </div>
+        </p-panel>
+
+        <!-- Education Section -->
+        <p-panel [header]="'PROFILE.EDUCATION.TITLE' | translate" [toggleable]="true">
+            <div formArrayName="education" class="array-container">
+                @for (edu of education.controls; track i; let i = $index) {
+                <div [formGroupName]="i" class="array-item form-grid">
+                    <div class="field">
+                        <label>{{ 'PROFILE.EDUCATION.INSTITUTION' | translate }} *</label>
+                        <input type="text" pInputText formControlName="institution"
+                            [class]="{'p-invalid': edu.get('institution')?.invalid && edu.get('institution')?.touched}">
+                        @if (edu.get('institution')?.invalid && edu.get('institution')?.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.EDUCATION.DEGREE' | translate }} *</label>
+                        <input type="text" pInputText formControlName="degree"
+                            [class]="{'p-invalid': edu.get('degree')?.invalid && edu.get('degree')?.touched}">
+                        @if (edu.get('degree')?.invalid && edu.get('degree')?.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.EDUCATION.SPECIALTY' | translate }} *</label>
+                        <input type="text" pInputText formControlName="specialty"
+                            [class]="{'p-invalid': edu.get('specialty')?.invalid && edu.get('specialty')?.touched}">
+                        @if (edu.get('specialty')?.invalid && edu.get('specialty')?.touched) {
+                        <small class="p-error">
+                            {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                        </small>
+                        }
+                    </div>
+
+                    <div class="field">
+                        <label>{{ 'PROFILE.EDUCATION.YEAR' | translate }} *</label>
+                        <p-inputNumber [min]="1900" [max]="currentYear" formControlName="year"
+                            [class]="{'p-invalid': edu.get('year')?.invalid && edu.get('year')?.touched}">
+                        </p-inputNumber>
+                    </div>
+
+                    <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                        (click)="removeEducation(i)">
+                    </button>
+                </div>
+                }
+                <button type="button" pButton icon="pi pi-plus" class="p-button-text" (click)="addEducation()">
+                    {{ 'PROFILE.EDUCATION.ADD_EDUCATION' | translate }}
+                </button>
+            </div>
+        </p-panel>
+
+        <!-- Experience Section -->
+        <p-panel [header]="'PROFILE.EXPERIENCE.TITLE' | translate" [toggleable]="true">
+            <div formArrayName="experience" class="array-container">
+                @for (exp of experience.controls; track i; let i = $index) {
+                <div [formGroupName]="i" class="array-item">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>{{ 'PROFILE.EXPERIENCE.COMPANY' | translate }} *</label>
+                            <input type="text" pInputText formControlName="company"
+                                [class]="{'p-invalid': exp.get('company')?.invalid && exp.get('company')?.touched}">
+                            @if (exp.get('company')?.invalid && exp.get('company')?.touched) {
+                            <small class="p-error">
+                                {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                            </small>
+                            }
+                        </div>
+
+                        <div class="field">
+                            <label>{{ 'PROFILE.EXPERIENCE.POSITION' | translate }} *</label>
+                            <input type="text" pInputText formControlName="position"
+                                [class]="{'p-invalid': exp.get('position')?.invalid && exp.get('position')?.touched}">
+                            @if (exp.get('position')?.invalid && exp.get('position')?.touched) {
+                            <small class="p-error">
+                                {{ 'PROFILE.VALIDATION.REQUIRED' | translate }}
+                            </small>
+                            }
+                        </div>
+
+                        <div class="field">
+                            <label>{{ 'PROFILE.EXPERIENCE.START_DATE' | translate }} *</label>
+                            <p-datepicker formControlName="startDate" dateFormat="yy-mm-dd" [showIcon]="true"
+                                [class]="{'p-invalid': exp.get('startDate')?.invalid && exp.get('startDate')?.touched}">
+                            </p-datepicker>
+                        </div>
+
+                        <div class="field">
+                            <label>{{ 'PROFILE.EXPERIENCE.END_DATE' | translate }}</label>
+                            <p-datepicker formControlName="endDate" dateFormat="yy-mm-dd" [showIcon]="true"
+                                [disabled]="exp.get('current')?.value">
+                            </p-datepicker>
+                            <p-checkbox [binary]="true" formControlName="current">
+                                {{ 'PROFILE.EXPERIENCE.CURRENT' | translate }}
+                              </p-checkbox>
+                        </div>
+                    </div>
+
+                    <!-- Tasks -->
+                    <div class="sub-array">
+                        <label>{{ 'PROFILE.EXPERIENCE.TASKS' | translate }}</label>
+                        <div formArrayName="tasks" class="array-container">
+                            @for (task of getTasksArray(exp).controls; track j; let j = $index) {
+                            <div class="array-item">
+                                <textarea pInputTextarea [rows]="1" [formControlName]="j"
+                                    [class]="{'p-invalid': task.invalid && task.touched}">
+                    </textarea>
+                                <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                                 (click)="removeTask(i, j)">
+                                </button>
+                            </div>
+                            }
+                            <button type="button" pButton icon="pi pi-plus" class="p-button-text"
+                                (click)="addTask(getFormGroup(exp))">
+                                {{ 'PROFILE.EXPERIENCE.ADD_TASK' | translate }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Technologies -->
+                    <div class="sub-array">
+                        <label>{{ 'PROFILE.EXPERIENCE.STACK' | translate }}</label>
+                        <div formArrayName="stack" class="array-container">
+                            @for (tech of getTechArray(exp).controls; track j; let j = $index) {
+                            <div class="array-item">
+                                <input type="text" pInputText [formControlName]="j"
+                                    [class]="{'p-invalid': tech.invalid && tech.touched}">
+                                <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                                (click)="removeTech(i, j)">
+                                </button>
+                            </div>
+                            }
+                            <button type="button" pButton icon="pi pi-plus" class="p-button-text"
+                                (click)="addTech(getFormGroup(exp))">
+                                {{ 'PROFILE.EXPERIENCE.ADD_TECH' | translate }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Achievements -->
+                    <div class="sub-array">
+                        <label>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.TITLE' | translate }}</label>
+                        <div formArrayName="achievements" class="array-container">
+                            @for (ach of getAchievementsArray(exp).controls; track j; let j = $index) {
+                            <div [formGroupName]="j" class="array-item form-grid">
+                                <div class="field">
+                                    <label>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.NAME' | translate }} *</label>
+                                    <input type="text" pInputText formControlName="name"
+                                        [class]="{'p-invalid': ach.get('name')?.invalid && ach.get('name')?.touched}">
+                                </div>
+
+                                <div class="field">
+                                    <label>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.INITIAL' | translate }} *</label>
+                                    <p-inputNumber formControlName="initial_value"
+                                        [class]="{'p-invalid': ach.get('initial_value')?.invalid && ach.get('initial_value')?.touched}">
+                                    </p-inputNumber>
+                                </div>
+
+                                <div class="field">
+                                    <label>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.FINAL' | translate }} *</label>
+                                    <p-inputNumber formControlName="final_value"
+                                        [class]="{'p-invalid': ach.get('final_value')?.invalid && ach.get('final_value')?.touched}">
+                                    </p-inputNumber>
+                                </div>
+
+                                <div class="field">
+                                    <label>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.UNIT' | translate }}</label>
+                                    <input type="text" pInputText formControlName="uom">
+                                </div>
+
+                                <div class="field">
+                                    <label>{{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.TYPE' | translate }}</label>
+                                    <input type="text" pInputText formControlName="type">
+                                </div>
+
+                                <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                                    (click)="removeAchievement(i, j)">
+                                </button>
+                            </div>
+                            }
+                            <button type="button" pButton icon="pi pi-plus" class="p-button-text"
+                                (click)="addAchievement(getFormGroup(exp))">
+                                {{ 'PROFILE.EXPERIENCE.ACHIEVEMENTS.ADD_ACHIEVEMENT' | translate }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                        (click)="removeExperience(i)">
+                    </button>
+                </div>
+                }
+                <button type="button" pButton icon="pi pi-plus" class="p-button-text" (click)="addExperience()">
+                    {{ 'PROFILE.EXPERIENCE.ADD_EXPERIENCE' | translate }}
+                </button>
+            </div>
+        </p-panel>
+
+        <!-- Hobby Section -->
+        <p-panel [header]="'PROFILE.HOBBY' | translate" [toggleable]="true">
+            <div formArrayName="hobby" class="array-container">
+                @for (h of hobby.controls; track i; let i = $index) {
+                <div class="array-item">
+                    <input type="text" pInputText [formControlName]="i" [class]="{'p-invalid': h.invalid && h.touched}">
+                    <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                        (click)="removeHobby(i)">
+                    </button>
+                </div>
+                }
+                <button type="button" pButton icon="pi pi-plus" class="p-button-text" (click)="addHobby()">
+                    {{ 'PROFILE.ADD_HOBBY' | translate }}
+                </button>
+            </div>
+        </p-panel>
+
+        <!-- Literature Section -->
+        <p-panel [header]="'PROFILE.LITERATURE' | translate" [toggleable]="true">
+            <div formArrayName="literature" class="array-container">
+                @for (l of literature.controls; track i; let i = $index) {
+                <div class="array-item">
+                    <input type="text" pInputText [formControlName]="i" [class]="{'p-invalid': l.invalid && l.touched}">
+                    <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                        (click)="removeLiterature(i)">
+                    </button>
+                </div>
+                }
+                <button type="button" pButton icon="pi pi-plus" class="p-button-text" (click)="addLiterature()">
+                    {{ 'PROFILE.ADD_LITERATURE' | translate }}
+                </button>
+            </div>
+        </p-panel>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" pButton [label]="'PROFILE.ACTIONS.SAVE' | translate"
+                [disabled]="profileForm.invalid || loading">
+            </button>
+
+            <button type="button" pButton [label]="'PROFILE.ACTIONS.RESET' | translate" class="p-button-secondary"
+                (click)="resetForm()">
+            </button>
+
+            <button type="button" pButton [label]="'PROFILE.ACTIONS.EXPORT_YAML' | translate" class="p-button-help"
+                (click)="showPreview('yaml')">
+            </button>
+
+            <button type="button" pButton [label]="'PROFILE.ACTIONS.EXPORT_TXT' | translate" class="p-button-help"
+                (click)="showPreview('txt')">
+            </button>
+
+            <p-fileUpload mode="basic" chooseLabel="Import YAML" accept=".yaml,.yml" (onSelect)="onFileSelect($event)"
+                styleClass="p-button-outlined">
+            </p-fileUpload>
+        </div>
+    </form>
+
+    <!-- Preview Dialog -->
+    <p-dialog header="{{ 'PROFILE.PREVIEW_TITLE' | translate }}" [(visible)]="previewVisible" [modal]="true"
+        [style]="{ width: '50vw' }" [maximizable]="true">
+        <pre class="preview-content">{{ previewContent }}</pre>
+        <ng-template pTemplate="footer">
+            <button pButton [label]="'PROFILE.DOWNLOAD' | translate" icon="pi pi-download"
+                (click)="downloadFile(previewContent, previewFormat)">
+            </button>
+            <button pButton [label]="'PROFILE.CLOSE' | translate" class="p-button-secondary"
+                (click)="closePreview()">
+            </button>
+        </ng-template>
+    </p-dialog>
+</div>

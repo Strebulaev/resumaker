@@ -1,0 +1,128 @@
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.language-selector {
+  position: relative;
+  margin-right: 0.5rem;
+
+  .language-trigger {
+    width: 2.5rem;
+    transform: scale(1.3);
+    height: 2.5rem;
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .pi-globe {
+      font-size: 1.5rem !important; // Увеличиваем иконку
+      color: #6b7280;
+    }
+    
+    &:hover {
+      background-color: #f3f4f6 !important;
+      
+      .pi-globe {
+        color: #3b82f6;
+      }
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+    }
+  }
+  
+  .language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
+    z-index: 1000;
+    display: none;
+    margin-top: 0.5rem;
+    
+    &.show {
+      display: block;
+    }
+    
+    .dropdown-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 600;
+      background: #f9fafb;
+      color: #374151;
+    }
+    
+    .language-list {
+      padding: 0.5rem 0;
+    }
+    
+    .language-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #f3f4f6;
+      }
+      
+      &.active {
+        background-color: #3b82f6;
+        color: white;
+        
+        .flag-icon {
+          color: white;
+        }
+        
+        .language-name {
+          color: white;
+        }
+      }
+      
+      .flag-icon {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+        color: #6b7280;
+      }
+      
+      .language-name {
+        font-size: 0.875rem;
+        color: #374151;
+      }
+    }
+  }
+}
+
+// Стили для кнопки выхода, чтобы они были одинаковыми
+.p-button.p-button-rounded {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50% !important;
+  
+  .pi-sign-out {
+    font-size: 1.2rem;
+  }
+}
+
+// Аватар тоже делаем такого же размера
+.p-avatar.p-avatar-circle {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+// Имя пользователя
+.user-info .mr-3 {
+  margin-right: 0.75rem;
+  color: #374151;
+  font-weight: 500;
+}
