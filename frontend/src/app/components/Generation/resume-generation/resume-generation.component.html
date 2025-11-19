@@ -1,4 +1,4 @@
-<!-- Файл: C:\Users\Serezhka\Documents\CollectiveProjects\resume\frontend\src\app\resume-generation\resume-generation.component.html -->
+<!-- Файл: src/app/components/Generation/resume-generation/resume-generation.component.html -->
 <div class="resume-container">
   <h2>{{ 'RESUME_GENERATION.HEADER' | translate }}</h2>
 
@@ -84,16 +84,17 @@
     </button>
   </div>
 
+  <!-- Секция информации о текущем AI провайдере -->
   <div class="ai-config-section">
     <button pButton 
-            label="Настроить AI"
+            label="{{ 'AI_CONFIG.CONFIGURE_BUTTON' | translate }}"
             icon="pi pi-cog"
             (click)="showAIConfigModal = true"
             class="p-button-outlined">
     </button>
     
     <small *ngIf="aiGuard.getCurrentProviderName()" class="current-provider">
-      Текущий провайдер: {{ aiGuard.getCurrentProviderName() }}
+      {{ 'AI_CONFIG.CURRENT_PROVIDER' | translate }}: {{ aiGuard.getCurrentProviderName() }}
     </small>
   </div>
 
@@ -181,14 +182,13 @@
   </p-dialog>
 
   <p-dialog 
-  header="Настройка AI провайдеров" 
-  [(visible)]="showAIConfigModal" 
-  [modal]="true"
-  [style]="{ width: '70vw', maxWidth: '900px' }">
+    header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
+    [(visible)]="showAIConfigModal" 
+    [modal]="true"
+    [style]="{ width: '70vw', maxWidth: '900px' }">
   
     <app-ai-config-modal 
       (closed)="showAIConfigModal = false">
     </app-ai-config-modal>
   </p-dialog>
-
 </div>

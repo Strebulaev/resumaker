@@ -2,6 +2,19 @@
   @if(supabase.currentUser) {
   <ng-template pTemplate="end">
     <div class="user-info">
+      <div class="ai-config-button">
+        <button 
+          pButton 
+          [icon]="aiGuard.checkAIConfigured() ? 'pi pi-android' : 'pi pi-android'" 
+          class="p-button-text ai-trigger"
+          (click)="showAIConfigModal = true"
+          [pTooltip]="getAIStatusTooltip()" 
+          tooltipPosition="left">
+          <div class="ai-status-indicator" 
+               [class.connected]="aiGuard.checkAIConfigured()"></div>
+        </button>
+      </div>
+
       <div class="language-selector">
         <button 
           pButton 
@@ -34,8 +47,14 @@
 
       <p-avatar [image]="userAvatar" size="normal" shape="circle" styleClass="mr-2"></p-avatar>
       <span class="mr-3">{{ userName }}</span>
-      <p-button pButton icon="pi pi-sign-out" class="p-button-rounded p-button-text" (click)="signOut()"
-        [pTooltip]="'TOOLTIP.SIGNOUT_BUTTON' | translate" tooltipPosition="left"></p-button>
+      <button 
+        pButton 
+        icon="pi pi-sign-out" 
+        class="p-button-rounded p-button-text" 
+        (click)="signOut()"
+        [pTooltip]="'TOOLTIP.SIGNOUT_BUTTON' | translate" 
+        tooltipPosition="left">
+      </button>
     </div>
   </ng-template>
   }
@@ -43,3 +62,14 @@
 
 <router-outlet />
 <app-error-toast></app-error-toast>
+
+<p-dialog 
+  header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
+  [(visible)]="showAIConfigModal" 
+  [modal]="true"
+  [style]="{ width: '70vw', maxWidth: '900px' }">
+  
+  <app-ai-config-modal 
+    (closed)="showAIConfigModal = false">
+  </app-ai-config-modal>
+</p-dialog>

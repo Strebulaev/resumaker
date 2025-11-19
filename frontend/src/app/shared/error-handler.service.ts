@@ -9,18 +9,44 @@ export class ErrorHandlerService {
 
   constructor(private injector: Injector) {}
 
-  // Метод для регистрации компонента (вызывается из компонента)
-  registerErrorToast(component: ErrorToastComponent) {
-    this.errorToastComponent = component;
+  handleAIConnectionError(error: any, context: string = 'AI Service') {
+    if (error.status === 0 || error.message?.includes('CORS')) {
+      this.showAIError('CORS ошибка: невозможно подключиться к AI API. Проверьте настройки провайдера.', context);
+    } else if (error.status === 401) {
+      this.showAIError('Неверный API ключ AI провайдера', context);
+    } else if (error.status === 403) {
+      this.showAIError('Доступ к AI сервису запрещен', context);
+    } else if (error.status === 429) {
+      this.showAIError('Превышен лимит запросов к AI сервису', context);
+    } else {
+      this.showAIError(`Ошибка AI сервиса: ${error.message}`, context);
+    }
   }
 
-  // Публичные методы для показа ошибок
+  registerErrorToast(component: ErrorToastComponent) {
+    this.errorToastComponent = component;
+    console.log('ErrorToastComponent registered successfully');
+  }
+
   showError(message: string, source?: string) {
-    this.errorToastComponent?.showError(message, source);
+    console.log('Showing error:', message, source);
+    if (this.errorToastComponent) {
+      this.errorToastComponent.showError(message, source);
+    } else {
+      console.warn('ErrorToastComponent not registered. Message:', message);
+      // Fallback: показать alert или console.error
+      console.error(`[${source}] ${message}`);
+    }
   }
 
   showAIError(message: string, source?: string) {
-    this.errorToastComponent?.showAIError(message, source);
+    console.log('Showing AI error:', message, source);
+    if (this.errorToastComponent) {
+      this.errorToastComponent.showAIError(message, source);
+    } else {
+      console.warn('ErrorToastComponent not registered. AI Message:', message);
+      console.error(`[AI-${source}] ${message}`);
+    }
   }
 
   showWarning(message: string, source?: string) {

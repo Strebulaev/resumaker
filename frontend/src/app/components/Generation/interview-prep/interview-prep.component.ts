@@ -20,6 +20,8 @@ import { FileProcessorService } from '../../../shared/utils/file-processor.servi
 import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
 import { ErrorToastComponent } from '../../Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
+import { AIGuardService } from '../../../shared/ai/ai-guard.service';
+import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 
 interface PromptConfig {
   system_prompt: string;
@@ -47,7 +49,8 @@ interface PromptConfig {
     CheckboxModule,
     MarkdownModule,
     FormsModule,
-    TranslatedFileInputComponent
+    TranslatedFileInputComponent,
+    AiConfigModalComponent
 ]
 })
 export class InterviewPrepComponent implements OnInit {
@@ -74,7 +77,8 @@ export class InterviewPrepComponent implements OnInit {
   promptConfig: PromptConfig | null = null;
   vacancyUrl: string = '';
   currentVacancy: any = null;
-  
+  showAIConfigModal = false;
+
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
@@ -83,7 +87,8 @@ export class InterviewPrepComponent implements OnInit {
     private configService: ConfigService,
     private messageService: MessageService,
     private vacancyService: HHVacancyService,
-        private errorHandler: ErrorHandlerService
+    public aiGuard: AIGuardService,
+    private errorHandler: ErrorHandlerService
   ) {
     this.interviewForm = this.fb.group({
       customResume: [''],
@@ -285,6 +290,13 @@ export class InterviewPrepComponent implements OnInit {
   }
 
   async generateInterviewPlan(): Promise<void> {
+    const aiCheck = this.aiGuard.ensureAIConfigured();
+    if (!aiCheck.configured) {
+      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
+      this.showAIConfigModal = true;
+      return;
+    }
+
     if (this.isLoading) return;
 
     this.isLoading = true;

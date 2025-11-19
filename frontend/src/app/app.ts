@@ -18,12 +18,14 @@ import { PopoverModule } from 'primeng/popover';
 import { HostListener } from '@angular/core';
 import { ErrorToastComponent } from "./components/Helpers/error-toast/error-toast.component";
 import { ErrorHandlerService } from './shared/error-handler.service';
+import { DialogModule } from "primeng/dialog";
+import { AiConfigModalComponent } from "./components/Pages/ai-config-modal/ai-config-modal.component";
+import { AIGuardService } from './shared/ai/ai-guard.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    RouterOutlet,
     CommonModule,
     ButtonModule,
     FormsModule,
@@ -36,6 +38,8 @@ import { ErrorHandlerService } from './shared/error-handler.service';
     TranslatePipe,
     SelectModule,
     PopoverModule,
+    AiConfigModalComponent,
+    DialogModule,
     ErrorToastComponent
 ],
   templateUrl: './app.html',
@@ -51,12 +55,15 @@ export class App implements OnInit {
   currentLang: string = 'en';
   availableLanguages: any[] = [];
   showLanguageDropdown: boolean = false;
+  showAIConfigModal = false;
+  currentAIProvider: string = 'Не настроен';
 
   constructor(
     public supabase: SupabaseService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    public aiGuard: AIGuardService,
   ) 
   {
     this.setupNavigationHandling();
@@ -71,9 +78,15 @@ export class App implements OnInit {
       this.showLanguageDropdown = false;
     }
   }
+  
   ngOnInit(): void {
     this.initializeLanguages();
     this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
+    
+    // Подписываемся на изменения текущего AI провайдера
+    this.aiGuard.getCurrentProviderNameObservable().subscribe(provider => {
+      this.currentAIProvider = provider;
+    });
     
     this.restoreAppState();
     
@@ -91,6 +104,18 @@ export class App implements OnInit {
     });
   }
 
+  getAIStatusTooltip(): string {
+    if (this.currentAIProvider === 'Не настроен') {
+      return 'AI не настроен - нажмите для настройки';
+    }
+    return `Текущий провайдер: ${this.currentAIProvider} - нажмите для изменения`;
+  }
+
+  getAIIconColor(): string {
+    return this.aiGuard.checkAIConfigured() ? 'var(--green-500)' : 'var(--red-500)';
+  }
+
+  // Остальные методы без изменений...
   private initializeLanguages(): void {
     this.availableLanguages = [
       {
@@ -109,30 +134,6 @@ export class App implements OnInit {
         countryName: 'Russia',
         tooltip: 'RU - Русский'
       },
-      // {
-      //   code: 'de',
-      //   name: 'Deutsch',
-      //   flag: 'pi pi-flag-fill', 
-      //   countryCode: 'DE',
-      //   countryName: 'Germany',
-      //   tooltip: 'DE - Deutsch'
-      // },
-      // {
-      //   code: 'fr',
-      //   name: 'Français',
-      //   flag: 'pi pi-flag-fill',
-      //   countryCode: 'FR',
-      //   countryName: 'France',
-      //   tooltip: 'FR - Français'
-      // },
-      // {
-      //   code: 'es',
-      //   name: 'Español',
-      //   flag: 'pi pi-flag-fill',
-      //   countryCode: 'ES',
-      //   countryName: 'Spain',
-      //   tooltip: 'ES - Español'
-      // }
     ];
   }
 
@@ -151,7 +152,6 @@ export class App implements OnInit {
     return this.availableLanguages.find(lang => lang.code === this.currentLang);
   }
 
-  // Остальные методы остаются без изменений...
   private setupNavigationHandling(): void {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationStart) {
@@ -180,8 +180,6 @@ export class App implements OnInit {
   }
 
   private restoreNavigation(): void {
-    // console.log('Navigation restoration disabled for better UX');
-    
     const savedState = this.appStateService.getState();
     const lastUrl = this.appStateService.getLastUrl();
     
@@ -265,7 +263,7 @@ export class App implements OnInit {
   }
 
   ngAfterViewInit() {
-    // Регистрируем компонент в сервисе после инициализации
+    console.log('Registering ErrorToastComponent...');
     this.errorHandler.registerErrorToast(this.errorToast);
   }
 }

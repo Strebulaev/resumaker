@@ -39,7 +39,6 @@ export interface UserProfile {
   updated_at: string;
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
@@ -51,11 +50,16 @@ export class SupabaseService {
   private _initialized = false;
   private initializedSubject = new BehaviorSubject<boolean>(false);
   public initialized$: Observable<boolean> = this.initializedSubject.asObservable();
+  
   get initialized(): boolean {
     return this.initializedSubject.value;
   }
-  constructor(private router: Router, private appStateService: AppStateService,
-      private errorHandler: ErrorHandlerService) {
+
+  constructor(
+    private router: Router, 
+    private appStateService: AppStateService,
+    private errorHandler: ErrorHandlerService
+  ) {
     this.setupAuthStateHandling();
   }
 
@@ -65,7 +69,6 @@ export class SupabaseService {
       this.userSubject.next(session?.user || null);
       
       if (event === 'SIGNED_IN') {
-        // Сохраняем состояние при входе
         this.appStateService.saveState({
           ...this.appStateService.getState(),
           user: {
@@ -132,13 +135,15 @@ export class SupabaseService {
         return;
       }
 
-      // Инициализируем реальный клиент
+      // Инициализируем реальный клиент с исправленными настройками auth
       this.supabase = createClient(config.supabaseUrl, config.supabaseKey, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-          flowType: 'pkce'
+          flowType: 'pkce',
+          // Отключаем встроенный lock для избежания ошибок
+          storage: this.createSafeStorage()
         }
       });
 
@@ -150,19 +155,62 @@ export class SupabaseService {
     }
   }
 
+  // Создаем безопасную реализацию storage для обхода проблем с LockManager
+  private createSafeStorage() {
+    return {
+      getItem: (key: string): Promise<string | null> => {
+        return new Promise((resolve) => {
+          try {
+            const value = localStorage.getItem(key);
+            resolve(value);
+          } catch (error) {
+            console.warn('Storage getItem failed:', error);
+            resolve(null);
+          }
+        });
+      },
+      setItem: (key: string, value: string): Promise<void> => {
+        return new Promise((resolve) => {
+          try {
+            localStorage.setItem(key, value);
+            resolve();
+          } catch (error) {
+            console.warn('Storage setItem failed:', error);
+            resolve();
+          }
+        });
+      },
+      removeItem: (key: string): Promise<void> => {
+        return new Promise((resolve) => {
+          try {
+            localStorage.removeItem(key);
+            resolve();
+          } catch (error) {
+            console.warn('Storage removeItem failed:', error);
+            resolve();
+          }
+        });
+      }
+    };
+  }
+
   private async initAuth(): Promise<void> {
     if (!this.supabase) return;
   
     try {
+      // Используем безопасный метод получения сессии
       const { data: { session }, error } = await this.supabase.auth.getSession();
       
       if (error) {
         console.warn('Session error:', error);
+        // Пробуем восстановить сессию из localStorage
+        await this.tryRecoverSession();
       } else if (session) {
         this.session = session;
         this.userSubject.next(session.user);
       }
   
+      // Настраиваем обработчик изменений состояния аутентификации
       this.supabase.auth.onAuthStateChange((event, session) => {
         console.log('Auth state changed:', event);
         this.session = session;
@@ -176,7 +224,7 @@ export class SupabaseService {
               email: session?.user?.email
             }
           });
-          // Редирект только если мы на странице логина или callback
+          
           if (this.router.url.includes('/login') || this.router.url.includes('/auth/callback')) {
             this.router.navigate(['/profile/view']);
           }
@@ -190,7 +238,27 @@ export class SupabaseService {
   
     } catch (error) {
       console.error('Auth initialization failed:', error);
+      // Всегда помечаем как инициализированное, даже при ошибке
       this.initializedSubject.next(true);
+    }
+  }
+
+  private async tryRecoverSession(): Promise<void> {
+    try {
+      // Пытаемся восстановить сессию из localStorage
+      const storageKey = `sb-${environment.supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
+      const storedSession = localStorage.getItem(storageKey);
+      
+      if (storedSession) {
+        const session = JSON.parse(storedSession);
+        if (session?.access_token && session?.expires_at > Date.now() / 1000) {
+          this.session = session;
+          this.userSubject.next(session.user);
+          console.log('Session recovered from localStorage');
+        }
+      }
+    } catch (error) {
+      console.warn('Session recovery failed:', error);
     }
   }
 
@@ -309,7 +377,6 @@ export class SupabaseService {
         throw new Error('User not authenticated');
       }
   
-      // Убедитесь, что структура данных соответствует таблице
       const profile = {
         id: userId,
         email: profileData.contact?.email || this.currentUser?.email,
@@ -338,17 +405,15 @@ export class SupabaseService {
         return { data: profile, error: null };
       }
   
-      // ИСПРАВЛЕННЫЙ КОД - используем правильный синтаксис upsert
       const { data, error } = await this.supabase!
         .from('user_profiles')
         .upsert(profile, { 
           onConflict: 'id'
         })
-        .select(); // Добавляем select чтобы получить обновленные данные
-  
+        .select();
+
       if (error) {
         this.errorHandler.showError('Ошибка Supabase', 'SupabaseService');
-        // Fallback to local storage
         localStorage.setItem('sb-local-profile', JSON.stringify(profile));
         return { data: profile, error: null };
       }
@@ -441,6 +506,9 @@ export class SupabaseService {
     }
 
     try {
+      // Очищаем localStorage перед выходом
+      this.clearProblematicStorage();
+      
       await this.supabase.auth.signOut();
       window.location.href = '/';
     } catch (error) {
@@ -514,5 +582,34 @@ export class SupabaseService {
       throw error;
     }
     return data;
+  }
+
+  // Метод для очистки проблемных локальных данных
+  clearProblematicStorage(): void {
+    const keysToRemove = [
+      'sb-lxlzpilbbnzriywuvcnf-auth-token',
+      'sb-mock-session',
+      'sb-local-profile'
+    ];
+    
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      } catch (e) {
+        console.warn(`Failed to remove ${key}:`, e);
+      }
+    });
+    
+    // Очищаем все ключи, связанные с Supabase
+    Object.keys(localStorage)
+      .filter(key => key.startsWith('sb-') || key.includes('supabase'))
+      .forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.warn(`Failed to remove ${key}:`, e);
+        }
+      });
   }
 }

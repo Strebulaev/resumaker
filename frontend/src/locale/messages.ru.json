@@ -639,6 +639,12 @@
     "SUPERJOB": "SuperJob",
     "UNKNOWN": "Неизвестная платформа"
   },
+  "AI_CONFIG": {
+    "BUTTON_TOOLTIP": "Настроить AI провайдеры",
+    "MODAL_TITLE": "Настройка AI провайдеров",
+    "CONFIGURE_BUTTON": "Настроить AI", 
+    "CURRENT_PROVIDER": "Текущий провайдер"
+  },
   "FILTER": "Фильтр",
   "ACTIONS": "Действия",
   "STATUS": "Статус",

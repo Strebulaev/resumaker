@@ -2,7 +2,89 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  position: relative;
+
+  .ai-config-button {
+    margin-right: 0.5rem;
+    
+    .ai-trigger {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      // Уменьшаем размер иконки и центрируем
+      ::ng-deep .p-button-icon {
+        font-size: 1.2rem !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      
+      .ai-status-indicator {
+        position: absolute;
+        bottom: 6px;
+        right: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ef4444;
+        border: 1px solid white;
+        
+        &.connected {
+          background: #10b981;
+        }
+      }
+    }
+  }
+
+  .language-selector {
+    position: relative;
+    
+    .language-trigger {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      padding: 0;
+      
+      ::ng-deep .p-button-icon {
+        font-size: 1.2rem !important;
+        margin: 0 !important;
+      }
+    }
+  }
+  
+  // Стили для кнопки выхода
+  ::ng-deep .p-button.p-button-rounded {
+    width: 40px;
+    height: 40px;
+    
+    .p-button-icon {
+      font-size: 1.2rem !important;
+      margin: 0 !important;
+    }
+  }
 }
 
 .language-selector {
@@ -19,7 +101,7 @@
     justify-content: center;
     
     .pi-globe {
-      font-size: 1.5rem !important; // Увеличиваем иконку
+      font-size: 1.5rem !important;
       color: #6b7280;
     }
     
@@ -103,7 +185,6 @@
   }
 }
 
-// Стили для кнопки выхода, чтобы они были одинаковыми
 .p-button.p-button-rounded {
   width: 2.5rem;
   height: 2.5rem;
@@ -114,15 +195,23 @@
   }
 }
 
-// Аватар тоже делаем такого же размера
 .p-avatar.p-avatar-circle {
   width: 2.5rem;
   height: 2.5rem;
 }
 
-// Имя пользователя
 .user-info .mr-3 {
   margin-right: 0.75rem;
   color: #374151;
   font-weight: 500;
+}
+
+// Исправление для иконки AI - центрирование
+::ng-deep .ai-trigger .p-button-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-size: 1.2rem !important;
 }

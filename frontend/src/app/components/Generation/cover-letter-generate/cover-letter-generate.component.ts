@@ -23,7 +23,7 @@ import { VacancyService } from '../../../shared/vacancy/vacancy.service';
 import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { AIGuardService } from '../../../shared/ai/ai-guard.service';
-import { AiConfigModalComponent } from "../../Helpers/ai-config-modal/ai-config-modal.component";
+import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 
 @Component({
   selector: 'app-cover-letter-generate',
@@ -259,11 +259,15 @@ export class CoverLetterGenerateComponent implements OnInit {
     };
     reader.readAsText(file);
   }
+
   generateCoverLetter(): void {
-    if (!this.aiGuard.checkAIConfigured()) {
+    const aiCheck = this.aiGuard.ensureAIConfigured();
+    if (!aiCheck.configured) {
+      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
       this.showAIConfigModal = true;
       return;
     }
+    
     if (this.coverLetterForm.invalid) {
       this.markFormGroupTouched();
       return;

@@ -18,7 +18,7 @@ import { FileProcessorService } from '../../../shared/utils/file-processor.servi
 import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
 import { ErrorToastComponent } from '../../Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
-import { AiConfigModalComponent } from "../../Helpers/ai-config-modal/ai-config-modal.component";
+import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 import { AIGuardService } from '../../../shared/ai/ai-guard.service';
 
 @Component({
@@ -141,14 +141,16 @@ export class ResumeGenerationComponent {
   }
 
   generateResume() {
-    if (!this.aiGuard.checkAIConfigured()) {
+    const aiCheck = this.aiGuard.ensureAIConfigured();
+    if (!aiCheck.configured) {
+      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
       this.showAIConfigModal = true;
       return;
     }
+
     this.isLoading = true;
     this.error = null;
 
-    // Загружаем информацию о вакансии, если указана ссылка
     if (this.vacancyUrl) {
       this.loadVacancyInfo().then(() => {
         this.generateResumeWithContext();

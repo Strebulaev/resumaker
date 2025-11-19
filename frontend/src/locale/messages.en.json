@@ -643,6 +643,12 @@
     "SALARY_DESC": "Salary (high to low)",
     "SALARY_ASC": "Salary (low to high)"
   },
+  "AI_CONFIG": {
+    "BUTTON_TOOLTIP": "Configure AI providers",
+    "MODAL_TITLE": "AI Providers Configuration", 
+    "CONFIGURE_BUTTON": "Configure AI",
+    "CURRENT_PROVIDER": "Current provider"
+  },
   "FILTER": "Filter",
   "ACTIONS": "Actions",
   "STATUS": "Status",
