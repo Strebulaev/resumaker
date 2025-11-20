@@ -131,20 +131,23 @@ export class ResumeManagementComponent implements OnInit {
     
     window.open(testUrl, '_blank');
   }
-  
+
   openResumeInPlatform(resume: any, platform: 'hh' | 'superjob'): void {
     let url: string;
     
     if (platform === 'hh') {
       url = `https://hh.ru/resume/${resume.id}`;
     } else {
-      url = `https://www.superjob.ru/resume/${resume.id}.html`;
+      const professionSlug = resume.profession 
+        ? resume.profession.toLowerCase().replace(/[^a-zA-Z0-9а-яА-Я]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+        : 'resume';
+      url = `https://www.superjob.ru/resume/${professionSlug}-${resume.id}.html`;
     }
     
     console.log('Opening resume URL:', url);
     window.open(url, '_blank');
   }
-
+  
   async deleteHHResume(resumeId: string) {
     if (!confirm(this.translate.instant('RESUME.DELETE_CONFIRM'))) {
       return;

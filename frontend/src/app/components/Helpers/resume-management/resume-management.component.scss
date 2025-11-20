@@ -288,3 +288,74 @@
       }
     }
   }
+
+  .resume-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    
+    // Фиксированная высота для всех кнопок
+    button {
+      height: 36px !important;
+      min-height: 36px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      
+      // Убедитесь, что текст не переносится
+      white-space: nowrap;
+      
+      // Для кнопок с иконками
+      ::ng-deep .p-button-icon {
+        margin: 0 !important;
+      }
+      
+      // Для кнопок с текстом
+      ::ng-deep .p-button-label {
+        line-height: 1 !important;
+      }
+    }
+  }
+  
+  // Убедитесь, что карточки имеют одинаковую высоту
+  .resume-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    ::ng-deep .p-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      
+      .p-card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .p-card-content {
+        flex: 1;
+      }
+      
+      .resume-actions {
+        margin-top: auto;
+        padding-top: 1rem;
+      }
+    }
+  }
+  
+  // Специфичные стили для кнопок HH.ru
+  .resumes-section.hh-section {
+    .resume-actions {
+      button {
+        height: 36px;
+        min-height: 36px;
+        
+        // Убедитесь, что кнопки имеют одинаковую ширину
+        min-width: 120px;
+        justify-content: center;
+      }
+    }
+  }
