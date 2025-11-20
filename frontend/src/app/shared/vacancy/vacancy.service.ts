@@ -84,9 +84,7 @@ export class VacancyService {
     return forkJoin(searches);
   }
 
-  // Методы для HH.ru - ПРЯМЫЕ ВЫЗОВЫ API
   private getHHVacancy(id: string): Observable<Vacancy> {
-    // ПРЯМОЙ ВЫЗОВ API HH.RU
     return this.http.get<any>(`https://api.hh.ru/vacancies/${id}`, {
       headers: {
         'User-Agent': 'RezulutionApp/1.0',
@@ -109,7 +107,6 @@ export class VacancyService {
       }
     });
 
-    // ПРЯМОЙ ВЫЗОВ API HH.RU
     return this.http.get<any>(`https://api.hh.ru/vacancies?${queryParams}`, {
       headers: {
         'User-Agent': 'RezulutionApp/1.0',
@@ -118,15 +115,45 @@ export class VacancyService {
     });
   }
 
-  // Методы для SuperJob - через ваш CORS прокси
+  detectPlatformFromUrl(url: string): string {
+    if (url.includes('hh.ru') || url.includes('hh.') || /\/vacancy\//.test(url)) {
+      return 'hh.ru';
+    } else if (url.includes('superjob.ru')) {
+      return 'superjob.ru';
+    }
+    return 'unknown';
+  }
+  
+  getPlatformLabel(platform: string): string {
+    const platformLabels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob',
+      'hh': 'HH.ru', 
+      'superjob': 'SuperJob'
+    };
+    return platformLabels[platform] || platform;
+  }
+
   private getSuperJobVacancy(id: string): Observable<Vacancy> {
-    // Используем ваш существующий CORS прокси
+    console.log('Fetching SuperJob vacancy with ID:', id);
+    
     return this.http.post<any>('/api/cors-proxy', {
       url: `https://api.superjob.ru/2.0/vacancies/${id}/`,
       method: 'GET'
     }).pipe(
-      map(response => this.mapSuperJobVacancyToCommon(response)),
+      map(response => {
+        console.log('Raw SuperJob API response:', response);
+        
+        if (response.error) {
+          throw new Error(`SuperJob API error: ${response.error}`);
+        }
+        
+        const mappedVacancy = this.mapSuperJobVacancyToCommon(response);
+        console.log('Mapped SuperJob vacancy:', mappedVacancy);
+        return mappedVacancy;
+      }),
       catchError(error => {
+        console.error('SuperJob vacancy fetch error:', error);
         throw new Error(`Ошибка получения вакансии SuperJob: ${error.message}`);
       })
     );
@@ -179,15 +206,20 @@ export class VacancyService {
     const patterns = [
       /superjob\.ru\/vakansii\/(\d+)\.html/,
       /superjob\.ru\/vacancy\/(\d+)\.html/,
-      /(\d+)\.html/
+      /superjob\.ru\/resume\/(\d+)\.html/,
+      /\/vacancy\/(\d+)\/?/,
+      /(\d{5,9})/
     ];
-
+  
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
+        console.log('Extracted SuperJob ID:', match[1], 'from URL:', url);
         return match[1];
       }
     }
+    
+    console.warn('Could not extract SuperJob ID from URL:', url);
     return null;
   }
 

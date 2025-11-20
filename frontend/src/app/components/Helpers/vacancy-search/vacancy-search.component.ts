@@ -926,7 +926,6 @@ export class VacancySearchComponent implements OnInit {
     }
   }
   
-  // Исправьте метод loadVacancyFromUrl:
   async loadVacancyFromUrl(): Promise<void> {
     if (this.urlForm.invalid) return;
   
@@ -934,23 +933,31 @@ export class VacancySearchComponent implements OnInit {
     this.isLoading = true;
   
     try {
+      console.log('Loading vacancy from URL:', url);
+      
       const vacancy = await this.vacancyService.getVacancyWithCache(url);
       
-      // Преобразуем в FavoriteVacancy
-      const favoriteVacancy: FavoriteVacancy = {
-        ...vacancy,
-        isFavorite: this.favoriteVacancies.some(fav => fav.id === vacancy.id),
-        isGeneratingLetter: false,
-        isSending: false
-      };
+      console.log('Loaded vacancy:', vacancy);
+      
+      if (vacancy) {
+        const favoriteVacancy: FavoriteVacancy = {
+          ...vacancy,
+          isFavorite: this.favoriteVacancies.some(fav => fav.id === vacancy.id),
+          isGeneratingLetter: false,
+          isSending: false
+        };
   
-      this.selectedVacancy = favoriteVacancy;
-      this.showDetailsDialog = true;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Вакансия загружена'
-      });
+        this.selectedVacancy = favoriteVacancy;
+        this.showDetailsDialog = true;
+        
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Вакансия загружена',
+          detail: `Платформа: ${vacancy.platform || 'Неизвестно'}`
+        });
+      }
     } catch (error: any) {
+      console.error('Error loading vacancy:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Ошибка загрузки вакансии',

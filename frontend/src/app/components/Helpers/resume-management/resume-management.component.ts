@@ -130,11 +130,23 @@ export class ResumeManagementComponent implements OnInit {
     return status === 1 ? 'success' : 'warning';
   }
 
-  formatDate(date: string | number): string {
-    if (typeof date === 'number') {
-      return new Date(date * 1000).toLocaleDateString();
+  formatDate(date: string | number | null | undefined): string {
+    if (!date) return 'Не указано';
+    
+    try {
+      if (typeof date === 'number') {
+        return new Date(date * 1000).toLocaleDateString('ru-RU');
+      }
+      
+      if (typeof date === 'string') {
+        return new Date(date).toLocaleDateString('ru-RU');
+      }
+      
+      return 'Не указано';
+    } catch (error) {
+      console.warn('Date formatting error:', error, date);
+      return 'Не указано';
     }
-    return new Date(date).toLocaleDateString();
   }
 
   openResumeInPlatform(resume: any, platform: 'hh' | 'superjob') {
