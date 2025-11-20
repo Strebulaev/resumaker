@@ -103,6 +103,7 @@ export class SuperJobAuthService {
       this.configLoaded.next(true); // Все равно помечаем как загруженное
     }
   }
+
   async getUserResumes(): Promise<SuperJobResume[]> {
     const token = await this.getValidToken();
     
@@ -111,14 +112,14 @@ export class SuperJobAuthService {
     }
   
     try {
-      // Правильный endpoint для получения резюме пользователя
+      // Правильный endpoint для получения резюме ТЕКУЩЕГО пользователя
       const response = await fetch('/api/cors-proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: `${this.API_URL}/resumes/`,
+          url: `${this.API_URL}/oauth2/curriculums/`, // ПРАВИЛЬНЫЙ ENDPOINT
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -128,34 +129,49 @@ export class SuperJobAuthService {
       });
       
       if (!response.ok) {
-        throw new Error(`SuperJob API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('SuperJob API error response:', errorText);
+        throw new Error(`SuperJob API error: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
+      console.log('SuperJob user resumes response:', data);
       
-      // Проверяем структуру ответа
-      console.log('SuperJob resumes response:', data);
-      
-      if (!data.objects || !Array.isArray(data.objects)) {
-        console.warn('Invalid SuperJob resumes response structure:', data);
-        return [];
+      // Ожидаемая структура для резюме пользователя
+      if (data.curriculums && Array.isArray(data.curriculums)) {
+        return data.curriculums.map((resume: any) => this.mapUserResume(resume));
       }
       
-      const validResumes = data.objects.filter((resume: any) => {
-        return resume && 
-               resume.id && 
-               (resume.title || resume.profession) &&
-               resume.status !== undefined;
-      });
+      // Если структура другая, попробуем адаптировать
+      if (data.objects && Array.isArray(data.objects)) {
+        console.warn('Using fallback resume mapping');
+        return data.objects.map((resume: any) => this.mapUserResume(resume));
+      }
       
-      console.log('Valid SuperJob resumes:', validResumes.length);
-      return validResumes;
+      console.warn('Unexpected SuperJob resumes response structure:', data);
+      return [];
       
     } catch (error) {
-      console.error('Error loading SuperJob resumes:', error);
+      console.error('Error loading SuperJob user resumes:', error);
       this.errorHandler.showError('Ошибка загрузки резюме SuperJob', 'SuperJobAuthService');
       return [];
     }
+  }
+  
+  // Метод для преобразования данных резюме
+  private mapUserResume(resumeData: any): SuperJobResume {
+    return {
+      id: resumeData.id || resumeData.curriculum_id || 0,
+      title: resumeData.position || resumeData.profession || 'Резюме',
+      profession: resumeData.profession || resumeData.specialization || '',
+      created: resumeData.date_created || resumeData.created || Date.now() / 1000,
+      modified: resumeData.date_modified || resumeData.modified || Date.now() / 1000,
+      status: resumeData.status || resumeData.is_active ? 1 : 0,
+      skills: resumeData.skills || resumeData.key_skills || '',
+      education: resumeData.education || [],
+      experience: resumeData.experience || [],
+      language: resumeData.languages || []
+    };
   }
   
   async getVacancies(params: any = {}): Promise<{ objects: SuperJobVacancy[]; total: number }> {
