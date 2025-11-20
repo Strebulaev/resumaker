@@ -14,6 +14,7 @@ export interface SuperJobTokenResponse {
   token_type: string;
   expires_at?: number;
 }
+
 export interface SuperJobResume {
   id: number;
   title: string;
@@ -31,6 +32,12 @@ export interface SuperJobResume {
     company: string;
     period: string;
   }>;
+  language?: Array<{ // делаем опциональным
+    level: string;
+    language: string;
+  }>;
+  platform?: string;
+  raw_data?: any;
 }
 
 export interface SuperJobVacancy {
@@ -56,7 +63,7 @@ export interface SuperJobResume {
   education: Array<{ name: string; year: number }>;
   experience: Array<{ position: string; company: string; period: string }>;
   skills: string;
-  language: Array<{ level: string; language: string }>;
+  language?: Array<{ level: string; language: string }>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -104,61 +111,6 @@ export class SuperJobAuthService {
     }
   }
 
-  async getUserResumes(): Promise<SuperJobResume[]> {
-    const token = await this.getValidToken();
-    
-    if (!token) {
-      throw new Error('Требуется авторизация в SuperJob');
-    }
-  
-    try {
-      // Правильный endpoint для получения резюме ТЕКУЩЕГО пользователя
-      const response = await fetch('/api/cors-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: `${this.API_URL}/oauth2/curriculums/`, // ПРАВИЛЬНЫЙ ENDPOINT
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'X-Api-App-Id': this.clientSecret
-          }
-        })
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('SuperJob API error response:', errorText);
-        throw new Error(`SuperJob API error: ${response.status} - ${errorText}`);
-      }
-      
-      const data = await response.json();
-      console.log('SuperJob user resumes response:', data);
-      
-      // Ожидаемая структура для резюме пользователя
-      if (data.curriculums && Array.isArray(data.curriculums)) {
-        return data.curriculums.map((resume: any) => this.mapUserResume(resume));
-      }
-      
-      // Если структура другая, попробуем адаптировать
-      if (data.objects && Array.isArray(data.objects)) {
-        console.warn('Using fallback resume mapping');
-        return data.objects.map((resume: any) => this.mapUserResume(resume));
-      }
-      
-      console.warn('Unexpected SuperJob resumes response structure:', data);
-      return [];
-      
-    } catch (error) {
-      console.error('Error loading SuperJob user resumes:', error);
-      this.errorHandler.showError('Ошибка загрузки резюме SuperJob', 'SuperJobAuthService');
-      return [];
-    }
-  }
-  
-  // Метод для преобразования данных резюме
   private mapUserResume(resumeData: any): SuperJobResume {
     return {
       id: resumeData.id || resumeData.curriculum_id || 0,
@@ -514,5 +466,142 @@ export class SuperJobAuthService {
     }
     
     return await response.json();
+  }
+
+
+  async getUserResumes(): Promise<SuperJobResume[]> {
+    const token = await this.getValidToken();
+    
+    if (!token) {
+      throw new Error('Требуется авторизация в SuperJob');
+    }
+  
+    try {
+      // ПРАВИЛЬНЫЙ ENDPOINT для получения резюме
+      const response = await fetch('/api/cors-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: `${this.API_URL}/resumes/`, // ИЗМЕНЕНО: правильный endpoint
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'X-Api-App-Id': this.clientSecret
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('SuperJob API error response:', errorText);
+        throw new Error(`SuperJob API error: ${response.status} - ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('SuperJob user resumes response:', data);
+      
+      // ПРАВИЛЬНОЕ ИЗВЛЕЧЕНИЕ ДАННЫХ
+      if (data.objects && Array.isArray(data.objects)) {
+        return data.objects.map((resume: any) => this.mapResumeData(resume));
+      }
+      
+      console.warn('Unexpected SuperJob resumes response structure:', data);
+      return [];
+      
+    } catch (error) {
+      console.error('Error loading SuperJob user resumes:', error);
+      this.errorHandler.showError('Ошибка загрузки резюме SuperJob', 'SuperJobAuthService');
+      return [];
+    }
+  }
+  
+  private mapResumeStatus(resumeData: any): number {
+    // Статусы SuperJob: 1 - активно, 0 - неактивно
+    if (resumeData.is_active !== undefined) {
+      return resumeData.is_active ? 1 : 0;
+    }
+    if (resumeData.status !== undefined) {
+      return resumeData.status;
+    }
+    return 1; // по умолчанию активен
+  }
+  
+  private extractSkills(resumeData: any): string {
+    if (resumeData.skills) {
+      return resumeData.skills;
+    }
+    if (resumeData.key_skills && Array.isArray(resumeData.key_skills)) {
+      return resumeData.key_skills.map((skill: any) => skill.title || skill.name).join(', ');
+    }
+    if (resumeData.catalogues && Array.isArray(resumeData.catalogues)) {
+      return resumeData.catalogues.map((cat: any) => cat.title).join(', ');
+    }
+    return '';
+  }
+  
+  private mapResumeData(resumeData: any): SuperJobResume {
+    return {
+      id: resumeData.id || 0,
+      title: resumeData.profession || resumeData.position || 'Резюме без названия',
+      profession: resumeData.profession || '',
+      created: resumeData.date_published || Date.now() / 1000,
+      modified: resumeData.date_published || Date.now() / 1000,
+      status: this.mapResumeStatus(resumeData),
+      skills: this.extractSkills(resumeData),
+      education: this.extractEducation(resumeData),
+      experience: this.extractExperience(resumeData),
+      language: this.extractLanguages(resumeData), // Добавляем языки
+      platform: 'superjob',
+      raw_data: resumeData
+    };
+  }
+  
+  private extractLanguages(resumeData: any): Array<{ level: string; language: string }> {
+    if (resumeData.languages && Array.isArray(resumeData.languages)) {
+      return resumeData.languages.map((lang: any) => ({
+        level: lang.level || 'intermediate',
+        language: lang.language || lang.name || ''
+      }));
+    }
+    
+    return [
+      {
+        level: 'intermediate',
+        language: 'Русский'
+      }
+    ];
+  }
+
+  private extractEducation(resumeData: any): Array<{ name: string; year: number }> {
+    if (resumeData.education && Array.isArray(resumeData.education)) {
+      return resumeData.education.map((edu: any) => ({
+        name: edu.name || edu.institution || '',
+        year: edu.year || edu.graduation_year || new Date().getFullYear()
+      }));
+    }
+    return [];
+  }
+  
+  private extractExperience(resumeData: any): Array<{ position: string; company: string; period: string }> {
+    if (resumeData.experience && Array.isArray(resumeData.experience)) {
+      return resumeData.experience.map((exp: any) => ({
+        position: exp.position || '',
+        company: exp.company || exp.employer || '',
+        period: this.formatExperiencePeriod(exp)
+      }));
+    }
+    return [];
+  }
+  
+  private formatExperiencePeriod(exp: any): string {
+    if (exp.date_start && exp.date_end) {
+      return `${exp.date_start} - ${exp.date_end}`;
+    }
+    if (exp.period) {
+      return exp.period;
+    }
+    return 'Не указан';
   }
 }

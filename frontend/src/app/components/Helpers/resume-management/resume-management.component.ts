@@ -122,26 +122,16 @@ export class ResumeManagementComponent implements OnInit {
       testUrl = `https://hh.ru/resume/${resume.id}`;
     }
     
-    // Открываем в новом окне для проверки
-    const testWindow = window.open(testUrl, '_blank');
-    
-    if (!testWindow) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Не удалось открыть ссылку',
-        detail: 'Возможно, браузер блокирует всплывающие окна'
-      });
-    }
-    
-    // Логируем для отладки
     console.log('Testing resume link:', {
       platform,
       id: resume.id,
       url: testUrl,
-      resumeData: resume
+      resumeData: resume // выводим все данные резюме для отладки
     });
+    
+    window.open(testUrl, '_blank');
   }
-
+  
   openResumeInPlatform(resume: any, platform: 'hh' | 'superjob'): void {
     let url: string;
     
