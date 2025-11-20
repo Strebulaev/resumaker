@@ -34,7 +34,6 @@ import { AIGuardService } from '../../../shared/ai/ai-guard.service';
     FormsModule,
     InputTextModule,
     TranslatedFileInputComponent,
-    AiConfigModalComponent
 ],
   templateUrl: './resume-generation.component.html',
   styleUrls: ['./resume-generation.component.scss']

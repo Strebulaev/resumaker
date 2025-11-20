@@ -220,15 +220,4 @@
     </ng-template>
   </p-dialog>
 
-  <p-dialog 
-    header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
-    [(visible)]="showAIConfigModal" 
-    [modal]="true"
-    [style]="{ width: '70vw', maxWidth: '900px' }">
-    
-    <app-ai-config-modal 
-      (closed)="showAIConfigModal = false">
-    </app-ai-config-modal>
-  </p-dialog>
-
 </div>

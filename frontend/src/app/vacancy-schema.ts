@@ -64,7 +64,8 @@ const vacancySchema = z.object({
   snippet: z.object({
     requirement: z.string().optional(),
     responsibility: z.string().optional()
-  }).optional()
+  }).optional(),
+  platform: z.string().optional()
 });
 
 type Employer = z.infer<typeof employerSchema>;

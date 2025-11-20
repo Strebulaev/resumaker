@@ -156,41 +156,10 @@ export class CoverLetterService {
   }
 
   private getVacancyDetails(vacancyId: string): Observable<any> {
-    return from(this.hhAuthService.getValidToken()).pipe(
-      switchMap(token => {
-        const platform = this.detectPlatformFromId(vacancyId);
-        
-        console.log('🔍 Detected platform:', platform, 'for vacancy ID:', vacancyId);
-        
-        if (platform === 'hh') {
-          // HH.ru API call
-          return this.http.get<any>(`https://api.hh.ru/vacancies/${vacancyId}`, {
-            headers: {
-              'User-Agent': 'RezulutionApp/1.0',
-              'HH-User-Agent': 'RezulutionApp/1.0'
-            }
-          }).pipe(
-            map(response => this.mapHHVacancyData(response))
-          );
-        } else {
-          // SuperJob API call through proxy
-          return this.http.post<any>('/api/cors-proxy', {
-            url: `https://api.superjob.ru/2.0/vacancies/${vacancyId}/`,
-            method: 'GET',
-            headers: {
-              'X-Api-App-Id': this.superJobService.clientSecret
-            }
-          }).pipe(
-            map(response => {
-              console.log('🔍 RAW SUPERJOB RESPONSE:', response);
-              return this.mapSuperJobVacancyData(response);
-            })
-          );
-        }
-      }),
+    return this.vacancyService.getVacancy(vacancyId).pipe(
       catchError(error => {
         this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
-        return of(this.createFallbackVacancyData());
+        throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
       })
     );
   }

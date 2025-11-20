@@ -46,7 +46,6 @@ import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-mo
     TextareaModule,
     TooltipModule,
     TranslatedFileInputComponent,
-    AiConfigModalComponent
 ],
   providers: [MessageService]
 })
@@ -258,6 +257,23 @@ export class CoverLetterGenerateComponent implements OnInit {
       });
     };
     reader.readAsText(file);
+  }
+
+  getVacancyPlatform(vacancy: any): string {
+    if (vacancy.platform) {
+      return vacancy.platform;
+    }
+    if (vacancy.alternate_url?.includes('hh.ru')) return 'hh.ru';
+    if (vacancy.alternate_url?.includes('superjob.ru')) return 'superjob.ru';
+    return 'unknown';
+  }
+  
+  getPlatformLabel(platform: string): string {
+    const platformLabels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob'
+    };
+    return platformLabels[platform] || platform;
   }
 
   generateCoverLetter(): void {

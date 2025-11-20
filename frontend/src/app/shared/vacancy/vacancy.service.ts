@@ -5,7 +5,6 @@ import { map, catchError, switchMap } from 'rxjs/operators';
 import { Vacancy } from '../../vacancy-schema';
 import { HHAuthService } from '../job-platforms/hh/hh-auth.service';
 import { SuperJobAuthService } from '../job-platforms/super-job/superjob-auth.service';
-import { ErrorToastComponent } from '../../components/Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../error-handler.service';
 
 export interface VacancySearchParams {
@@ -64,7 +63,7 @@ export class VacancyService {
       }
       return vacancy!;
     } catch (error) {
-      this.errorHandler.showError('Ошибка получения вакансии', 'VacancySearchComponent');
+      this.errorHandler.showError('Ошибка получения вакансии', 'VacancyService');
       throw error;
     }
   }
@@ -73,12 +72,12 @@ export class VacancyService {
   searchVacancies(params: VacancySearchParams): Observable<{ platform: string; results: any }[]> {
     const searches = [
       this.searchHHVacancies(params).pipe(
-        map(results => ({ platform: 'hh', results })),
-        catchError(error => of({ platform: 'hh', results: { error: error.message } }))
+        map(results => ({ platform: 'hh.ru', results })),
+        catchError(error => of({ platform: 'hh.ru', results: { error: error.message } }))
       ),
       this.searchSuperJobVacancies(params).pipe(
-        map(results => ({ platform: 'superjob', results })),
-        catchError(error => of({ platform: 'superjob', results: { error: error.message } }))
+        map(results => ({ platform: 'superjob.ru', results })),
+        catchError(error => of({ platform: 'superjob.ru', results: { error: error.message } }))
       )
     ];
 
@@ -87,21 +86,13 @@ export class VacancyService {
 
   // Методы для HH.ru - ПРЯМЫЕ ВЫЗОВЫ API
   private getHHVacancy(id: string): Observable<Vacancy> {
-    return from(this.hhAuthService.getValidToken()).pipe(
-      switchMap(token => {
-        if (!token) {
-          throw new Error('Требуется авторизация в HH.ru');
-        }
-
-        // ПРЯМОЙ ВЫЗОВ API HH.RU
-        return this.http.get<any>(`https://api.hh.ru/vacancies/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'User-Agent': 'RezulutionApp/1.0',
-            'HH-User-Agent': 'RezulutionApp/1.0'
-          }
-        });
-      }),
+    // ПРЯМОЙ ВЫЗОВ API HH.RU
+    return this.http.get<any>(`https://api.hh.ru/vacancies/${id}`, {
+      headers: {
+        'User-Agent': 'RezulutionApp/1.0',
+        'HH-User-Agent': 'RezulutionApp/1.0'
+      }
+    }).pipe(
       map(response => this.mapHHVacancyToCommon(response)),
       catchError(error => {
         throw new Error(`Ошибка получения вакансии HH.ru: ${error.message}`);
@@ -110,52 +101,30 @@ export class VacancyService {
   }
 
   private searchHHVacancies(params: VacancySearchParams): Observable<any> {
-    return from(this.hhAuthService.getValidToken()).pipe(
-      switchMap(token => {
-        if (!token) {
-          throw new Error('Требуется авторизация в HH.ru');
-        }
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      const value = params[key];
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
 
-        const queryParams = new URLSearchParams();
-        Object.keys(params).forEach(key => {
-          const value = params[key];
-          if (value !== undefined && value !== null && value !== '') {
-            queryParams.append(key, value.toString());
-          }
-        });
-
-        // ПРЯМОЙ ВЫЗОВ API HH.RU
-        return this.http.get<any>(`https://api.hh.ru/vacancies?${queryParams}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'User-Agent': 'RezulutionApp/1.0',
-            'HH-User-Agent': 'RezulutionApp/1.0'
-          }
-        });
-      })
-    );
+    // ПРЯМОЙ ВЫЗОВ API HH.RU
+    return this.http.get<any>(`https://api.hh.ru/vacancies?${queryParams}`, {
+      headers: {
+        'User-Agent': 'RezulutionApp/1.0',
+        'HH-User-Agent': 'RezulutionApp/1.0'
+      }
+    });
   }
 
-  // Методы для SuperJob - ПРЯМЫЕ ВЫЗОВЫ API
+  // Методы для SuperJob - через ваш CORS прокси
   private getSuperJobVacancy(id: string): Observable<Vacancy> {
-    return from(this.superJobService.getValidToken()).pipe(
-      switchMap(token => {
-        if (!token) {
-          throw new Error('Требуется авторизация в SuperJob');
-        }
-
-        if (!this.superJobService.clientSecret) {
-          throw new Error('SuperJob client secret not configured');
-        }
-
-        // ПРЯМОЙ ВЫЗОВ API SUPERJOB
-        return this.http.get<any>(`https://api.superjob.ru/2.0/vacancies/${id}/`, {
-          headers: {
-            'X-Api-App-Id': this.superJobService.clientSecret,
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }),
+    // Используем ваш существующий CORS прокси
+    return this.http.post<any>('/api/cors-proxy', {
+      url: `https://api.superjob.ru/2.0/vacancies/${id}/`,
+      method: 'GET'
+    }).pipe(
       map(response => this.mapSuperJobVacancyToCommon(response)),
       catchError(error => {
         throw new Error(`Ошибка получения вакансии SuperJob: ${error.message}`);
@@ -164,33 +133,19 @@ export class VacancyService {
   }
 
   private searchSuperJobVacancies(params: VacancySearchParams): Observable<any> {
-    return from(this.superJobService.getValidToken()).pipe(
-      switchMap(token => {
-        if (!token) {
-          throw new Error('Требуется авторизация в SuperJob');
-        }
+    const queryParams = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+      const value = params[key];
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
 
-        if (!this.superJobService.clientSecret) {
-          throw new Error('SuperJob client secret not configured');
-        }
-
-        const queryParams = new URLSearchParams();
-        Object.keys(params).forEach(key => {
-          const value = params[key];
-          if (value !== undefined && value !== null && value !== '') {
-            queryParams.append(key, value.toString());
-          }
-        });
-
-        // ПРЯМОЙ ВЫЗОВ API SUPERJOB
-        return this.http.get<any>(`https://api.superjob.ru/2.0/vacancies/?${queryParams}`, {
-          headers: {
-            'X-Api-App-Id': this.superJobService.clientSecret,
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      })
-    );
+    // Используем ваш существующий CORS прокси
+    return this.http.post<any>('/api/cors-proxy', {
+      url: `https://api.superjob.ru/2.0/vacancies/?${queryParams}`,
+      method: 'GET'
+    });
   }
 
   // Вспомогательные методы
@@ -241,14 +196,66 @@ export class VacancyService {
       catchError(() => {
         return this.getSuperJobVacancy(identifier).pipe(
           catchError(error => {
-            throw new Error(`Не удалось найти вакансию: ${error.message}`);
+            throw new Error(`Не удалось найти вакансию на поддерживаемых платформах: ${error.message}`);
           })
         );
       })
     );
   }
 
-  // Маппинг данных
+  extractKeySkills(vacancy: any): string[] {
+    return vacancy.key_skills?.map((skill: any) => skill.name) || [];
+  }
+  
+  extractRequirements(vacancy: any): string {
+    return this.cleanHtml(vacancy.snippet?.requirement || '');
+  }
+
+  private cleanHtml(text: string): string {
+    if (!text) return '';
+    return text
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Экспорт вакансии
+  exportVacancy(vacancy: Vacancy, format: 'txt' | 'json' = 'txt'): string {
+    if (format === 'json') {
+      return JSON.stringify(vacancy, null, 2);
+    }
+
+    let text = `=== ИНФОРМАЦИЯ О ВАКАНСИИ ===\n\n`;
+    text += `Платформа: ${vacancy.platform || 'Неизвестно'}\n`;
+    text += `Вакансия: ${vacancy.name}\n`;
+    text += `Компания: ${vacancy.employer?.name || 'Не указана'}\n`;
+    
+    if (vacancy.salary) {
+      text += `Зарплата: `;
+      if (vacancy.salary.from) text += `от ${vacancy.salary.from} `;
+      if (vacancy.salary.to) text += `до ${vacancy.salary.to} `;
+      text += `${vacancy.salary.currency || ''}\n`;
+    }
+    
+    if (vacancy.address?.city) {
+      text += `Город: ${vacancy.address.city}\n`;
+    }
+    
+    if (vacancy.description) {
+      text += `Описание: ${this.cleanHtml(vacancy.description.substring(0, 500))}...\n`;
+    }
+    
+    if (vacancy.key_skills && vacancy.key_skills.length > 0) {
+      text += `Навыки: ${vacancy.key_skills.map(s => s.name).join(', ')}\n`;
+    }
+    
+    text += `Ссылка: ${vacancy.alternate_url || 'Не указана'}\n`;
+    
+    return text;
+  }
+
   private mapHHVacancyToCommon(vacancy: any): Vacancy {
     return {
       id: vacancy.id,
@@ -276,10 +283,12 @@ export class VacancyService {
       snippet: vacancy.snippet ? {
         requirement: vacancy.snippet.requirement,
         responsibility: vacancy.snippet.responsibility
-      } : undefined
+      } : undefined,
+      platform: 'hh.ru' // ОСТАВЬТЕ ЭТУ СТРОКУ - теперь она в схеме
     };
   }
-
+  
+  // В методе mapSuperJobVacancyToCommon
   private mapSuperJobVacancyToCommon(vacancy: any): Vacancy {
     return {
       id: vacancy.id.toString(),
@@ -299,55 +308,14 @@ export class VacancyService {
       experience: vacancy.experience ? { name: vacancy.experience.title } : undefined,
       employment: vacancy.type_of_work ? { name: vacancy.type_of_work.title } : undefined,
       alternate_url: vacancy.link || `https://www.superjob.ru/vacancy/${vacancy.id}.html`,
-      published_at: vacancy.date_published ? new Date(vacancy.date_published * 1000).toISOString() : undefined
+      published_at: vacancy.date_published ? new Date(vacancy.date_published * 1000).toISOString() : undefined,
+      platform: 'superjob.ru' // ОСТАВЬТЕ ЭТУ СТРОКУ - теперь она в схеме
     };
   }
-
-  // Вспомогательные методы для работы с вакансиями
-  extractKeySkills(vacancy: any): string[] {
-    return vacancy.key_skills?.map((skill: any) => skill.name) || [];
-  }
   
-  extractRequirements(vacancy: any): string {
-    return this.cleanHtml(vacancy.snippet?.requirement || '');
+  // В методе getVacancyPlatform
+  getVacancyPlatform(vacancy: any): string {
+    return vacancy.platform || 'unknown';
   }
 
-  private cleanHtml(text: string): string {
-    if (!text) return '';
-    return text
-      .replace(/<[^>]*>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  // Экспорт вакансии
-  exportVacancy(vacancy: Vacancy, format: 'txt' | 'json' = 'txt'): string {
-    if (format === 'json') {
-      return JSON.stringify(vacancy, null, 2);
-    }
-
-    let text = `Вакансия: ${vacancy.name}\n`;
-    text += `Компания: ${vacancy.employer?.name || 'Не указана'}\n`;
-    
-    if (vacancy.salary) {
-      text += `Зарплата: `;
-      if (vacancy.salary.from) text += `от ${vacancy.salary.from} `;
-      if (vacancy.salary.to) text += `до ${vacancy.salary.to} `;
-      text += `${vacancy.salary.currency || ''}\n`;
-    }
-    
-    if (vacancy.description) {
-      text += `Описание: ${this.cleanHtml(vacancy.description.substring(0, 500))}...\n`;
-    }
-    
-    if (vacancy.key_skills && vacancy.key_skills.length > 0) {
-      text += `Навыки: ${vacancy.key_skills.map(s => s.name).join(', ')}\n`;
-    }
-    
-    text += `Ссылка: ${vacancy.alternate_url || 'Не указана'}\n`;
-    
-    return text;
-  }
 }

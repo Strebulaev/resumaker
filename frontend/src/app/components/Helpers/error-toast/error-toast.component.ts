@@ -20,7 +20,9 @@ interface ErrorInfo {
   templateUrl: './error-toast.component.html',
   styleUrls: ['./error-toast.component.scss']
 })
+
 export class ErrorToastComponent implements OnInit, OnDestroy {
+
   errors: ErrorInfo[] = [];
   private errorId = 0;
   private consoleErrorHandler?: (event: ErrorEvent) => void;
@@ -43,6 +45,36 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
     this.timerSubscription?.unsubscribe();
   }
 
+  private readonly IGNORED_ERRORS = [
+    'Acquiring an exclusive Navigator LockManager lock',
+    'Navigator LockManager',
+    'lock:sb-'
+  ];
+
+  private normalizeErrorMessage(message: string, type: 'error' | 'warning' | 'ai-error'): string {
+    let normalized = message.trim().toLowerCase();
+    
+    // Проверяем, не является ли ошибка игнорируемой
+    if (this.isIgnoredError(message)) {
+      return 'ignored_lock_manager_error'; // Специальное значение для фильтрации
+    }
+    
+    // Убираем переменные части сообщений (например, timestamp, IDs)
+    normalized = normalized.replace(/\d+/g, '#');
+    normalized = normalized.replace(/\[.*?\]/g, '');
+    normalized = normalized.replace(/http\S+/g, 'URL');
+    
+    return normalized;
+  }
+
+  private isIgnoredError(message: string): boolean {
+    return this.IGNORED_ERRORS.some(ignored => 
+      message.includes(ignored)
+    );
+  }
+
+
+  
   private setupErrorHandling() {
     this.originalConsoleError = console.error;
     this.originalConsoleWarn = console.warn;
@@ -193,15 +225,16 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   }
 
   private addError(message: string, source?: string, type: 'error' | 'warning' | 'ai-error' = 'error') {
-    // Нормализуем сообщение для сравнения
+    if (this.isIgnoredError(message)) {
+      console.log('Ignoring LockManager error:', message);
+      return;
+    }
     const normalizedMessage = this.normalizeErrorMessage(message, type);
     
-    // Проверяем, не было ли такого сообщения недавно
     if (this.isDuplicateError(normalizedMessage)) {
-      return; // Игнорируем дубликат
+      return;
     }
 
-    // Обрезаем длинное сообщение
     const displayMessage = normalizedMessage.length > 200 
       ? normalizedMessage.substring(0, 200) + '...' 
       : normalizedMessage;
@@ -229,17 +262,6 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
 
     // Очищаем кэш от старых записей
     this.cleanErrorCache();
-  }
-
-  private normalizeErrorMessage(message: string, type: 'error' | 'warning' | 'ai-error'): string {
-    let normalized = message.trim().toLowerCase();
-    
-    // Убираем переменные части сообщений (например, timestamp, IDs)
-    normalized = normalized.replace(/\d+/g, '#');
-    normalized = normalized.replace(/\[.*?\]/g, '');
-    normalized = normalized.replace(/http\S+/g, 'URL');
-    
-    return normalized;
   }
 
   private isDuplicateError(normalizedMessage: string): boolean {

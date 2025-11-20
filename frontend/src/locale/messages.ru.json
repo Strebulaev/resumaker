@@ -306,8 +306,8 @@
     "RESUME_ID": "ID резюме в системе",
     "UPLOAD_RESUME": "Загрузить резюме",
     "RESUME_ID_PLACEHOLDER": "Введите ID вашего резюме",
-    "VACANCY_ID": "ID вакансии на HH.ru",
-    "VACANCY_ID_PLACEHOLDER": "Например: 12345678",
+    "VACANCY_ID": "ID вакансии",
+    "VACANCY_ID_PLACEHOLDER": "Например: 12345678 (HH) или 12345 (SuperJob)",
     "VACANCY_URL": "Ссылка на вакансию",
     "VACANCY_URL_HINT": "Вставьте ссылку на вакансию HH.ru для получения детальной информации",
     "STYLE": "Стиль письма",
@@ -363,7 +363,7 @@
     "SUCCESS": "Файл успешно обработан",
     "ERROR": "Ошибка обработки файла",
     "VACANCY_URL": "Ссылка на вакансию",
-    "VACANCY_URL_HINT": "Вставьте ссылку на вакансию HH.ru для получения детальной информации"
+    "VACANCY_URL_HINT": "Вставьте ссылку на вакансию zдля получения детальной информации"
   },
   "RESUME": {
     "MANAGEMENT_TITLE": "Управление резюме",
@@ -448,8 +448,8 @@
     "SEARCH": "Поиск вакансий",
     "DOWNLOAD": "Скачать вакансию",
     "BY_URL": "Скачать по ссылке",
-    "LINK_PLACEHOLDER": "Ссылка на вакансию HH.ru",
-    "LINK_HINT": "Поддерживаемые форматы: https://hh.ru/vacancy/12345678",
+    "LINK_PLACEHOLDER": "Ссылка на вакансию",
+    "LINK_HINT": "Поддерживаемые форматы: https://hh.ru/vacancy/12345678, https://superjob.ru/vakansii/12345.html",
     "LOAD": "Загрузить вакансию",
     "EXPORT": "Экспорт вакансии",
     "INCLUDE_SALARY": "Включать зарплату",

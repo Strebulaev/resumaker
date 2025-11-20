@@ -182,6 +182,14 @@
             </div>
           </div>
 
+          <div class="vacancy-platform" *ngIf="getVacancyPlatform(vacancy)">
+            <span class="platform-badge" [class.hh-badge]="getVacancyPlatform(vacancy) === 'hh.ru'" 
+                  [class.sj-badge]="getVacancyPlatform(vacancy) === 'superjob.ru'">
+              <i class="pi pi-briefcase"></i>
+              {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}
+            </span>
+          </div>
+          
           <div class="vacancy-company">
             <span class="company-name">{{ vacancy.employer.name }}</span>
             <span class="company-location" *ngIf="vacancy.address?.city">
@@ -337,6 +345,14 @@
           </button>
         </div>
 
+        <div class="vacancy-platform" *ngIf="getVacancyPlatform(vacancy)">
+          <span class="platform-badge" [class.hh-badge]="getVacancyPlatform(vacancy) === 'hh.ru'" 
+                [class.sj-badge]="getVacancyPlatform(vacancy) === 'superjob.ru'">
+            <i class="pi pi-briefcase"></i>
+            {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}
+          </span>
+        </div>
+
         <div class="favorite-vacancy-info">
           <p><strong>Компания:</strong> {{ vacancy.employer.name }}</p>
           <p><strong>Зарплата:</strong> {{ getSalaryText(vacancy) || 'Не указана' }}</p>
@@ -434,6 +450,17 @@
         <div class="skills-detail">
           <span *ngFor="let skill of selectedVacancy.key_skills" class="skill-tag large">
             {{ skill.name }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="detail-section" *ngIf="selectedVacancy">
+        <h5>Платформа</h5>
+        <div class="vacancy-platform">
+          <span class="platform-badge" [class.hh-badge]="getVacancyPlatform(selectedVacancy) === 'hh.ru'" 
+                [class.sj-badge]="getVacancyPlatform(selectedVacancy) === 'superjob.ru'">
+            <i class="pi pi-briefcase"></i>
+            {{ getPlatformLabel(getVacancyPlatform(selectedVacancy)) }}
           </span>
         </div>
       </div>

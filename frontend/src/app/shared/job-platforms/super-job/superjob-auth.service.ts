@@ -139,6 +139,60 @@ export class SuperJobAuthService {
     }
   }
   
+  async getVacancies(params: any = {}): Promise<{ objects: SuperJobVacancy[]; total: number }> {
+    try {
+      await this.waitForConfig();
+      
+      const queryParams = new URLSearchParams();
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+          queryParams.append(key, params[key].toString());
+        }
+      });
+  
+      // Используем ваш CORS прокси вместо прямого вызова
+      const response = await fetch('/api/cors-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: `https://api.superjob.ru/2.0/vacancies/?${queryParams}`,
+          method: 'GET'
+        })
+      });
+  
+      if (!response.ok) {
+        throw new Error(`SuperJob API error: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('SuperJob getVacancies error:', error);
+      throw error;
+    }
+  }
+  
+  async getVacancyDetails(vacancyId: number): Promise<SuperJobVacancy> {
+    // Используем ваш CORS прокси
+    const response = await fetch('/api/cors-proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: `https://api.superjob.ru/2.0/vacancies/${vacancyId}/`,
+        method: 'GET'
+      })
+    });
+  
+    if (!response.ok) {
+      throw new Error(`SuperJob API error: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
   async deleteResume(resumeId: number): Promise<void> {
     const token = await this.getValidToken();
     
@@ -398,60 +452,7 @@ export class SuperJobAuthService {
     
     return await response.json();
   }
-  async getVacancies(params: any = {}): Promise<{ objects: SuperJobVacancy[]; total: number }> {
-    try {
-      await this.waitForConfig();
-      
-      if (!this.clientSecret) {
-        throw new Error('SuperJob configuration missing');
-      }
-  
-      const queryParams = new URLSearchParams();
-      Object.keys(params).forEach(key => {
-        if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
-          queryParams.append(key, params[key].toString());
-        }
-      });
-  
-      // ПРЯМОЙ ВЫЗОВ API SUPERJOB
-      const response = await fetch(`https://api.superjob.ru/2.0/vacancies/?${queryParams}`, {
-        headers: {
-          'X-Api-App-Id': this.clientSecret,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      });
-  
-      if (!response.ok) {
-        throw new Error(`SuperJob API error: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('SuperJob getVacancies error:', error);
-      throw error;
-    }
-  }
-
-  async getVacancyDetails(vacancyId: number): Promise<SuperJobVacancy> {
-    const token = await this.getValidToken();
-    
-    if (!token) {
-      throw new Error('Требуется авторизация в SuperJob');
-    }
-
-    const response = await fetch(`https://api.superjob.ru/2.0/vacancies/${vacancyId}/`, {
-      headers: {
-        'X-Api-App-Id': this.clientSecret,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`SuperJob API error: ${response.status}`);
-    }
-    
-    return await response.json();
-  }
+ 
   async sendApplication(vacancyId: number, resumeId: number, message: string): Promise<any> {
     const token = await this.getValidToken();
     

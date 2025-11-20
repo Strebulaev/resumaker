@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AppConfig } from '../config/config.service';
 import { AppStateService } from '../state/app-state.service';
-import { ErrorToastComponent } from '../../components/Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../error-handler.service';
 
 export interface UserProfile {
@@ -107,14 +106,12 @@ export class SupabaseService {
       console.log('Initializing Supabase with config from:', 
         environment.production ? 'API endpoint' : 'environment.ts');
 
-      // Если конфиг пустой, используем mock режим
       if (!config.supabaseUrl || !config.supabaseKey) {
         console.warn('Supabase configuration missing, using mock mode');
         this.setupMockAuth();
         return;
       }
 
-      // Проверяем доступность Supabase
       try {
         const testResponse = await fetch(`${config.supabaseUrl}/rest/v1/`, {
           method: 'HEAD',

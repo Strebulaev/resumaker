@@ -18,12 +18,14 @@ import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/sup
 import { Vacancy } from '../../../vacancy-schema';
 import { ErrorToastComponent } from '../error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
+import { VacancyService } from '../../../shared/vacancy/vacancy.service';
 
 interface FavoriteVacancy extends Vacancy {
   isFavorite: boolean;
   coverLetter?: string;
   isGeneratingLetter?: boolean;
   isSending?: boolean;
+  platform?: string;
 }
 
 @Component({
@@ -79,7 +81,8 @@ export class VacancySearchComponent implements OnInit {
     private coverLetterService: CoverLetterService,
     private messageService: MessageService,
     private translate: TranslateService,
-        private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private vacancyService: VacancyService
   ) {
     this.initializeForms();
     this.loadFavorites();
@@ -175,7 +178,6 @@ export class VacancySearchComponent implements OnInit {
     }
   }
 
-  // Сохранение избранных вакансий в localStorage
   private saveFavorites(): void {
     localStorage.setItem('favorite_vacancies', JSON.stringify(this.favoriteVacancies));
   }
@@ -403,60 +405,25 @@ export class VacancySearchComponent implements OnInit {
     }
   }
 
-  async searchVacancies(): Promise<void> {
-    if (this.isLoading) return;
-  
-    this.isLoading = true;
-    this.searchPerformed = true;
-    this.vacancies = [];
-    this.currentPage = 1;
-  
-    const params = this.searchForm.value;
-    
-    try {
-      const searchPromises: Promise<Vacancy[]>[] = [];
-  
-      // HH.ru поиск
-      if (params.platforms?.includes('hh')) {
-        searchPromises.push(this.searchHHVacanciesDirectly(this.prepareHHParams(params)));
-      }
-  
-      // SuperJob поиск
-      if (params.platforms?.includes('superjob')) {
-        searchPromises.push(this.searchSuperJobVacanciesDirectly(this.prepareSuperJobParams(params)));
-      }
-  
-      const results = await Promise.all(
-        searchPromises.map(p => p.catch(e => {
-          console.error('Search error:', e);
-          return [] as Vacancy[];
-        }))
-      );
-      
-      this.vacancies = results.flat().map(vacancy => {
-        const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
-        return {
-          ...vacancy,
-          isFavorite: isFavorite,
-          isGeneratingLetter: false,
-          isSending: false
-        } as FavoriteVacancy;
-      });
-      
-      this.sortVacancies();
-      this.calculatePagination();
-  
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка поиска',
-        detail: 'Попробуйте изменить параметры поиска'
-      });
-    } finally {
-      this.isLoading = false;
+  getVacancyPlatform(vacancy: any): string {
+    if (vacancy.platform) {
+      return vacancy.platform;
     }
+    if (vacancy.alternate_url?.includes('hh.ru')) return 'hh.ru';
+    if (vacancy.alternate_url?.includes('superjob.ru')) return 'superjob.ru';
+    return 'unknown';
   }
   
+  getPlatformLabel(platform: string): string {
+    const platformLabels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob',
+      'hh': 'HH.ru', 
+      'superjob': 'SuperJob'
+    };
+    return platformLabels[platform] || platform;
+  }
+
   private prepareHHParams(params: any): any {
     const hhParams: any = {};
     
@@ -564,17 +531,6 @@ export class VacancySearchComponent implements OnInit {
   closeDetailsDialog(): void {
     this.showDetailsDialog = false;
     this.selectedVacancy = null;
-  }
-
-  // Вспомогательные методы для работы с вакансиями
-  getVacancyPlatform(vacancy: Vacancy): string {
-    if (vacancy.alternate_url?.includes('hh.ru')) return 'hh';
-    if (vacancy.alternate_url?.includes('superjob.ru')) return 'superjob';
-    return 'unknown';
-  }
-
-  getPlatformLabel(platform: string): string {
-    return this.platformOptions.find(p => p.value === platform)?.label || platform;
   }
 
   getSalaryText(vacancy: Vacancy): string {
@@ -688,52 +644,6 @@ export class VacancySearchComponent implements OnInit {
     a.download = `${filename}.${format}`;
     a.click();
     window.URL.revokeObjectURL(url);
-  }
-
-  async loadVacancyFromUrl(): Promise<void> {
-    if (this.urlForm.invalid) return;
-
-    const url = this.urlForm.get('vacancyUrl')?.value;
-    this.isLoading = true;
-
-    try {
-      const platform = this.detectPlatformFromUrl(url);
-      const vacancyId = this.extractVacancyId(url, platform);
-      
-      if (!vacancyId) {
-        throw new Error('Не удалось извлечь ID вакансии из ссылки');
-      }
-
-      let vacancy: Vacancy;
-      if (platform === 'hh') {
-        vacancy = await this.getHHVacancyDirectly(vacancyId);
-      } else {
-        vacancy = await this.getSuperJobVacancyDirectly(vacancyId);
-      }
-
-      // Преобразуем в FavoriteVacancy
-      const favoriteVacancy: FavoriteVacancy = {
-        ...vacancy,
-        isFavorite: this.favoriteVacancies.some(fav => fav.id === vacancy.id),
-        isGeneratingLetter: false,
-        isSending: false
-      };
-
-      this.selectedVacancy = favoriteVacancy;
-      this.showDetailsDialog = true;
-      this.messageService.add({
-        severity: 'success',
-        summary: this.translate.instant('MESSAGE.VACANCY_LOADED')
-      });
-    } catch (error: any) {
-      this.messageService.add({
-        severity: 'error',
-        summary: this.translate.instant('MESSAGE.LOAD_ERROR'),
-        detail: error.message
-      });
-    } finally {
-      this.isLoading = false;
-    }
   }
 
   private detectPlatformFromUrl(url: string): string {
@@ -968,6 +878,86 @@ export class VacancySearchComponent implements OnInit {
       };
     } catch (error) {
       throw new Error(`Ошибка получения вакансии SuperJob: ${error}`);
+    }
+  }
+
+  async searchVacancies(): Promise<void> {
+    if (this.isLoading) return;
+  
+    this.isLoading = true;
+    this.searchPerformed = true;
+    this.vacancies = [];
+    this.currentPage = 1;
+  
+    const params = this.searchForm.value;
+    
+    try {
+      const searchResults = await this.vacancyService.searchVacancies(params).toPromise();
+      
+      if (searchResults) {
+        this.vacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
+          if (result.results.items) {
+            return result.results.items.map((vacancy: any) => {
+              const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
+              return {
+                ...vacancy,
+                platform: result.platform,
+                isFavorite: isFavorite,
+                isGeneratingLetter: false,
+                isSending: false
+              } as FavoriteVacancy;
+            });
+          }
+          return [];
+        });
+        
+        this.sortVacancies();
+        this.calculatePagination();
+      }
+  
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка поиска',
+        detail: 'Попробуйте изменить параметры поиска'
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  // Исправьте метод loadVacancyFromUrl:
+  async loadVacancyFromUrl(): Promise<void> {
+    if (this.urlForm.invalid) return;
+  
+    const url = this.urlForm.get('vacancyUrl')?.value;
+    this.isLoading = true;
+  
+    try {
+      const vacancy = await this.vacancyService.getVacancyWithCache(url);
+      
+      // Преобразуем в FavoriteVacancy
+      const favoriteVacancy: FavoriteVacancy = {
+        ...vacancy,
+        isFavorite: this.favoriteVacancies.some(fav => fav.id === vacancy.id),
+        isGeneratingLetter: false,
+        isSending: false
+      };
+  
+      this.selectedVacancy = favoriteVacancy;
+      this.showDetailsDialog = true;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Вакансия загружена'
+      });
+    } catch (error: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка загрузки вакансии',
+        detail: error.message
+      });
+    } finally {
+      this.isLoading = false;
     }
   }
 }
