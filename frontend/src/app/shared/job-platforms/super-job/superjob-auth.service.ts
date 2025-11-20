@@ -111,7 +111,7 @@ export class SuperJobAuthService {
     }
   
     try {
-      // Используем прокси-запрос через ваш API endpoint
+      // Правильный endpoint для получения резюме пользователя
       const response = await fetch('/api/cors-proxy', {
         method: 'POST',
         headers: {
@@ -132,10 +132,29 @@ export class SuperJobAuthService {
       }
       
       const data = await response.json();
-      return data.objects || [];
+      
+      // Проверяем структуру ответа
+      console.log('SuperJob resumes response:', data);
+      
+      if (!data.objects || !Array.isArray(data.objects)) {
+        console.warn('Invalid SuperJob resumes response structure:', data);
+        return [];
+      }
+      
+      const validResumes = data.objects.filter((resume: any) => {
+        return resume && 
+               resume.id && 
+               (resume.title || resume.profession) &&
+               resume.status !== undefined;
+      });
+      
+      console.log('Valid SuperJob resumes:', validResumes.length);
+      return validResumes;
+      
     } catch (error) {
+      console.error('Error loading SuperJob resumes:', error);
       this.errorHandler.showError('Ошибка загрузки резюме SuperJob', 'SuperJobAuthService');
-      throw new Error('Ошибка получения резюме с SuperJob');
+      return [];
     }
   }
   

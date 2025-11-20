@@ -37,9 +37,9 @@ export class ResumeManagementComponent implements OnInit {
 
   constructor(
     private hhAuthService: HHAuthService,
-    private superJobService: SuperJobAuthService,
     private messageService: MessageService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    public superJobService: SuperJobAuthService,
   ) {}
 
   ngOnInit() {
@@ -48,15 +48,59 @@ export class ResumeManagementComponent implements OnInit {
   closeDetailsDialog(): void {
     this.showDetailsDialog = false;
   }
+
   async loadResumes() {
     this.isLoading = true;
     try {
+      // Загрузка резюме HH.ru
       if (this.hhAuthService.isTokenValid()) {
-        this.hhResumes = await this.hhAuthService.getUserResumes();
+        try {
+          this.hhResumes = await this.hhAuthService.getUserResumes();
+          console.log('HH.ru resumes loaded:', this.hhResumes.length);
+        } catch (error) {
+          console.error('Error loading HH.ru resumes:', error);
+          this.hhResumes = [];
+        }
       }
-
+  
+      // Загрузка резюме SuperJob с улучшенной обработкой
       if (this.superJobService.isTokenValid()) {
-        this.superJobResumes = await this.superJobService.getUserResumes();
+        try {
+          const superJobResumes = await this.superJobService.getUserResumes();
+          
+          // Дополнительная валидация данных SuperJob
+          this.superJobResumes = superJobResumes.filter(resume => {
+            const isValid = resume && 
+                           resume.id && 
+                           (resume.title || resume.profession) &&
+                           typeof resume.status !== 'undefined';
+            
+            if (!isValid) {
+              console.warn('Invalid SuperJob resume filtered out:', resume);
+            }
+            
+            return isValid;
+          });
+          
+          console.log('Valid SuperJob resumes:', this.superJobResumes.length);
+          
+          if (superJobResumes.length > 0 && this.superJobResumes.length === 0) {
+            console.warn('All SuperJob resumes were filtered out. Raw data:', superJobResumes);
+            this.messageService.add({
+              severity: 'warn',
+              summary: 'Нет доступных резюме в SuperJob',
+              detail: 'Все полученные данные не являются резюме'
+            });
+          }
+          
+        } catch (error) {
+          console.error('Error loading SuperJob resumes:', error);
+          this.superJobResumes = [];
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Ошибка загрузки резюме SuperJob'
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading resumes:', error);
@@ -67,6 +111,48 @@ export class ResumeManagementComponent implements OnInit {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  testResumeLink(resume: any, platform: 'hh' | 'superjob'): void {
+    let testUrl: string;
+    
+    if (platform === 'superjob') {
+      testUrl = `https://www.superjob.ru/resume/${resume.id}.html`;
+    } else {
+      testUrl = `https://hh.ru/resume/${resume.id}`;
+    }
+    
+    // Открываем в новом окне для проверки
+    const testWindow = window.open(testUrl, '_blank');
+    
+    if (!testWindow) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Не удалось открыть ссылку',
+        detail: 'Возможно, браузер блокирует всплывающие окна'
+      });
+    }
+    
+    // Логируем для отладки
+    console.log('Testing resume link:', {
+      platform,
+      id: resume.id,
+      url: testUrl,
+      resumeData: resume
+    });
+  }
+
+  openResumeInPlatform(resume: any, platform: 'hh' | 'superjob'): void {
+    let url: string;
+    
+    if (platform === 'hh') {
+      url = `https://hh.ru/resume/${resume.id}`;
+    } else {
+      url = `https://www.superjob.ru/resume/${resume.id}.html`;
+    }
+    
+    console.log('Opening resume URL:', url);
+    window.open(url, '_blank');
   }
 
   async deleteHHResume(resumeId: string) {
@@ -147,17 +233,5 @@ export class ResumeManagementComponent implements OnInit {
       console.warn('Date formatting error:', error, date);
       return 'Не указано';
     }
-  }
-
-  openResumeInPlatform(resume: any, platform: 'hh' | 'superjob') {
-    let url: string;
-    
-    if (platform === 'hh') {
-      url = `https://hh.ru/resume/${resume.id}`;
-    } else {
-      url = `https://www.superjob.ru/resume/${resume.id}.html`;
-    }
-    
-    window.open(url, '_blank');
   }
 }

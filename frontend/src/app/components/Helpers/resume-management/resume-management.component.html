@@ -100,75 +100,79 @@
       </div>
     </div>
   
-  <div *ngIf="activeTab === 'superjob' && !isLoading" class="resumes-section">
-    <div *ngIf="superJobResumes.length === 0" class="empty-state">
-      <i class="pi pi-briefcase" style="font-size: 3rem; color: #6c757d;"></i>
-      <h4>{{ 'RESUME.NO_SUPERJOB_RESUMES' | translate }}</h4>
-      <p>{{ 'RESUME.CONNECT_SUPERJOB_HINT' | translate }}</p>
-      <button pButton 
-              [label]="'PLATFORM.CONNECT_SUPERJOB' | translate" 
-              routerLink="/auth/superjob-callback"
-              icon="pi pi-link"
-              class="p-button-primary">
-      </button>
-    </div>
-
-    <div *ngIf="superJobResumes.length > 0" class="resumes-grid">
-      <div *ngFor="let resume of superJobResumes" class="resume-card">
-        <p-card>
-          <div class="resume-header">
-            <h4 class="resume-title">{{ resume.title || resume.profession || 'Без названия' }}</h4>
-            <p-tag [value]="getResumeStatus(resume.status)" 
-                  [severity]="getResumeStatusSeverity(resume.status)">
-            </p-tag>
-          </div>
-
-          <div class="resume-meta">
-            <div class="meta-item" *ngIf="resume.created">
-              <i class="pi pi-calendar"></i>
-              <span>{{ 'RESUME.CREATED' | translate }}: {{ formatDate(resume.created) }}</span>
+    <div *ngIf="activeTab === 'superjob' && !isLoading" class="resumes-section">
+      <div class="debug-info" *ngIf="superJobResumes.length > 0" style="font-size: 12px; color: #666; margin-bottom: 10px;">
+        Найдено резюме: {{ superJobResumes.length }}
+      </div>
+    
+      <div *ngIf="superJobResumes.length === 0" class="empty-state">
+        <i class="pi pi-briefcase" style="font-size: 3rem; color: #6c757d;"></i>
+        <h4>{{ 'RESUME.NO_SUPERJOB_RESUMES' | translate }}</h4>
+        <p>{{ 'RESUME.CONNECT_SUPERJOB_HINT' | translate }}</p>
+        
+        <!-- Информация о статусе подключения -->
+        <div *ngIf="superJobService.isTokenValid()" class="connection-status">
+          <p>✅ Подключение к SuperJob активно</p>
+          <small>Но резюме не найдены или API возвращает некорректные данные</small>
+        </div>
+        
+        <button pButton 
+                [label]="'PLATFORM.CONNECT_SUPERJOB' | translate" 
+                routerLink="/auth/superjob-callback"
+                icon="pi pi-link"
+                class="p-button-primary">
+        </button>
+      </div>
+    
+      <div *ngIf="superJobResumes.length > 0" class="resumes-grid">
+        <div *ngFor="let resume of superJobResumes" class="resume-card">
+          <p-card>
+            <div class="resume-header">
+              <h4 class="resume-title">{{ resume.title || resume.profession || 'Резюме без названия' }}</h4>
+              <p-tag [value]="getResumeStatus(resume.status)" 
+                    [severity]="getResumeStatusSeverity(resume.status)">
+              </p-tag>
             </div>
-            <div class="meta-item" *ngIf="resume.modified">
-              <i class="pi pi-refresh"></i>
-              <span>{{ 'RESUME.UPDATED' | translate }}: {{ formatDate(resume.modified) }}</span>
+    
+            <!-- Отладочная информация -->
+            <div *ngIf="!resume.title && !resume.profession" class="debug-warning" style="color: orange; font-size: 12px;">
+              ⚠️ Отсутствует название резюме
             </div>
-            <div class="meta-item" *ngIf="resume.profession">
-              <i class="pi pi-briefcase"></i>
-              <span>{{ resume.profession }}</span>
+    
+            <div class="resume-meta">
+              <div class="meta-item" *ngIf="resume.created">
+                <i class="pi pi-calendar"></i>
+                <span>{{ 'RESUME.CREATED' | translate }}: {{ formatDate(resume.created) }}</span>
+              </div>
+              <div class="meta-item" *ngIf="resume.modified">
+                <i class="pi pi-refresh"></i>
+                <span>{{ 'RESUME.UPDATED' | translate }}: {{ formatDate(resume.modified) }}</span>
+              </div>
+              <div class="meta-item" *ngIf="resume.profession">
+                <i class="pi pi-briefcase"></i>
+                <span>Профессия: {{ resume.profession }}</span>
+              </div>
             </div>
-          </div>
-
-          <div class="resume-skills" *ngIf="resume.skills">
-            <label>{{ 'RESUME.SKILLS' | translate }}:</label>
-            <p class="skills-text">{{ resume.skills }}</p>
-          </div>
-
-          <div class="resume-actions">
-            <button pButton 
-                    [label]="'DETAILS.VIEW' | translate" 
-                    (click)="showResumeDetails(resume, 'superjob')"
-                    icon="pi pi-eye"
-                    class="p-button-info">
-            </button>
-            
-            <button pButton 
-                    [label]="'RESUME.OPEN_IN_PLATFORM' | translate" 
-                    (click)="openResumeInPlatform(resume, 'superjob')"
-                    icon="pi pi-external-link"
-                    class="p-button-secondary">
-            </button>
-            
-            <button pButton 
-                    [label]="'RESUME.DELETE' | translate" 
-                    (click)="deleteSuperJobResume(resume.id)"
-                    icon="pi pi-trash"
-                    class="p-button-danger">
-            </button>
-          </div>
-        </p-card>
+    
+            <div class="resume-actions">
+              <button pButton 
+                      [label]="'DETAILS.VIEW' | translate" 
+                      (click)="showResumeDetails(resume, 'superjob')"
+                      icon="pi pi-eye"
+                      class="p-button-info">
+              </button>
+              
+              <button pButton 
+                      [label]="'Проверить ссылку' | translate" 
+                      (click)="testResumeLink(resume, 'superjob')"
+                      icon="pi pi-external-link"
+                      class="p-button-help">
+              </button>
+            </div>
+          </p-card>
+        </div>
       </div>
     </div>
-  </div>
   
     <p-dialog [header]="selectedResume?.title" 
       [(visible)]="showDetailsDialog"
