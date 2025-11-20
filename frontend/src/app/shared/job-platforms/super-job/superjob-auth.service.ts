@@ -23,21 +23,14 @@ export interface SuperJobResume {
   modified: number;
   status: number;
   skills: string;
-  education: Array<{
-    name: string;
-    year: number;
-  }>;
-  experience: Array<{
-    position: string;
-    company: string;
-    period: string;
-  }>;
-  language?: Array<{ // делаем опциональным
-    level: string;
-    language: string;
-  }>;
+  education: Array<{ name: string; year: number }>;
+  experience: Array<{ position: string; company: string; period: string }>;
+  payment?: number;
+  currency?: string;
+  name?: string;
+  photo?: string;
+  published?: number;
   platform?: string;
-  raw_data?: any;
 }
 
 export interface SuperJobVacancy {
@@ -111,21 +104,6 @@ export class SuperJobAuthService {
     }
   }
 
-  private mapUserResume(resumeData: any): SuperJobResume {
-    return {
-      id: resumeData.id || resumeData.curriculum_id || 0,
-      title: resumeData.position || resumeData.profession || 'Резюме',
-      profession: resumeData.profession || resumeData.specialization || '',
-      created: resumeData.date_created || resumeData.created || Date.now() / 1000,
-      modified: resumeData.date_modified || resumeData.modified || Date.now() / 1000,
-      status: resumeData.status || resumeData.is_active ? 1 : 0,
-      skills: resumeData.skills || resumeData.key_skills || '',
-      education: resumeData.education || [],
-      experience: resumeData.experience || [],
-      language: resumeData.languages || []
-    };
-  }
-  
   async getVacancies(params: any = {}): Promise<{ objects: SuperJobVacancy[]; total: number }> {
     try {
       await this.waitForConfig();
@@ -328,27 +306,6 @@ export class SuperJobAuthService {
       throw error;
     }
   }
-  private handleApiError(error: any, platform: string): string {
-    console.error(`${platform} API error:`, error);
-    
-    if (error.status === 0) {
-      return `Network error: Cannot connect to ${platform}`;
-    }
-    
-    if (error.status >= 500) {
-      return `${platform} server error: ${error.status}`;
-    }
-    
-    if (error.status === 404) {
-      return `Not found on ${platform}`;
-    }
-    
-    if (error.status === 401 || error.status === 403) {
-      return `Authorization error on ${platform}`;
-    }
-    
-    return `Error accessing ${platform}: ${error.status} ${error.statusText}`;
-  }
 
   async refreshToken(): Promise<string | null> {
     const refreshToken = localStorage.getItem(this.SJ_REFRESH_TOKEN_KEY);
@@ -468,23 +425,22 @@ export class SuperJobAuthService {
     return await response.json();
   }
 
-
   async getUserResumes(): Promise<SuperJobResume[]> {
     const token = await this.getValidToken();
     
     if (!token) {
       throw new Error('Требуется авторизация в SuperJob');
     }
-  
+
     try {
-      // ПРАВИЛЬНЫЙ ENDPOINT для получения резюме
+      // ПРАВИЛЬНЫЙ ENDPOINT для получения списка резюме пользователя
       const response = await fetch('/api/cors-proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: `${this.API_URL}/resumes/`, // ИЗМЕНЕНО: правильный endpoint
+          url: `${this.API_URL}/user_cvs/`, // ИЗМЕНЕНО: правильный endpoint для списка резюме
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -502,9 +458,9 @@ export class SuperJobAuthService {
       const data = await response.json();
       console.log('SuperJob user resumes response:', data);
       
-      // ПРАВИЛЬНОЕ ИЗВЛЕЧЕНИЕ ДАННЫХ
+      // ПРАВИЛЬНОЕ ИЗВЛЕЧЕНИЕ ДАННЫХ ИЗ user_cvs
       if (data.objects && Array.isArray(data.objects)) {
-        return data.objects.map((resume: any) => this.mapResumeData(resume));
+        return data.objects.map((resume: any) => this.mapUserCvData(resume));
       }
       
       console.warn('Unexpected SuperJob resumes response structure:', data);
@@ -516,92 +472,39 @@ export class SuperJobAuthService {
       return [];
     }
   }
-  
-  private mapResumeStatus(resumeData: any): number {
-    // Статусы SuperJob: 1 - активно, 0 - неактивно
-    if (resumeData.is_active !== undefined) {
-      return resumeData.is_active ? 1 : 0;
-    }
-    if (resumeData.status !== undefined) {
-      return resumeData.status;
-    }
-    return 1; // по умолчанию активен
-  }
-  
-  private extractSkills(resumeData: any): string {
-    if (resumeData.skills) {
-      return resumeData.skills;
-    }
-    if (resumeData.key_skills && Array.isArray(resumeData.key_skills)) {
-      return resumeData.key_skills.map((skill: any) => skill.title || skill.name).join(', ');
-    }
-    if (resumeData.catalogues && Array.isArray(resumeData.catalogues)) {
-      return resumeData.catalogues.map((cat: any) => cat.title).join(', ');
-    }
-    return '';
-  }
-  
-  private mapResumeData(resumeData: any): SuperJobResume {
+
+  // НОВЫЙ МЕТОД ДЛЯ МАППИНГА ДАННЫХ ИЗ user_cvs
+  private mapUserCvData(resumeData: any): SuperJobResume {
     return {
       id: resumeData.id || 0,
-      title: resumeData.profession || resumeData.position || 'Резюме без названия',
+      title: resumeData.profession || 'Резюме без названия',
       profession: resumeData.profession || '',
       created: resumeData.date_published || Date.now() / 1000,
       modified: resumeData.date_published || Date.now() / 1000,
-      status: this.mapResumeStatus(resumeData),
-      skills: this.extractSkills(resumeData),
-      education: this.extractEducation(resumeData),
-      experience: this.extractExperience(resumeData),
-      language: this.extractLanguages(resumeData), // Добавляем языки
+      status: this.mapCvStatus(resumeData.published),
+      skills: '', // В кратком списке навыков нет
+      education: [], // В кратком списке образования нет
+      experience: [], // В кратком списке опыта нет
       platform: 'superjob',
-      raw_data: resumeData
+      // Дополнительные поля из user_cvs
+      payment: resumeData.payment,
+      currency: resumeData.currency,
+      name: resumeData.name,
+      photo: resumeData.photo,
+      published: resumeData.published
     };
   }
-  
-  private extractLanguages(resumeData: any): Array<{ level: string; language: string }> {
-    if (resumeData.languages && Array.isArray(resumeData.languages)) {
-      return resumeData.languages.map((lang: any) => ({
-        level: lang.level || 'intermediate',
-        language: lang.language || lang.name || ''
-      }));
-    }
-    
-    return [
-      {
-        level: 'intermediate',
-        language: 'Русский'
-      }
-    ];
-  }
 
-  private extractEducation(resumeData: any): Array<{ name: string; year: number }> {
-    if (resumeData.education && Array.isArray(resumeData.education)) {
-      return resumeData.education.map((edu: any) => ({
-        name: edu.name || edu.institution || '',
-        year: edu.year || edu.graduation_year || new Date().getFullYear()
-      }));
+  private mapCvStatus(publishedStatus: number): number {
+    switch (publishedStatus) {
+      case 1: // открытый доступ
+      case 10: // выборочный доступ
+        return 1; // активен
+      case 0: // закрытый доступ
+      case 4: // отказано в публикации
+      case 100: // черновик
+      default:
+        return 0; // неактивен
     }
-    return [];
-  }
-  
-  private extractExperience(resumeData: any): Array<{ position: string; company: string; period: string }> {
-    if (resumeData.experience && Array.isArray(resumeData.experience)) {
-      return resumeData.experience.map((exp: any) => ({
-        position: exp.position || '',
-        company: exp.company || exp.employer || '',
-        period: this.formatExperiencePeriod(exp)
-      }));
-    }
-    return [];
-  }
-  
-  private formatExperiencePeriod(exp: any): string {
-    if (exp.date_start && exp.date_end) {
-      return `${exp.date_start} - ${exp.date_end}`;
-    }
-    if (exp.period) {
-      return exp.period;
-    }
-    return 'Не указан';
   }
 }
