@@ -33,7 +33,7 @@
 
         <div class="file-upload" *ngIf="!selectedVacancyForInterview">
           <app-translated-file-input 
-            (fileSelected)="onFileSelect($event, 'vacancy')"
+            (fileSelected)="onFileSelect($event, 'resume')"
             [fieldName]="'interview-resume'"
             [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>

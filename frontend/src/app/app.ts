@@ -245,12 +245,12 @@ export class App implements OnInit {
         label: this.translate.instant('MAIN_MENU.ABOUT.name'),
         routerLink: '/about'
       },
-      {
-        label: 'Избранное',
-        icon: 'pi pi-heart',
-        routerLink: '/vacancy-search',
-        queryParams: { section: 'favorites' }
-      }
+      // {
+      //   label: 'Избранное',
+      //   icon: 'pi pi-heart',
+      //   routerLink: '/vacancy-search',
+      //   queryParams: { section: 'favorites' }
+      // }
     ];
   }
 

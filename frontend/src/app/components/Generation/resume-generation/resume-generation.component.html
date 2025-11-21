@@ -110,7 +110,7 @@
               [disabled]="isLoading" 
               class="publish-btn"
               icon="pi pi-send">
-        {{ 'BUTTON.PUBLISH_TO_HH' | translate }}
+        {{ 'BUTTON.PUBLISH_TO_JOB_PLATFORMS' | translate }}
       </button>
     </div>
   }
@@ -142,7 +142,7 @@
     @if (publishStatus === 'success' && hhResumeUrl) {
       <div class="publish-success">
         <p>{{ 'RESUME_GENERATION.PUBLISH_SUCCESS' | translate }}</p>
-        <a [href]="hhResumeUrl" target="_blank">{{ 'RESUME_GENERATION.VIEW_ON_HH' | translate }}</a>
+        <a [href]="hhResumeUrl" target="_blank">{{ 'RESUME_GENERATION.VIEW_ON_PLATFORMS' | translate }}</a>
       </div>
     }
     
