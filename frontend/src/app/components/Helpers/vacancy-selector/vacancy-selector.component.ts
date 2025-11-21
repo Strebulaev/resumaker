@@ -140,46 +140,6 @@ export class VacancySelectorComponent implements OnInit {
     this.loadFromUrl();
   }
 
-  // Загрузка из файла
-  async onFileSelect(file: File): Promise<void> {
-    this.selectedFile = file;
-    
-    try {
-      const content = await this.fileProcessor.extractTextFromFile(file);
-      
-      // Пытаемся распарсить как структурированные данные
-      let vacancyData: any;
-      try {
-        if (file.name.endsWith('.json')) {
-          vacancyData = JSON.parse(content);
-        } else if (file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
-          // Для YAML потребуется дополнительная библиотека
-          vacancyData = this.parseYaml(content);
-        } else {
-          // Для текстовых файлов создаем базовую структуру
-          vacancyData = this.createVacancyFromText(content, file.name);
-        }
-      } catch (parseError) {
-        // Если не удалось распарсить, создаем базовую структуру из текста
-        vacancyData = this.createVacancyFromText(content, file.name);
-      }
-
-      this.selectedVacancy = this.normalizeVacancyData(vacancyData);
-      
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Файл вакансии загружен'
-      });
-    } catch (error) {
-      this.errorHandler.showError('Ошибка обработки файла', 'VacancySelectorComponent');
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка обработки файла'
-      });
-    }
-  }
-
-  // Создание вакансии из текста
   private createVacancyFromText(content: string, fileName: string): any {
     const lines = content.split('\n').filter(line => line.trim());
     
@@ -334,5 +294,48 @@ export class VacancySelectorComponent implements OnInit {
     if (salary.currency) text += salary.currency;
     
     return text.trim() || 'Зарплата не указана';
+  }
+
+  async onFileSelect(file: File | File[]): Promise<void> {
+    // Обрабатываем как одиночный файл
+    const selectedFile = file instanceof File ? file : (Array.isArray(file) ? file[0] : null);
+    
+    if (!selectedFile) return;
+  
+    this.selectedFile = selectedFile;
+    
+    try {
+      const content = await this.fileProcessor.extractTextFromFile(selectedFile);
+      
+      // Пытаемся распарсить как структурированные данные
+      let vacancyData: any;
+      try {
+        if (selectedFile.name.endsWith('.json')) {
+          vacancyData = JSON.parse(content);
+        } else if (selectedFile.name.endsWith('.yaml') || selectedFile.name.endsWith('.yml')) {
+          // Для YAML потребуется дополнительная библиотека
+          vacancyData = this.parseYaml(content);
+        } else {
+          // Для текстовых файлов создаем базовую структуру
+          vacancyData = this.createVacancyFromText(content, selectedFile.name);
+        }
+      } catch (parseError) {
+        // Если не удалось распарсить, создаем базовую структуру из текста
+        vacancyData = this.createVacancyFromText(content, selectedFile.name);
+      }
+  
+      this.selectedVacancy = this.normalizeVacancyData(vacancyData);
+      
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Файл вакансии загружен'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка обработки файла', 'VacancySelectorComponent');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка обработки файла'
+      });
+    }
   }
 }

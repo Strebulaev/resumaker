@@ -217,63 +217,6 @@ export class InterviewPrepComponent implements OnInit {
     }
   }
   
-  async onFileSelect(event: any, field: string): Promise<void> {
-    const file = event.target.files[0];
-    if (!file) return;
-  
-    try {
-      let content = await this.fileProcessor.extractTextFromFile(file);
-      
-      if (field === 'resume' && (file.name.endsWith('.json') || file.name.endsWith('.yaml') || file.name.endsWith('.yml'))) {
-        try {
-          const profileData = await this.processStructuredResumeFile(content, file.type);
-          content = this.profileService.exportToTxt(profileData);
-        } catch (error) {
-          console.warn('Failed to parse structured resume file, using raw content:', error);
-        }
-      }
-      
-      switch (field) {
-        case 'resume':
-          this.resumeFile = file;
-          this.resumeContent = content;
-          break;
-        case 'vacancy':
-          this.vacancyFile = file;
-          this.vacancyContent = content;
-          break;
-        case 'company':
-          this.companyFile = file;
-          this.companyContent = content;
-          break;
-        case 'personalContext':
-          this.personalContextFile = file;
-          this.personalContextContent = content;
-          break;
-        case 'coverLetter':
-          this.coverLetterFile = file;
-          this.coverLetterContent = content;
-          break;
-        case 'internalContext':
-          this.internalContextFile = file;
-          this.internalContextContent = content;
-          break;
-      }
-  
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Файл загружен',
-        detail: `${file.name} успешно обработан`
-      });
-    } catch (error) {
-      this.errorHandler.showError('Ошибка обработки файла', 'InterviewPrepComponent');
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка обработки файла'
-      });
-    }
-  }
-  
   removeFile(field: string): void {
     switch (field) {
       case 'resume':
@@ -357,7 +300,7 @@ export class InterviewPrepComponent implements OnInit {
     } else {
       vacancyText = this.interviewForm.get('customVacancy')?.value || '';
     }
-    
+
     const vacancyContext = this.currentVacancy ? `
     ИНФОРМАЦИЯ О ВАКАНСИИ:
     - Должность: ${this.currentVacancy.name}
@@ -553,5 +496,62 @@ export class InterviewPrepComponent implements OnInit {
     if (salary.to) text += `до ${salary.to} `;
     if (salary.currency) text += salary.currency;
     return text.trim();
+  }
+
+  async onFileSelect(event: any, field: string): Promise<void> {
+    const file = event instanceof File ? event : (Array.isArray(event) ? event[0] : null);
+    if (!file) return;
+  
+    try {
+      let content = await this.fileProcessor.extractTextFromFile(file);
+      
+      if (field === 'resume' && (file.name.endsWith('.json') || file.name.endsWith('.yaml') || file.name.endsWith('.yml'))) {
+        try {
+          const profileData = await this.processStructuredResumeFile(content, file.type);
+          content = this.profileService.exportToTxt(profileData);
+        } catch (error) {
+          console.warn('Failed to parse structured resume file, using raw content:', error);
+        }
+      }
+      
+      switch (field) {
+        case 'resume':
+          this.resumeFile = file;
+          this.resumeContent = content;
+          break;
+        case 'vacancy':
+          this.vacancyFile = file;
+          this.vacancyContent = content;
+          break;
+        case 'company':
+          this.companyFile = file;
+          this.companyContent = content;
+          break;
+        case 'personalContext':
+          this.personalContextFile = file;
+          this.personalContextContent = content;
+          break;
+        case 'coverLetter':
+          this.coverLetterFile = file;
+          this.coverLetterContent = content;
+          break;
+        case 'internalContext':
+          this.internalContextFile = file;
+          this.internalContextContent = content;
+          break;
+      }
+  
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Файл загружен',
+        detail: `${file.name} успешно обработан`
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка обработки файла', 'InterviewPrepComponent');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка обработки файла'
+      });
+    }
   }
 }

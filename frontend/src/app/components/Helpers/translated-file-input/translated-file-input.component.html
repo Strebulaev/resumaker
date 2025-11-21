@@ -1,37 +1,39 @@
-<div class="file-input-wrapper">
-    <input 
-      type="file" 
-      [id]="id"
-      [accept]="accept"
-      (change)="onFileSelect($event)"
-      class="file-input"
-      #fileInput
-    />
+<div class="file-input-wrapper" [class.disabled]="disabled">
+  <input 
+    type="file" 
+    [id]="id"
+    [accept]="accept"
+    [multiple]="multiple"
+    (change)="onFileSelect($event)"
+    class="file-input"
+    #fileInput
+    [disabled]="disabled"
+  />
+  
+  <div class="file-input-controls">
+    <label [for]="id" class="file-input-label" [class.disabled]="disabled">
+      <i class="pi pi-upload"></i>
+      {{ 'FILE.SELECT' | translate }}
+    </label>
     
-    <div class="file-input-controls">
-      <label [for]="id" class="file-input-label">
-        <i class="pi pi-upload"></i>
-        {{ 'FILE.SELECT' | translate }}
-      </label>
-      
-      <div class="file-info" *ngIf="selectedFile">
-        <span class="file-name">{{ selectedFile.name }}</span>
-        <span class="file-size">({{ getFileSize(selectedFile.size) }})</span>
-        <button 
-          type="button" 
-          class="clear-button"
-          (click)="clearFile()"
-          [attr.aria-label]="'FILE.CLEAR' | translate">
-          <i class="pi pi-times"></i>
-        </button>
-      </div>
-      
-      <div class="file-info" *ngIf="!selectedFile">
-        <span class="no-file">{{ 'FILE.NO_FILE_CHOSEN' | translate }}</span>
-      </div>
+    <div class="file-info" *ngIf="selectedFile || selectedFiles.length > 0">
+      <span class="file-name">{{ getDisplayText() }}</span>
+      <button 
+        type="button" 
+        class="clear-button"
+        (click)="clearFile()"
+        [disabled]="disabled"
+        [attr.aria-label]="'FILE.CLEAR' | translate">
+        <i class="pi pi-times"></i>
+      </button>
     </div>
-
-    <div class="file-types-hint" *ngIf="showFileTypes">
-      <small>{{ 'FILE.SUPPORTED_FORMATS' | translate }}: {{ getFormatsList() }}</small>
+    
+    <div class="file-info" *ngIf="!selectedFile && selectedFiles.length === 0">
+      <span class="no-file">{{ 'FILE.NO_FILE_CHOSEN' | translate }}</span>
     </div>
   </div>
+
+  <div class="file-types-hint" *ngIf="showFileTypes">
+    <small>{{ 'FILE.SUPPORTED_FORMATS' | translate }}: {{ getFormatsList() }}</small>
+  </div>
+</div>

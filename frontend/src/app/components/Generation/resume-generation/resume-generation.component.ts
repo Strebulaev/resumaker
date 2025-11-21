@@ -70,43 +70,9 @@ export class ResumeGenerationComponent {
     }
   }
 
-  async onCoverLetterFileSelect(file: File): Promise<void> {
-    try {
-      this.coverLetterFile = file;
-      const content = await this.fileProcessor.extractTextFromFile(file);
-      this.coverLetterContent = content;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Файл сопроводительного письма загружен'
-      });
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка загрузки файла'
-      });
-    }
-  }
-
   removeCoverLetterFile(): void {
     this.coverLetterFile = null;
     this.coverLetterContent = '';
-  }
-
-  async onVacancyFileSelect(file: File): Promise<void> {
-    try {
-      this.vacancyFile = file;
-      const content = await this.fileProcessor.extractTextFromFile(file);
-      // Можно сохранить содержимое вакансии для использования при генерации
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Файл вакансии загружен'
-      });
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка загрузки файла вакансии'
-      });
-    }
   }
 
   removeVacancyFile(): void {
@@ -397,5 +363,49 @@ export class ResumeGenerationComponent {
     return forms[
       count % 100 > 4 && count % 100 < 20 ? 2 : cases[Math.min(count % 10, 5)]
     ];
+  }
+
+  async onCoverLetterFileSelect(file: File | File[]): Promise<void> {
+    try {
+      // Обрабатываем как одиночный файл
+      const selectedFile = file instanceof File ? file : (Array.isArray(file) ? file[0] : null);
+      
+      if (selectedFile) {
+        this.coverLetterFile = selectedFile;
+        const content = await this.fileProcessor.extractTextFromFile(selectedFile);
+        this.coverLetterContent = content;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Файл сопроводительного письма загружен'
+        });
+      }
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка загрузки файла'
+      });
+    }
+  }
+  
+  async onVacancyFileSelect(file: File | File[]): Promise<void> {
+    try {
+      // Обрабатываем как одиночный файл
+      const selectedFile = file instanceof File ? file : (Array.isArray(file) ? file[0] : null);
+      
+      if (selectedFile) {
+        this.vacancyFile = selectedFile;
+        const content = await this.fileProcessor.extractTextFromFile(selectedFile);
+        // Можно сохранить содержимое вакансии для использования при генерации
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Файл вакансии загружен'
+        });
+      }
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка загрузки файла вакансии'
+      });
+    }
   }
 }

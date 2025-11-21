@@ -174,11 +174,6 @@ export class CoverLetterGenerateComponent implements OnInit {
       this.isLoading = false;
     }
   }
-  
-  onFileSelect(file: File): void {
-    this.uploadedResumeFile = file;
-    this.readResumeFile(file);
-  }
 
   onFileClear(): void {
     this.uploadedResumeFile = null;
@@ -262,18 +257,6 @@ export class CoverLetterGenerateComponent implements OnInit {
         });
       }
     });
-  }
-
-  private readResumeFile(file: File): void {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.resumeContent = e.target?.result as string;
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Файл резюме загружен'
-      });
-    };
-    reader.readAsText(file);
   }
 
   getVacancyPlatform(vacancy: any): string {
@@ -486,5 +469,29 @@ export class CoverLetterGenerateComponent implements OnInit {
         });
       }
     });
+  }
+  onFileSelect(file: File | File[]): void {
+    // Обрабатываем как одиночный файл
+    if (file instanceof File) {
+      this.uploadedResumeFile = file;
+      this.readResumeFile(file);
+    } else if (Array.isArray(file) && file.length > 0) {
+      // Берем первый файл из массива
+      this.uploadedResumeFile = file[0];
+      this.readResumeFile(file[0]);
+    }
+  }
+  
+  // Обновим метод для работы с новым типом
+  private readResumeFile(file: File): void {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.resumeContent = e.target?.result as string;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Файл резюме загружен'
+      });
+    };
+    reader.readAsText(file);
   }
 }

@@ -20,6 +20,7 @@
     <div class="file-upload-field">
       <app-translated-file-input
         [accept]="'.txt,.pdf,.doc,.docx,.rtf'"
+        [fieldName]="'resume-generation-cover-letter'"
         (fileSelected)="onCoverLetterFileSelect($event)"
         [showFileTypes]="true">
       </app-translated-file-input>
@@ -53,6 +54,7 @@
     <div class="file-upload-field">
       <app-translated-file-input
         [accept]="'.txt,.pdf,.doc,.docx,.rtf,.json,.yaml,.yml'"
+        [fieldName]="'resume-generation-vacancy'"
         (fileSelected)="onVacancyFileSelect($event)"
         [showFileTypes]="true">
       </app-translated-file-input>

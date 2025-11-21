@@ -52,23 +52,14 @@
         </p-select>
       </div>
 
-      <!-- Загрузка файла резюме (альтернативный способ) -->
       <div class="field" *ngIf="!selectedResumeFromSelector">
         <label>{{ 'COVER_LETTER.UPLOAD_RESUME' | translate }}</label>
         <app-translated-file-input
           [accept]="'.txt,.pdf,.doc,.docx,.rtf'"
+          [fieldName]="'cover-letter-resume'"
           (fileSelected)="onFileSelect($event)"
           [showFileTypes]="true">
         </app-translated-file-input>
-        
-        @if (uploadedResumeFile) {
-          <div class="file-info">
-            <span>{{ 'FILE_UPLOADED' | translate }}: {{ uploadedResumeFile.name }}</span>
-            <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
-                    (click)="uploadedResumeFile = null; resumeContent = ''">
-            </button>
-          </div>
-        }
       </div>
       
       <!-- Обновите поле resume_id -->

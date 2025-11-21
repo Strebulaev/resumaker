@@ -34,7 +34,8 @@
         <div class="file-upload" *ngIf="!selectedVacancyForInterview">
           <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'vacancy')"
-            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           
           <div class="file-info" *ngIf="vacancyFile">
@@ -59,7 +60,8 @@
         <div class="file-upload">
           <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'vacancy')"
-            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           
           <div class="file-info" *ngIf="vacancyFile">
@@ -105,7 +107,8 @@
         <div class="file-upload">
           <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'company')"
-            accept=".txt,.pdf,.doc,.docx,.rtf">
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           
           <div class="file-info" *ngIf="companyFile">
@@ -130,7 +133,8 @@
         <div class="file-upload">
           <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'personalContext')"
-            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           <div class="file-info" *ngIf="personalContextFile">
             <span>{{ personalContextFile.name }}</span>
@@ -154,7 +158,8 @@
         <div class="file-upload">
           <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'coverLetter')"
-            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           
           <div class="file-info" *ngIf="coverLetterFile">
@@ -179,7 +184,8 @@
         <div class="file-upload">
           <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'internalContext')"
-            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           
           <div class="file-info" *ngIf="internalContextFile">
