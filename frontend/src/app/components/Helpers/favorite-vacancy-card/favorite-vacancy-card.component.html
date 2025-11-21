@@ -1,0 +1,156 @@
+<div class="favorite-vacancy-card">
+    <p-card>
+      <!-- Заголовок вакансии -->
+      <div class="vacancy-header">
+        <div class="vacancy-title-section">
+          <h4 class="vacancy-title">{{ vacancy.name }}</h4>
+          <div class="vacancy-platform">
+            <span class="platform-badge" 
+                  [class.hh-badge]="getVacancyPlatform(vacancy) === 'hh.ru'"
+                  [class.sj-badge]="getVacancyPlatform(vacancy) === 'superjob.ru'">
+              {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}
+            </span>
+          </div>
+        </div>
+        <button pButton 
+                icon="pi pi-times" 
+                class="p-button-text p-button-danger"
+                (click)="onRemoveFromFavorites()"
+                pTooltip="Удалить из избранного">
+        </button>
+      </div>
+  
+      <div class="vacancy-info">
+        <div class="info-row">
+          <strong>Компания:</strong> {{ vacancy.employer.name }}
+        </div>
+        <div class="info-row">
+          <strong>Зарплата:</strong> {{ getSalaryText(vacancy) }}
+        </div>
+        <div class="info-row" *ngIf="vacancy.address?.city">
+          <strong>Город:</strong> {{ vacancy.address?.city }}
+        </div>
+        <div class="info-row" *ngIf="vacancy.experience?.name">
+          <strong>Опыт:</strong> {{ vacancy.experience?.name }}
+        </div>
+      </div>
+  
+      <!-- Кнопки генерации -->
+      <div class="generation-actions">
+        <div class="action-buttons">
+          <button pButton 
+                  label="Сопроводительное письмо"
+                  icon="pi pi-envelope"
+                  (click)="onGenerateCoverLetter()"
+                  [disabled]="!selectedResume"
+                  class="p-button-outlined p-button-sm"
+                  pTooltip="Сгенерировать сопроводительное письмо">
+          </button>
+  
+          <button pButton 
+                  label="План развития"
+                  icon="pi pi-chart-line"
+                  (click)="onGenerateDevelopmentPlan()"
+                  class="p-button-outlined p-button-sm"
+                  pTooltip="Сгенерировать план развития">
+          </button>
+  
+          <button pButton 
+                  label="Резюме"
+                  icon="pi pi-file"
+                  (click)="onGenerateResume()"
+                  class="p-button-outlined p-button-sm"
+                  pTooltip="Сгенерировать резюме">
+          </button>
+        </div>
+      </div>
+  
+      <!-- Сгенерированный контент -->
+      <div class="generated-content" *ngIf="hasGeneratedContent()">
+        <div class="content-section" *ngIf="vacancy.coverLetter">
+          <h5>Сопроводительное письмо</h5>
+          <div class="content-preview">
+            {{ vacancy.coverLetter.substring(0, 150) }}...
+          </div>
+          <div class="content-actions">
+            <button pButton 
+                    icon="pi pi-eye"
+                    (click)="showCoverLetterDialog = true"
+                    class="p-button-text p-button-sm">
+            </button>
+            <button pButton 
+                    icon="pi pi-send"
+                    (click)="onSendCoverLetter()"
+                    class="p-button-text p-button-sm p-button-success"
+                    pTooltip="Отправить на платформу">
+            </button>
+          </div>
+        </div>
+  
+        <div class="content-section" *ngIf="vacancy.developmentPlan">
+          <h5>План развития</h5>
+          <div class="content-preview">
+            {{ vacancy.developmentPlan.substring(0, 150) }}...
+          </div>
+          <div class="content-actions">
+            <button pButton 
+                    icon="pi pi-eye"
+                    (click)="showDevelopmentPlanDialog = true"
+                    class="p-button-text p-button-sm">
+            </button>
+          </div>
+        </div>
+  
+        <div class="content-section" *ngIf="vacancy.generatedResume">
+          <h5>Резюме</h5>
+          <div class="content-preview">
+            {{ vacancy.generatedResume.substring(0, 150) }}...
+          </div>
+          <div class="content-actions">
+            <button pButton 
+                    icon="pi pi-eye"
+                    (click)="showResumeDialog = true"
+                    class="p-button-text p-button-sm">
+            </button>
+          </div>
+        </div>
+  
+        <div class="last-generated" *ngIf="vacancy.lastGenerated">
+          <small>Обновлено: {{ getLastGeneratedTime() }}</small>
+        </div>
+      </div>
+    </p-card>
+  
+    <!-- Диалоги для просмотра полного контента -->
+    <p-dialog header="Сопроводительное письмо" 
+             [(visible)]="showCoverLetterDialog" 
+             [modal]="true"
+             [style]="{ width: '70vw' }">
+      <div class="content-dialog">
+        <textarea pInputTextarea 
+                  [rows]="15" 
+                  [value]="vacancy.coverLetter"
+                  style="width: 100%"
+                  readonly>
+        </textarea>
+      </div>
+    </p-dialog>
+  
+    <p-dialog header="План развития" 
+             [(visible)]="showDevelopmentPlanDialog" 
+             [modal]="true"
+             [style]="{ width: '70vw' }">
+      <div class="content-dialog">
+        <div class="markdown-content" [innerHTML]="vacancy.developmentPlan"></div>
+      </div>
+    </p-dialog>
+  
+    <p-dialog header="Резюме" 
+             [(visible)]="showResumeDialog" 
+             [modal]="true"
+             [style]="{ width: '70vw' }">
+      <div class="content-dialog">
+        <div class="markdown-content" [innerHTML]="vacancy.generatedResume"></div>
+      </div>
+    </p-dialog>
+  </div>

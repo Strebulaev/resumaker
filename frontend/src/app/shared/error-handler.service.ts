@@ -1,4 +1,4 @@
-import { Injectable, Injector } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { ErrorToastComponent } from '../components/Helpers/error-toast/error-toast.component';
 
 @Injectable({
@@ -7,7 +7,7 @@ import { ErrorToastComponent } from '../components/Helpers/error-toast/error-toa
 export class ErrorHandlerService {
   private errorToastComponent?: ErrorToastComponent;
 
-  constructor(private injector: Injector) {}
+  constructor() {}
 
   handleAIConnectionError(error: any, context: string = 'AI Service') {
     if (error.status === 0 || error.message?.includes('CORS')) {

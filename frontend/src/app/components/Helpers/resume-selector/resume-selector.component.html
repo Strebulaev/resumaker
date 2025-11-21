@@ -1,0 +1,109 @@
+<div class="resume-selector-container">
+    <p-dialog 
+      [header]="'RESUME_SELECTOR.TITLE' | translate" 
+      [(visible)]="showSelector" 
+      [modal]="true"
+      [style]="{ width: '70vw', maxWidth: '800px' }"
+      (onHide)="closeSelector()">
+      
+      <!-- Загрузка -->
+      <div class="loading-section" *ngIf="isLoading">
+        <p-progressSpinner></p-progressSpinner>
+        <p>{{ 'RESUME_SELECTOR.LOADING' | translate }}</p>
+      </div>
+  
+      <!-- Список резюме -->
+      <div *ngIf="!isLoading" class="resumes-section">
+        <div class="resumes-list">
+          <div *ngFor="let resume of resumes" 
+               class="resume-card"
+               [class.selected]="selectedResume?.id === resume.id"
+               (click)="selectedResume = resume">
+            
+            <div class="resume-header">
+              <i [class]="getPlatformIcon(resume.platform)" 
+                 [class.hh-icon]="resume.platform === 'hh'"
+                 [class.sj-icon]="resume.platform === 'superjob'"
+                 [class.file-icon]="resume.platform === 'file'"></i>
+              
+              <div class="resume-info">
+                <h4 class="resume-title">{{ resume.title }}</h4>
+                <span class="resume-platform">{{ getPlatformLabel(resume.platform) }}</span>
+              </div>
+            </div>
+  
+            <div class="resume-meta" *ngIf="resume.created || resume.updated">
+              <small *ngIf="resume.created">
+                {{ 'RESUME_SELECTOR.CREATED' | translate }}: {{ formatDate(resume.created) }}
+              </small>
+              <small *ngIf="resume.updated">
+                {{ 'RESUME_SELECTOR.UPDATED' | translate }}: {{ formatDate(resume.updated) }}
+              </small>
+            </div>
+  
+            <div class="resume-skills" *ngIf="resume.skills && resume.skills.length > 0">
+              <small>{{ resume.skills.join(', ') }}</small>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Загрузка файла -->
+        <div class="file-upload-section">
+          <h4>{{ 'RESUME_SELECTOR.UPLOAD_NEW' | translate }}</h4>
+          
+          <div class="file-upload">
+            <input 
+              type="file" 
+              (change)="onFileSelect($event)"
+              accept=".txt,.pdf,.doc,.docx,.rtf"
+              class="file-input">
+            
+            <small>{{ 'RESUME_SELECTOR.SUPPORTED_FORMATS' | translate }}</small>
+          </div>
+  
+          <div class="file-info" *ngIf="uploadedFile">
+            <i class="pi pi-file"></i>
+            <span>{{ uploadedFile.name }}</span>
+          </div>
+        </div>
+  
+        <!-- Сообщение если нет резюме -->
+        <div *ngIf="resumes.length === 0 && !uploadedFile" class="no-resumes">
+          <i class="pi pi-inbox" style="font-size: 3rem; color: #6c757d;"></i>
+          <h4>{{ 'RESUME_SELECTOR.NO_RESUMES' | translate }}</h4>
+          <p>{{ 'RESUME_SELECTOR.NO_RESUMES_HINT' | translate }}</p>
+          
+          <div class="platform-actions">
+            <button pButton 
+                    [label]="'PLATFORM.CONNECT_HH' | translate" 
+                    routerLink="/auth/callback"
+                    icon="pi pi-link"
+                    class="p-button-outlined">
+            </button>
+            
+            <button pButton 
+                    [label]="'PLATFORM.CONNECT_SUPERJOB' | translate" 
+                    routerLink="/auth/superjob-callback"
+                    icon="pi pi-link"
+                    class="p-button-outlined">
+            </button>
+          </div>
+        </div>
+      </div>
+  
+      <ng-template pTemplate="footer">
+        <button pButton 
+                [label]="'BUTTON.CANCEL' | translate" 
+                (click)="closeSelector()"
+                class="p-button-secondary">
+        </button>
+        
+        <button pButton 
+                [label]="'RESUME_SELECTOR.SELECT' | translate" 
+                (click)="selectResume()"
+                [disabled]="!selectedResume"
+                class="p-button-primary">
+        </button>
+      </ng-template>
+    </p-dialog>
+  </div>

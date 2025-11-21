@@ -1,29 +1,30 @@
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
-import { CardModule } from 'primeng/card';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { DialogModule } from 'primeng/dialog';
-import { TextareaModule } from 'primeng/textarea';
-import { TooltipModule } from 'primeng/tooltip';
-import { ProgressBarModule } from 'primeng/progressbar';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
 import { FileUploadModule } from 'primeng/fileupload';
+import { InputTextModule } from 'primeng/inputtext';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { SelectModule } from 'primeng/select';
+import { TextareaModule } from 'primeng/textarea';
+import { TooltipModule } from 'primeng/tooltip';
 import { Subscription } from 'rxjs';
+import { AIGuardService } from '../../../shared/ai/ai-guard.service';
 import { CoverLetterService } from '../../../shared/cover-letter/cover-letter.service';
 import { SupabaseService } from '../../../shared/db/supabase.service';
+import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { HHAuthService } from '../../../shared/job-platforms/hh/hh-auth.service';
 import { ProfileService } from '../../../shared/profile/profile.service';
 import { VacancyService } from '../../../shared/vacancy/vacancy.service';
 import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
-import { ErrorHandlerService } from '../../../shared/error-handler.service';
-import { AIGuardService } from '../../../shared/ai/ai-guard.service';
+import { ResumeSelectorComponent, Resume } from '../../Helpers/resume-selector/resume-selector.component';
 import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
+import { VacancySelectorComponent } from "../../Helpers/vacancy-selector/vacancy-selector.component";
 
 @Component({
   selector: 'app-cover-letter-generate',
@@ -46,6 +47,9 @@ import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-mo
     TextareaModule,
     TooltipModule,
     TranslatedFileInputComponent,
+    ResumeSelectorComponent,
+    AiConfigModalComponent,
+    VacancySelectorComponent
 ],
   providers: [MessageService]
 })
@@ -67,6 +71,10 @@ export class CoverLetterGenerateComponent implements OnInit {
   toneOptions: any[] = [];
   private langSubscription!: Subscription;
   showAIConfigModal = false;
+  showResumeSelector = false;
+  selectedResumeFromSelector: Resume | null = null;
+  showVacancySelector = false;
+  selectedVacancyFromSelector: any = null;
 
   constructor(
     private fb: FormBuilder,
@@ -89,6 +97,7 @@ export class CoverLetterGenerateComponent implements OnInit {
       resume_file: [null]
     });
   }
+  
   private updateTranslatedOptions(): void {
     this.styleOptions = [
       { label: this.translate.instant('COVER_LETTER.STYLES.FORMAL'), value: 'formal' },
@@ -102,6 +111,7 @@ export class CoverLetterGenerateComponent implements OnInit {
       { label: this.translate.instant('COVER_LETTER.TONES.CONSERVATIVE'), value: 'conservative' }
     ];
   }
+  
   ngOnInit(): void {
     this.updateTranslatedOptions();
     this.loadUserProfile();
@@ -110,9 +120,11 @@ export class CoverLetterGenerateComponent implements OnInit {
       this.updateTranslatedOptions();
     });
   }
+  
   closeTemplateDialog(): void {
     this.showTemplateDialog = false;
   }
+  
   async loadVacancyForLetter(): Promise<void> {
       if (!this.vacancyUrl) return;
       
@@ -132,6 +144,7 @@ export class CoverLetterGenerateComponent implements OnInit {
         this.isLoading = false;
       }
   }
+  
   async loadVacancyInfo(): Promise<void> {
     if (!this.vacancyUrl) return;
     
@@ -161,6 +174,7 @@ export class CoverLetterGenerateComponent implements OnInit {
       this.isLoading = false;
     }
   }
+  
   onFileSelect(file: File): void {
     this.uploadedResumeFile = file;
     this.readResumeFile(file);
@@ -170,6 +184,7 @@ export class CoverLetterGenerateComponent implements OnInit {
     this.uploadedResumeFile = null;
     this.resumeContent = '';
   }
+  
   private loadUserResumes(): void {
     const hhToken = localStorage.getItem('hh_access_token');
     if (hhToken && this.hhAuthService.isTokenValid()) {
@@ -184,6 +199,7 @@ export class CoverLetterGenerateComponent implements OnInit {
       });
     }
   }
+  
   sendToHH(): void {
     if (!this.generatedLetter || !this.userProfile) {
       return;
@@ -227,6 +243,7 @@ export class CoverLetterGenerateComponent implements OnInit {
       }
     });
   }
+  
   private loadUserProfile(): void {
     this.profileService.loadProfile().subscribe({
       next: (profile) => {
@@ -274,48 +291,6 @@ export class CoverLetterGenerateComponent implements OnInit {
       'superjob.ru': 'SuperJob'
     };
     return platformLabels[platform] || platform;
-  }
-
-  generateCoverLetter(): void {
-    const aiCheck = this.aiGuard.ensureAIConfigured();
-    if (!aiCheck.configured) {
-      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
-      this.showAIConfigModal = true;
-      return;
-    }
-    
-    if (this.coverLetterForm.invalid) {
-      this.markFormGroupTouched();
-      return;
-    }
-  
-    this.isLoading = true;
-    this.generatedLetter = null;
-  
-    const request = {
-      ...this.coverLetterForm.value,
-      selected_resume: this.selectedResume,
-      resume_content: this.resumeContent
-    };
-  
-    console.log('🚀 Starting letter generation for vacancy:', this.coverLetterForm.get('vacancy_id')?.value);
-  
-    this.coverLetterService.generateCoverLetter(request).subscribe({
-      next: (response) => {
-        console.log('✅ Letter generated successfully');
-        this.generatedLetter = response;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorHandler.showError('Ошибка генерации письма', 'CoverLetterGenerateComponent');
-        this.isLoading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Ошибка генерации',
-          detail: error.message
-        });
-      }
-    });
   }
 
   editLetter(): void {
@@ -389,9 +364,127 @@ export class CoverLetterGenerateComponent implements OnInit {
     const option = this.toneOptions.find(opt => opt.value === value);
     return option ? option.label : value;
   }
+  
   ngOnDestroy(): void {
     if (this.langSubscription) {
       this.langSubscription.unsubscribe();
     }
+  }
+
+  // Новые методы для работы с селектором резюме
+  onResumeSelected(resume: Resume): void {
+    this.selectedResumeFromSelector = resume;
+    
+    if (resume.platform === 'file' && resume.content) {
+      // Используем содержимое файла
+      this.resumeContent = resume.content;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Резюме загружено из файла'
+      });
+    } else if (resume.platform === 'hh' || resume.platform === 'superjob') {
+      // Устанавливаем выбранное резюме с платформы
+      this.selectedResume = resume;
+      this.coverLetterForm.patchValue({
+        selected_resume: resume
+      });
+    }
+  }
+
+  openResumeSelector(): void {
+    this.showResumeSelector = true;
+  }
+
+  onVacancySelected(vacancy: any): void {
+    this.selectedVacancyFromSelector = vacancy;
+    
+    // Автозаполнение поля vacancy_id
+    if (vacancy.id) {
+      this.coverLetterForm.patchValue({
+        vacancy_id: vacancy.id
+      });
+    }
+    
+    // Сохраняем текущую вакансию для использования в генерации
+    this.currentVacancy = vacancy;
+    
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Вакансия выбрана',
+      detail: `${vacancy.name} - ${vacancy.employer?.name}`
+    });
+  }
+
+  openVacancySelector(): void {
+    this.showVacancySelector = true;
+  }
+
+  clearSelectedVacancy(): void {
+    this.selectedVacancyFromSelector = null;
+    this.currentVacancy = null;
+    this.coverLetterForm.patchValue({
+      vacancy_id: ''
+    });
+  }
+
+  getPlatformIcon(platform: string): string {
+    const icons: { [key: string]: string } = {
+      'hh.ru': 'pi pi-briefcase',
+      'superjob.ru': 'pi pi-briefcase', 
+      'file': 'pi pi-file'
+    };
+    return icons[platform] || 'pi pi-question-circle';
+  }
+
+  getPlatformLabelForSelector(platform: string): string {
+    const labels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob',
+      'file': 'Файл'
+    };
+    return labels[platform] || platform;
+  }
+
+  generateCoverLetter(): void {
+    const aiCheck = this.aiGuard.ensureAIConfigured();
+    if (!aiCheck.configured) {
+      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'CoverLetterGenerateComponent');
+      this.showAIConfigModal = true;
+      return;
+    }
+    
+    if (this.coverLetterForm.invalid) {
+      this.markFormGroupTouched();
+      return;
+    }
+
+    this.isLoading = true;
+    this.generatedLetter = null;
+
+    const request = {
+      ...this.coverLetterForm.value,
+      selected_resume: this.selectedResume,
+      resume_content: this.resumeContent,
+      vacancy_data: this.currentVacancy || null
+    };
+
+    console.log('🚀 Starting letter generation for vacancy:', this.coverLetterForm.get('vacancy_id')?.value);
+
+    this.coverLetterService.generateCoverLetter(request).subscribe({
+      next: (response) => {
+        console.log('✅ Letter generated successfully');
+        this.generatedLetter = response;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.errorHandler.showError('Ошибка генерации письма', 'CoverLetterGenerateComponent');
+        this.isLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Ошибка генерации',
+          detail: error.message
+        });
+      }
+    });
   }
 }

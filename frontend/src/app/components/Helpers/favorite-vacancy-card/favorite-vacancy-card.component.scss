@@ -1,0 +1,136 @@
+.favorite-vacancy-card {
+    margin-bottom: 1rem;
+  
+    .vacancy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+  
+      .vacancy-title-section {
+        flex: 1;
+        
+        .vacancy-title {
+          margin: 0 0 0.5rem 0;
+          font-size: 1.1rem;
+          color: var(--text-color);
+        }
+  
+        .vacancy-platform {
+          .platform-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+  
+            &.hh-badge {
+              background-color: #FF5A00;
+              color: white;
+            }
+  
+            &.sj-badge {
+              background-color: #1E88E5;
+              color: white;
+            }
+          }
+        }
+      }
+    }
+  
+    .vacancy-info {
+      .info-row {
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+  
+        strong {
+          color: var(--text-color-secondary);
+        }
+      }
+    }
+  
+    .generation-actions {
+      margin: 1rem 0;
+  
+      .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+  
+        button {
+          flex: 1;
+          min-width: 120px;
+        }
+      }
+    }
+  
+    .generated-content {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--surface-border);
+  
+      .content-section {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background-color: var(--surface-ground);
+        border-radius: 6px;
+  
+        h5 {
+          margin: 0 0 0.5rem 0;
+          color: var(--primary-color);
+        }
+  
+        .content-preview {
+          font-size: 0.9rem;
+          color: var(--text-color-secondary);
+          margin-bottom: 0.5rem;
+        }
+  
+        .content-actions {
+          display: flex;
+          gap: 0.25rem;
+        }
+      }
+  
+      .last-generated {
+        text-align: right;
+        color: var(--text-color-secondary);
+        font-size: 0.8rem;
+      }
+    }
+  }
+  
+  .content-dialog {
+    .markdown-content {
+      max-height: 60vh;
+      overflow-y: auto;
+      
+      h1, h2, h3, h4, h5, h6 {
+        color: var(--text-color);
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+      }
+  
+      ul, ol {
+        padding-left: 1.5rem;
+      }
+  
+      li {
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
+  
+  // Адаптивность
+  @media (max-width: 768px) {
+    .favorite-vacancy-card {
+      .generation-actions {
+        .action-buttons {
+          flex-direction: column;
+  
+          button {
+            min-width: auto;
+          }
+        }
+      }
+    }
+  }

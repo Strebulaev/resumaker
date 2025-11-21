@@ -16,9 +16,7 @@ import { ProfileService } from '../../../shared/profile/profile.service';
 import { ResumeGenerationService } from '../../../shared/resume/resume-generation.service';
 import { FileProcessorService } from '../../../shared/utils/file-processor.service';
 import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
-import { ErrorToastComponent } from '../../Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
-import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 import { AIGuardService } from '../../../shared/ai/ai-guard.service';
 
 @Component({

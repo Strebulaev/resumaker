@@ -22,6 +22,8 @@ import { ErrorToastComponent } from '../../Helpers/error-toast/error-toast.compo
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { AIGuardService } from '../../../shared/ai/ai-guard.service';
 import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
+import { ResumeSelectorComponent, Resume } from '../../Helpers/resume-selector/resume-selector.component';
+import { VacancySelectorComponent } from "../../Helpers/vacancy-selector/vacancy-selector.component";
 
 interface PromptConfig {
   system_prompt: string;
@@ -50,7 +52,9 @@ interface PromptConfig {
     MarkdownModule,
     FormsModule,
     TranslatedFileInputComponent,
-    AiConfigModalComponent
+    AiConfigModalComponent,
+    ResumeSelectorComponent,
+    VacancySelectorComponent
 ]
 })
 export class InterviewPrepComponent implements OnInit {
@@ -78,6 +82,10 @@ export class InterviewPrepComponent implements OnInit {
   vacancyUrl: string = '';
   currentVacancy: any = null;
   showAIConfigModal = false;
+  showVacancySelector = false;
+  selectedVacancyForInterview: any = null;
+  showResumeSelector = false;
+  selectedResumeForInterview: Resume | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -144,9 +152,11 @@ export class InterviewPrepComponent implements OnInit {
       };
     }
   }
+  
   closePlanDialog(): void {
     this.showPlanDialog = false;
   }
+  
   private loadUserProfile(): void {
     this.profileService.loadProfile().subscribe({
       next: (profile) => {
@@ -157,6 +167,7 @@ export class InterviewPrepComponent implements OnInit {
       }
     });
   }
+  
   private async processStructuredResumeFile(content: string, fileType: string): Promise<any> {
     try {
       let parsedData: any;
@@ -181,6 +192,7 @@ export class InterviewPrepComponent implements OnInit {
       throw new Error('Не удалось распарсить файл резюме');
     }
   }
+  
   async loadVacancyInfo(): Promise<void> {
     if (!this.vacancyUrl) return;
     
@@ -204,6 +216,7 @@ export class InterviewPrepComponent implements OnInit {
       this.isLoading = false;
     }
   }
+  
   async onFileSelect(event: any, field: string): Promise<void> {
     const file = event.target.files[0];
     if (!file) return;
@@ -260,6 +273,7 @@ export class InterviewPrepComponent implements OnInit {
       });
     }
   }
+  
   removeFile(field: string): void {
     switch (field) {
       case 'resume':
@@ -328,6 +342,22 @@ export class InterviewPrepComponent implements OnInit {
     let personalContextText = '';
     let coverLetterText = '';
     let internalContextText = '';
+
+    if (this.selectedVacancyForInterview) {
+      vacancyText = `
+      ИНФОРМАЦИЯ О ВАКАНСИИ:
+      - Должность: ${this.selectedVacancyForInterview.name}
+      - Компания: ${this.selectedVacancyForInterview.employer?.name}
+      - Требования: ${this.vacancyService.extractRequirements(this.selectedVacancyForInterview)}
+      - Ключевые навыки: ${this.vacancyService.extractKeySkills(this.selectedVacancyForInterview).join(', ')}
+      - Описание: ${this.selectedVacancyForInterview.description?.substring(0, 500)}...
+      `;
+    } else if (this.vacancyContent) {
+      vacancyText = this.vacancyContent;
+    } else {
+      vacancyText = this.interviewForm.get('customVacancy')?.value || '';
+    }
+    
     const vacancyContext = this.currentVacancy ? `
     ИНФОРМАЦИЯ О ВАКАНСИИ:
     - Должность: ${this.currentVacancy.name}
@@ -463,5 +493,65 @@ export class InterviewPrepComponent implements OnInit {
         summary: 'Текст скопирован в буфер'
       });
     });
+  }
+
+  // Новые методы для работы с селектором резюме
+  onResumeSelected(resume: Resume): void {
+    this.selectedResumeForInterview = resume;
+    
+    if (resume.platform === 'file' && resume.content) {
+      // Автоматически заполняем поле резюме
+      this.interviewForm.patchValue({
+        customResume: resume.content
+      });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Резюме загружено'
+      });
+    }
+  }
+
+  openResumeSelector(): void {
+    this.showResumeSelector = true;
+  }
+
+
+  onVacancySelected(vacancy: any): void {
+    this.selectedVacancyForInterview = vacancy;
+    this.currentVacancy = vacancy;
+    
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Вакансия выбрана для подготовки',
+      detail: vacancy.name
+    });
+  }
+
+  openVacancySelector(): void {
+    this.showVacancySelector = true;
+  }
+
+  clearSelectedVacancy(): void {
+    this.selectedVacancyForInterview = null;
+    this.currentVacancy = null;
+  }
+
+  getPlatformLabel(platform: string): string {
+    const labels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob',
+      'file': 'Файл'
+    };
+    return labels[platform] || platform;
+  }
+
+  getSalaryText(vacancy: any): string {
+    if (!vacancy.salary) return 'Не указана';
+    const salary = vacancy.salary;
+    let text = '';
+    if (salary.from) text += `от ${salary.from} `;
+    if (salary.to) text += `до ${salary.to} `;
+    if (salary.currency) text += salary.currency;
+    return text.trim();
   }
 }

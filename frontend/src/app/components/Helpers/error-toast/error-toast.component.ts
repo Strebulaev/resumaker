@@ -10,7 +10,7 @@ interface ErrorInfo {
   progress: number;
   fadingOut: boolean;
   type: 'error' | 'warning' | 'ai-error';
-  originalMessage: string; // Для сравнения дубликатов
+  originalMessage: string;
 }
 
 @Component({
@@ -31,9 +31,8 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   private originalConsoleError?: (...data: any[]) => void;
   private originalConsoleWarn?: (...data: any[]) => void;
 
-  // Кэш для отслеживания дубликатов (сообщение -> timestamp)
   private errorCache = new Map<string, number>();
-  private readonly DUPLICATE_TIMEOUT = 5000; // 5 секунд для игнорирования дубликатов
+  private readonly DUPLICATE_TIMEOUT = 5000;
 
   ngOnInit() {
     this.setupErrorHandling();
@@ -54,12 +53,10 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   private normalizeErrorMessage(message: string, type: 'error' | 'warning' | 'ai-error'): string {
     let normalized = message.trim().toLowerCase();
     
-    // Проверяем, не является ли ошибка игнорируемой
     if (this.isIgnoredError(message)) {
-      return 'ignored_lock_manager_error'; // Специальное значение для фильтрации
+      return 'ignored_lock_manager_error';
     }
     
-    // Убираем переменные части сообщений (например, timestamp, IDs)
     normalized = normalized.replace(/\d+/g, '#');
     normalized = normalized.replace(/\[.*?\]/g, '');
     normalized = normalized.replace(/http\S+/g, 'URL');
@@ -123,7 +120,6 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
     const message = this.formatConsoleArgs(args);
     const source = this.getConsoleErrorSource();
     
-    // Определяем тип ошибки на основе содержимого
     let type: 'error' | 'warning' | 'ai-error' = 'error';
     
     if (this.isAIError(message)) {

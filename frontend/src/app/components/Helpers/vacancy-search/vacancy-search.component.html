@@ -119,25 +119,20 @@
       </p-card>
 
       <p-card [header]="'VACANCY.QUICK_DOWNLOAD' | translate" class="quick-search-card">
-        <form [formGroup]="urlForm" (ngSubmit)="loadVacancyFromUrl()">
-          <div class="url-input-group">
-            <input type="url" pInputText formControlName="vacancyUrl" 
-                   [placeholder]="'VACANCY.LINK_PLACEHOLDER' | translate"
-                   style="flex: 1; margin-right: 0.5rem;">
-            <button pButton type="submit" 
-                    [label]="'VACANCY.LOAD' | translate" 
-                    [disabled]="isLoading || urlForm.invalid"
-                    icon="pi pi-download"
-                    class="p-button-help">
-            </button>
-          </div>
+        <div class="quick-actions">
+          <button 
+            pButton 
+            [label]="'VACANCY_SELECTOR.TITLE' | translate" 
+            icon="pi pi-briefcase"
+            (click)="openVacancySelector()"
+            class="p-button-help"
+            style="margin-right: 0.5rem;">
+          </button>
           
           <small class="url-hint">
-            {{ 'VACANCY.LINK_SUPPORTED' | translate }}: 
-            {{ 'VACANCY.PLATFORM_HH' | translate }}, 
-            {{ 'VACANCY.PLATFORM_SUPERJOB' | translate }}
+            {{ 'VACANCY_SELECTOR.QUICK_LOAD_HINT' | translate }}
           </small>
-        </form>
+        </div>
       </p-card>
     </div>
 
@@ -296,7 +291,6 @@
     </div>
   </div>
 
-  <!-- Секция избранных вакансий -->
   <div *ngIf="activeSection === 'favorites'" class="favorites-section">
     <div class="favorites-header">
       <h3>Избранные вакансии ({{ favoriteVacancies.length }})</h3>
@@ -315,95 +309,33 @@
           </p-select>
         </div>
 
-        <!-- Кнопка массовой генерации -->
         <button pButton 
-                label="Сгенерировать письма для всех"
-                (click)="generateAllCoverLetters()"
-                [disabled]="isGeneratingAllLetters || !selectedResume"
-                icon="pi pi-envelope"
-                class="p-button-success"
-                style="margin-left: 1rem;">
-          <p-progressSpinner *ngIf="isGeneratingAllLetters" 
-                           [style]="{'width': '20px', 'height': '20px'}" 
-                           strokeWidth="4"
-                           styleClass="ml-2">
+          label="Сгенерировать всё для всех"
+          (click)="generateAllContent()"
+          [disabled]="!selectedResume"
+          icon="pi pi-bolt"
+          class="p-button-success generate-all-button"
+          style="margin-left: 1rem;">
+          <p-progressSpinner *ngIf="!selectedResume" 
+                          [style]="{'width': '20px', 'height': '20px'}" 
+                          strokeWidth="4"
+                          styleClass="ml-2">
           </p-progressSpinner>
         </button>
       </div>
     </div>
 
-    <!-- Список избранных вакансий -->
-    <div class="favorites-list" *ngIf="favoriteVacancies.length > 0">
-      <div *ngFor="let vacancy of favoriteVacancies" class="favorite-vacancy-card">
-        <div class="favorite-vacancy-header">
-          <h4>{{ vacancy.name }}</h4>
-          <button pButton 
-                  icon="pi pi-times" 
-                  class="p-button-text p-button-danger"
-                  (click)="removeFromFavorites(vacancy)"
-                  pTooltip="Удалить из избранного">
-          </button>
-        </div>
-
-        <div class="vacancy-platform" *ngIf="getVacancyPlatform(vacancy)">
-          <span class="platform-badge" [class.hh-badge]="getVacancyPlatform(vacancy) === 'hh.ru'" 
-                [class.sj-badge]="getVacancyPlatform(vacancy) === 'superjob.ru'">
-            <i class="pi pi-briefcase"></i>
-            {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}
-          </span>
-        </div>
-
-        <div class="favorite-vacancy-info">
-          <p><strong>Компания:</strong> {{ vacancy.employer.name }}</p>
-          <p><strong>Зарплата:</strong> {{ getSalaryText(vacancy) || 'Не указана' }}</p>
-          <p><strong>Город:</strong> {{ vacancy.address?.city || 'Не указан' }}</p>
-          <p><strong>Платформа:</strong> {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}</p>
-        </div>
-
-        <!-- Сгенерированное сопроводительное письмо -->
-        <div class="cover-letter-section" *ngIf="vacancy.coverLetter">
-          <h5>Сопроводительное письмо:</h5>
-          <div class="cover-letter-content">
-            <textarea pInputTextarea 
-                      [rows]="6" 
-                      [(ngModel)]="vacancy.coverLetter"
-                      [ngModelOptions]="{standalone: true}"
-                      style="width: 100%">
-            </textarea>
-          </div>
-          <div class="cover-letter-actions">
-            <button pButton 
-                    label="Отправить отклик"
-                    (click)="sendCoverLetter(vacancy)"
-                    [disabled]="vacancy.isSending"
-                    icon="pi pi-send"
-                    class="p-button-primary">
-              <p-progressSpinner *ngIf="vacancy.isSending" 
-                               [style]="{'width': '20px', 'height': '20px'}" 
-                               strokeWidth="4"
-                               styleClass="ml-2">
-              </p-progressSpinner>
-            </button>
-          </div>
-        </div>
-
-        <!-- Статус генерации -->
-        <div *ngIf="vacancy.isGeneratingLetter" class="generating-status">
-          <p-progressSpinner [style]="{'width': '30px', 'height': '30px'}"></p-progressSpinner>
-          <span>Генерация письма...</span>
-        </div>
-
-        <!-- Кнопка генерации для отдельной вакансии -->
-        <div *ngIf="!vacancy.coverLetter && !vacancy.isGeneratingLetter" class="generate-single-letter">
-          <button pButton 
-                  label="Сгенерировать письмо"
-                  (click)="generateCoverLetterForSingle(vacancy)"
-                  [disabled]="!selectedResume"
-                  icon="pi pi-file-edit"
-                  class="p-button-outlined">
-          </button>
-        </div>
-      </div>
+    <div class="favorites-grid" *ngIf="favoriteVacancies.length > 0">
+      <app-favorite-vacancy-card
+        *ngFor="let vacancy of favoriteVacancies"
+        [vacancy]="vacancy"
+        [selectedResume]="selectedResume"
+        (generateCoverLetter)="generateCoverLetterForFavorite($event)"
+        (generateDevelopmentPlan)="generateDevelopmentPlanForFavorite($event)"
+        (generateResume)="generateResumeForFavorite($event)"
+        (removeFromFavorites)="removeFromFavorites($event)"
+        (sendCoverLetter)="sendCoverLetter($event)">
+      </app-favorite-vacancy-card>
     </div>
 
     <!-- Сообщение об отсутствии избранных -->
@@ -492,3 +424,8 @@
     </div>
   </p-dialog>
 </div>
+
+<app-vacancy-selector
+  [(showSelector)]="showVacancySelector"
+  (vacancySelected)="onVacancySelected($event)">
+</app-vacancy-selector>

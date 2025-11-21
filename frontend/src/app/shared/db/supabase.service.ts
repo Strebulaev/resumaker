@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient, AuthSession, Session, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, AuthSession, User } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment.prod';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -44,7 +44,6 @@ export interface UserProfile {
 export class SupabaseService {
   private supabase: SupabaseClient | undefined;
   private session: AuthSession | null = null;
-  private isLocalDev = !environment.production;
   private userSubject = new BehaviorSubject<User | null>(null);
   private _initialized = false;
   private initializedSubject = new BehaviorSubject<boolean>(false);

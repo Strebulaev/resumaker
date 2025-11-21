@@ -471,7 +471,10 @@
     "PLATFORM_SUPERJOB": "https://www.superjob.ru/vakansii/nazvanie-vacancy-id.html",
     "QUICK_DOWNLOAD": "Быстрая загрузка по ссылке",
     "LINK_SUPPORTED": "Поддерживаемые платформы",
-    "VACANCY_URL": "Ссылка на вакансию"
+    "VACANCY_URL": "Ссылка на вакансию",
+    "PLATFORM_HH_NAME": "HH.ru",
+    "PLATFORM_SUPERJOB_NAME": "SuperJob", 
+    "LINK_PLACEHOLDER_PLATFORMS": "https://hh.ru/vacancy/12345678 или ссылка SuperJob"
   },
   "SEARCH": {
     "ALL_PLATFORMS": "Искать на всех платформах",
@@ -644,6 +647,32 @@
     "MODAL_TITLE": "Настройка AI провайдеров",
     "CONFIGURE_BUTTON": "Настроить AI", 
     "CURRENT_PROVIDER": "Текущий провайдер"
+  },
+  "RESUME_SELECTOR": {
+    "TITLE": "Выбор резюме",
+    "LOADING": "Загрузка резюме...",
+    "CREATED": "Создано",
+    "UPDATED": "Обновлено", 
+    "UPLOAD_NEW": "Загрузить новое резюме",
+    "SUPPORTED_FORMATS": "Поддерживаемые форматы: TXT, PDF, DOC, DOCX, RTF",
+    "NO_RESUMES": "Резюме не найдены",
+    "NO_RESUMES_HINT": "Подключите аккаунты платформ или загрузите файл резюме",
+    "SELECT": "Выбрать"
+  },
+  "VACANCY_SELECTOR": {
+    "TITLE": "Выбор вакансии",
+    "TAB_LINK": "По ссылке",
+    "TAB_FILE": "Из файла",
+    "TAB_FAVORITES": "Из избранного", 
+    "LINK_TITLE": "Загрузка по ссылке",
+    "FILE_TITLE": "Загрузка из файла",
+    "FAVORITES_TITLE": "Выбор из избранного",
+    "RECENT_LINKS": "Недавние ссылки",
+    "FILE_SUPPORTED_FORMATS": "Поддерживаемые форматы: TXT, PDF, DOC, DOCX, RTF, JSON, YAML",
+    "NO_FAVORITES": "Нет избранных вакансий",
+    "SELECTED_VACANCY": "Выбранная вакансия",
+    "SELECT": "Выбрать",
+    "QUICK_LOAD_HINT": "Быстрая загрузка вакансии из любого источника"
   },
   "FILTER": "Фильтр",
   "ACTIONS": "Действия",

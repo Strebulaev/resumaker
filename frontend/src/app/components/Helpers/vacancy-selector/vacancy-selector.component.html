@@ -1,0 +1,191 @@
+<div class="vacancy-selector-container">
+    <p-dialog 
+        [header]="'VACANCY_SELECTOR.TITLE' | translate" 
+        [(visible)]="showSelector" 
+        [modal]="true"
+        [style]="{ width: '70vw', maxWidth: '800px' }"
+        (onHide)="closeSelector()">
+        
+        <div class="selector-tabs">
+        <button 
+            [class]="['tab', activeTab === 'link' ? 'active' : '']"
+            (click)="activeTab = 'link'">
+            <i class="pi pi-link"></i>
+            {{ 'VACANCY_SELECTOR.TAB_LINK' | translate }}
+        </button>
+        
+        <button 
+            [class]="['tab', activeTab === 'file' ? 'active' : '']"
+            (click)="activeTab = 'file'">
+            <i class="pi pi-file"></i>
+            {{ 'VACANCY_SELECTOR.TAB_FILE' | translate }}
+        </button>
+        
+        <button 
+            [class]="['tab', activeTab === 'favorites' ? 'active' : '']"
+            (click)="activeTab = 'favorites'">
+            <i class="pi pi-heart"></i>
+            {{ 'VACANCY_SELECTOR.TAB_FAVORITES' | translate }}
+            <span class="badge" *ngIf="favoriteVacancies.length > 0">
+            {{ favoriteVacancies.length }}
+            </span>
+        </button>
+        </div>
+
+        <!-- Загрузка по ссылке -->
+        <div *ngIf="activeTab === 'link'" class="tab-content">
+        <div class="link-section">
+            <h4>{{ 'VACANCY_SELECTOR.LINK_TITLE' | translate }}</h4>
+            
+            <form [formGroup]="urlForm" (ngSubmit)="loadFromUrl()">
+            <div class="url-input-group">
+                <input 
+                type="url" 
+                pInputText 
+                formControlName="vacancyUrl"
+                [placeholder]="'VACANCY.LINK_PLACEHOLDER_PLATFORMS' | translate"
+                style="flex: 1; margin-right: 0.5rem;">
+                
+                <button 
+                pButton 
+                type="submit"
+                [label]="'VACANCY.LOAD' | translate" 
+                [disabled]="isLoading || urlForm.invalid"
+                icon="pi pi-download"
+                class="p-button-help">
+                </button>
+            </div>
+            
+            <small class="url-hint">
+                {{ 'VACANCY.LINK_SUPPORTED' | translate }}: 
+                {{ 'VACANCY.PLATFORM_HH_NAME' | translate }}, 
+                {{ 'VACANCY.PLATFORM_SUPERJOB_NAME' | translate }}
+            </small>
+            </form>
+
+            <!-- История ссылок -->
+            <div class="url-history" *ngIf="recentUrls.length > 0">
+            <h5>{{ 'VACANCY_SELECTOR.RECENT_LINKS' | translate }}</h5>
+            <div class="history-list">
+                <div *ngFor="let url of recentUrls" 
+                    class="history-item"
+                    (click)="loadFromRecentUrl(url)">
+                <i class="pi pi-history"></i>
+                <span class="url-text">{{ url }}</span>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Загрузка файла -->
+        <div *ngIf="activeTab === 'file'" class="tab-content">
+        <div class="file-section">
+            <h4>{{ 'VACANCY_SELECTOR.FILE_TITLE' | translate }}</h4>
+            
+            <app-translated-file-input
+            [accept]="'.txt,.pdf,.doc,.docx,.rtf,.json,.yaml,.yml'"
+            (fileSelected)="onFileSelect($event)"
+            [showFileTypes]="true">
+            </app-translated-file-input>
+
+            <div class="file-info" *ngIf="selectedFile">
+            <div class="file-details">
+                <i class="pi pi-file"></i>
+                <span>{{ selectedFile.name }}</span>
+                <span class="file-size">({{ getFileSize(selectedFile.size) }})</span>
+            </div>
+            <button 
+                pButton 
+                icon="pi pi-times" 
+                class="p-button-text p-button-danger"
+                (click)="clearFile()">
+            </button>
+            </div>
+
+            <small>{{ 'VACANCY_SELECTOR.FILE_SUPPORTED_FORMATS' | translate }}</small>
+        </div>
+        </div>
+
+        <!-- Избранные вакансии -->
+        <div *ngIf="activeTab === 'favorites'" class="tab-content">
+        <div class="favorites-section">
+            <h4>{{ 'VACANCY_SELECTOR.FAVORITES_TITLE' | translate }}</h4>
+            
+            <div *ngIf="favoriteVacancies.length === 0" class="no-favorites">
+            <i class="pi pi-heart" style="font-size: 3rem; color: #6c757d;"></i>
+            <p>{{ 'VACANCY_SELECTOR.NO_FAVORITES' | translate }}</p>
+            </div>
+
+            <div *ngIf="favoriteVacancies.length > 0" class="favorites-list">
+            <div *ngFor="let vacancy of favoriteVacancies" 
+                    class="favorite-item"
+                    [class.selected]="selectedVacancy?.id === vacancy.id"
+                    (click)="selectFavoriteVacancy(vacancy)">
+                
+                <div class="vacancy-preview">
+                <h5>{{ vacancy.name }}</h5>
+                <div class="vacancy-meta">
+                    <span class="company">{{ vacancy.employer.name }}</span>
+                    <span class="platform-badge" 
+                        [class.hh-badge]="getVacancyPlatform(vacancy) === 'hh.ru'"
+                        [class.sj-badge]="getVacancyPlatform(vacancy) === 'superjob.ru'">
+                    {{ getPlatformLabel(getVacancyPlatform(vacancy)) }}
+                    </span>
+                </div>
+                <div class="vacancy-salary" *ngIf="vacancy.salary">
+                    {{ getSalaryText(vacancy) }}
+                </div>
+                </div>
+                
+                <button 
+                pButton 
+                icon="pi pi-times" 
+                class="p-button-text p-button-danger"
+                (click)="removeFromFavorites(vacancy); $event.stopPropagation()"
+                pTooltip="Удалить из избранного">
+                </button>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Информация о выбранной вакансии -->
+        <div *ngIf="selectedVacancy" class="selected-vacancy-info">
+        <h4>{{ 'VACANCY_SELECTOR.SELECTED_VACANCY' | translate }}</h4>
+        <div class="vacancy-details">
+            <div class="detail-row">
+            <strong>{{ selectedVacancy.name }}</strong>
+            </div>
+            <div class="detail-row">
+            <span>{{ selectedVacancy.employer.name }}</span>
+            <span class="platform-badge" 
+                    [class.hh-badge]="getVacancyPlatform(selectedVacancy) === 'hh.ru'"
+                    [class.sj-badge]="getVacancyPlatform(selectedVacancy) === 'superjob.ru'">
+                {{ getPlatformLabel(getVacancyPlatform(selectedVacancy)) }}
+            </span>
+            </div>
+            <div class="detail-row" *ngIf="selectedVacancy.salary">
+            {{ getSalaryText(selectedVacancy) }}
+            </div>
+        </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+        <button 
+            pButton 
+            [label]="'BUTTON.CANCEL' | translate" 
+            (click)="closeSelector()"
+            class="p-button-secondary">
+        </button>
+        
+        <button 
+            pButton 
+            [label]="'VACANCY_SELECTOR.SELECT' | translate" 
+            (click)="selectVacancy()"
+            [disabled]="!selectedVacancy"
+            class="p-button-primary">
+        </button>
+        </ng-template>
+    </p-dialog>
+</div>

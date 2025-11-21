@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, from, of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
+import { map, catchError } from 'rxjs/operators';
 import { Vacancy } from '../../vacancy-schema';
-import { HHAuthService } from '../job-platforms/hh/hh-auth.service';
-import { SuperJobAuthService } from '../job-platforms/super-job/superjob-auth.service';
 import { ErrorHandlerService } from '../error-handler.service';
 
 export interface VacancySearchParams {
@@ -28,8 +26,6 @@ export class VacancyService {
   
   constructor(
     private http: HttpClient,
-    private hhAuthService: HHAuthService,
-    private superJobService: SuperJobAuthService,
     private errorHandler: ErrorHandlerService
   ) {}
 

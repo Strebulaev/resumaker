@@ -14,11 +14,14 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 import { CoverLetterService } from '../../../shared/cover-letter/cover-letter.service';
 import { HHAuthService } from '../../../shared/job-platforms/hh/hh-auth.service';
-import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/superjob-auth.service';
+// import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/superjob-auth.service';
 import { Vacancy } from '../../../vacancy-schema';
-import { ErrorToastComponent } from '../error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { VacancyService } from '../../../shared/vacancy/vacancy.service';
+import { VacancySelectorComponent } from "../vacancy-selector/vacancy-selector.component";
+import { FavoritesService } from '../../../shared/favorites/favorites.service';
+import { ResumeGenerationService } from '../../../shared/resume/resume-generation.service';
+import { FavoriteVacancyCardComponent } from "../favorite-vacancy-card/favorite-vacancy-card.component";
 
 interface FavoriteVacancy extends Vacancy {
   isFavorite: boolean;
@@ -46,8 +49,10 @@ interface FavoriteVacancy extends Vacancy {
     TranslatePipe,
     SelectModule,
     MultiSelectModule,
-    CheckboxModule
-  ]
+    CheckboxModule,
+    VacancySelectorComponent,
+    FavoriteVacancyCardComponent
+]
 })
 export class VacancySearchComponent implements OnInit {
   urlForm!: FormGroup;
@@ -67,22 +72,24 @@ export class VacancySearchComponent implements OnInit {
   selectedResume: any = null;
   userResumes: any[] = [];
 
-  // Опции фильтров
   experienceOptions: any[] = [];
   employmentOptions: any[] = [];
   scheduleOptions: any[] = [];
   platformOptions: any[] = [];
   sortOptions: any[] = [];
+  showVacancySelector = false;
 
   constructor(
     private fb: FormBuilder,
-    private superJobService: SuperJobAuthService,
+    // private superJobService: SuperJobAuthService,
     private hhAuthService: HHAuthService,
     private coverLetterService: CoverLetterService,
     private messageService: MessageService,
     private translate: TranslateService,
     private errorHandler: ErrorHandlerService,
-    private vacancyService: VacancyService
+    private vacancyService: VacancyService,
+    private favoritesService: FavoritesService,
+    private resumeService: ResumeGenerationService,
   ) {
     this.initializeForms();
     this.loadFavorites();
@@ -170,7 +177,6 @@ export class VacancySearchComponent implements OnInit {
     }
   }
 
-  // Загрузка избранных вакансий из localStorage
   private loadFavorites(): void {
     const favorites = localStorage.getItem('favorite_vacancies');
     if (favorites) {
@@ -182,46 +188,10 @@ export class VacancySearchComponent implements OnInit {
     localStorage.setItem('favorite_vacancies', JSON.stringify(this.favoriteVacancies));
   }
 
-  // Добавление/удаление из избранного
-  toggleFavorite(vacancy: FavoriteVacancy): void {
-    const index = this.favoriteVacancies.findIndex(fav => fav.id === vacancy.id);
-    
-    if (index > -1) {
-      // Удаляем из избранного
-      this.favoriteVacancies.splice(index, 1);
-      vacancy.isFavorite = false;
-    } else {
-      // Добавляем в избранное
-      vacancy.isFavorite = true;
-      const favoriteVacancy: FavoriteVacancy = {
-        ...vacancy,
-        isFavorite: true,
-        isGeneratingLetter: false,
-        isSending: false
-      };
-      this.favoriteVacancies.push(favoriteVacancy);
-    }
-    
-    // Обновляем статус в основном списке
-    const mainIndex = this.vacancies.findIndex(v => v.id === vacancy.id);
-    if (mainIndex > -1) {
-      this.vacancies[mainIndex].isFavorite = vacancy.isFavorite;
-    }
-    
-    this.saveFavorites();
-    
-    this.messageService.add({
-      severity: 'success',
-      summary: vacancy.isFavorite ? 'Добавлено в избранное' : 'Удалено из избранного'
-    });
-  }
-
-  // Переключение между секциями
   showSection(section: 'search' | 'favorites'): void {
     this.activeSection = section;
   }
 
-  // Массовая генерация сопроводительных писем
   async generateAllCoverLetters(): Promise<void> {
     if (this.favoriteVacancies.length === 0) {
       this.messageService.add({
@@ -304,7 +274,6 @@ export class VacancySearchComponent implements OnInit {
     });
   }
 
-  // Генерация письма для отдельной вакансии
   async generateCoverLetterForSingle(vacancy: FavoriteVacancy): Promise<void> {
     if (!this.selectedResume) {
       this.messageService.add({
@@ -335,202 +304,6 @@ export class VacancySearchComponent implements OnInit {
     } finally {
       vacancy.isGeneratingLetter = false;
     }
-  }
-
-  // Отправка письма на конкретную вакансию
-  async sendCoverLetter(vacancy: FavoriteVacancy): Promise<void> {
-    if (!vacancy.coverLetter) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Сначала сгенерируйте сопроводительное письмо'
-      });
-      return;
-    }
-
-    if (!this.selectedResume) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Выберите резюме для отправки'
-      });
-      return;
-    }
-
-    vacancy.isSending = true;
-
-    try {
-      const hhToken = localStorage.getItem('hh_access_token');
-      if (!hhToken) {
-        throw new Error('Требуется авторизация в HH.ru');
-      }
-
-      await this.coverLetterService.sendToHH(
-        vacancy.coverLetter,
-        vacancy.id,
-        this.selectedResume.id,
-        hhToken
-      ).toPromise();
-
-      this.messageService.add({
-        severity: 'success',
-        summary: `Отклик отправлен на вакансию "${vacancy.name}"`
-      });
-
-      // Удаляем из избранного после успешной отправки
-      this.removeFromFavorites(vacancy);
-
-    } catch (error: any) {
-      this.errorHandler.showError('Ошибка отправки письма', 'VacancySearchComponent');
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка отправки отклика',
-        detail: error.message
-      });
-    } finally {
-      vacancy.isSending = false;
-    }
-  }
-
-  // Удаление из избранного
-  removeFromFavorites(vacancy: FavoriteVacancy): void {
-    const index = this.favoriteVacancies.findIndex(fav => fav.id === vacancy.id);
-    if (index > -1) {
-      this.favoriteVacancies.splice(index, 1);
-      this.saveFavorites();
-      
-      // Обновляем статус в основном списке
-      const mainIndex = this.vacancies.findIndex(v => v.id === vacancy.id);
-      if (mainIndex > -1) {
-        this.vacancies[mainIndex].isFavorite = false;
-      }
-    }
-  }
-
-  getVacancyPlatform(vacancy: any): string {
-    if (vacancy.platform) {
-      return vacancy.platform;
-    }
-    if (vacancy.alternate_url?.includes('hh.ru')) return 'hh.ru';
-    if (vacancy.alternate_url?.includes('superjob.ru')) return 'superjob.ru';
-    return 'unknown';
-  }
-  
-  getPlatformLabel(platform: string): string {
-    const platformLabels: { [key: string]: string } = {
-      'hh.ru': 'HH.ru',
-      'superjob.ru': 'SuperJob',
-      'hh': 'HH.ru', 
-      'superjob': 'SuperJob'
-    };
-    return platformLabels[platform] || platform;
-  }
-
-  private prepareHHParams(params: any): any {
-    const hhParams: any = {};
-    
-    if (params.text) hhParams.text = params.text;
-    if (params.salary) hhParams.salary = params.salary;
-    if (params.area) hhParams.area = params.area;
-    if (params.experience) hhParams.experience = params.experience;
-    if (params.employment) hhParams.employment = params.employment;
-    if (params.schedule) hhParams.schedule = params.schedule;
-    if (params.only_with_salary) hhParams.only_with_salary = true;
-    
-    return hhParams;
-  }
-  
-  private prepareSuperJobParams(params: any): any {
-    const sjParams: any = {};
-    
-    if (params.text) sjParams.keywords = params.text;
-    if (params.salary) sjParams.payment_from = params.salary;
-    if (params.area) sjParams.t = params.area; // town ID для SuperJob
-    if (params.experience) {
-      // Маппинг опыта для SuperJob
-      const experienceMap: {[key: string]: number} = {
-        'noExperience': 1,
-        'between1And3': 2, 
-        'between3And6': 3,
-        'moreThan6': 4
-      };
-      sjParams.experience = experienceMap[params.experience];
-    }
-    
-    return sjParams;
-  }
-
-  sortVacancies(): void {
-    const sortBy = this.searchForm.get('sortBy')?.value || 'relevance';
-    
-    this.sortedVacancies = [...this.vacancies].sort((a, b) => {
-      switch (sortBy) {
-        case 'date_desc':
-          return new Date(b.published_at || '').getTime() - new Date(a.published_at || '').getTime();
-        case 'date_asc':
-          return new Date(a.published_at || '').getTime() - new Date(b.published_at || '').getTime();
-        case 'salary_desc':
-          return (b.salary?.from || 0) - (a.salary?.from || 0);
-        case 'salary_asc':
-          return (a.salary?.from || 0) - (b.salary?.from || 0);
-        case 'relevance':
-        default:
-          return new Date(b.published_at || '').getTime() - new Date(a.published_at || '').getTime();
-      }
-    });
-  
-    this.applyPagination();
-  }
-
-  calculatePagination(): void {
-    this.totalPages = Math.ceil(this.vacancies.length / this.itemsPerPage);
-    this.applyPagination();
-  }
-
-  applyPagination(): void {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    const end = start + this.itemsPerPage;
-    this.sortedVacancies = this.sortedVacancies.slice(start, end);
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.applyPagination();
-    }
-  }
-
-  prevPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.applyPagination();
-    }
-  }
-
-  resetFilters(): void {
-    this.searchForm.reset({
-      text: '',
-      salary: '',
-      area: '',
-      experience: '',
-      employment: '',
-      schedule: '',
-      platforms: ['hh', 'superjob'],
-      only_with_salary: false,
-      remote: false,
-      sortBy: 'relevance'
-    });
-    
-    this.vacancies = [];
-    this.searchPerformed = false;
-  }
-
-  showVacancyDetails(vacancy: FavoriteVacancy): void {
-    this.selectedVacancy = vacancy;
-    this.showDetailsDialog = true;
-  }
-
-  closeDetailsDialog(): void {
-    this.showDetailsDialog = false;
-    this.selectedVacancy = null;
   }
 
   getSalaryText(vacancy: Vacancy): string {
@@ -646,241 +419,6 @@ export class VacancySearchComponent implements OnInit {
     window.URL.revokeObjectURL(url);
   }
 
-  private detectPlatformFromUrl(url: string): string {
-    if (url.includes('hh.ru') || url.includes('hh.') || /\/vacancy\//.test(url)) {
-      return 'hh';
-    } else if (url.includes('superjob.ru')) {
-      return 'superjob';
-    }
-    return 'hh';
-  }
-
-  private extractVacancyId(url: string, platform: string): string | null {
-    if (platform === 'hh') {
-      const patterns = [
-        /\/vacancy\/(\d+)/,
-        /vacancy=(\d+)/,
-        /hh\.ru\/vacancy\/(\d+)/,
-        /(\d{5,10})/
-      ];
-
-      for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-          return match[1];
-        }
-      }
-    } else if (platform === 'superjob') {
-      const patterns = [
-        /superjob\.ru\/vakansii\/(\d+)\.html/,
-        /superjob\.ru\/vacancy\/(\d+)\.html/,
-        /(\d+)\.html/
-      ];
-
-      for (const pattern of patterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-          return match[1];
-        }
-      }
-    }
-    
-    return null;
-  }
-
-  private async getHHVacancyDirectly(vacancyId: string): Promise<Vacancy> {
-    try {
-      const response = await fetch(`https://api.hh.ru/vacancies/${vacancyId}`, {
-        headers: {
-          'User-Agent': 'RezulutionApp/1.0',
-          'HH-User-Agent': 'RezulutionApp/1.0'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      return {
-        id: data.id,
-        name: data.name,
-        description: data.description || '',
-        key_skills: data.key_skills?.map((skill: any) => ({ name: skill.name })) || [],
-        employer: {
-          name: data.employer?.name,
-          logo_urls: { original: data.employer?.logo_urls?.original }
-        },
-        salary: data.salary ? {
-          from: data.salary.from,
-          to: data.salary.to,
-          currency: data.salary.currency
-        } : null,
-        address: data.address ? {
-          city: data.address.city,
-          street: data.address.street,
-          building: data.address.building
-        } : null,
-        alternate_url: data.alternate_url,
-        published_at: data.published_at
-      };
-    } catch (error) {
-      throw new Error(`Ошибка получения вакансии HH.ru: ${error}`);
-    }
-  }
-
-  private async searchHHVacanciesDirectly(params: any): Promise<Vacancy[]> {
-    const queryParams = new URLSearchParams();
-    
-    Object.keys(params).forEach(key => {
-      if (key !== 'platform' && params[key] !== undefined && params[key] !== null && params[key] !== '') {
-        queryParams.append(key, params[key].toString());
-      }
-    });
-  
-    try {
-      const response = await fetch(`https://api.hh.ru/vacancies?${queryParams}`, {
-        headers: {
-          'User-Agent': 'RezulutionApp/1.0',
-          'HH-User-Agent': 'RezulutionApp/1.0'
-        }
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      
-      return data.items.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        description: item.snippet?.requirement || '',
-        key_skills: item.key_skills?.map((skill: any) => ({ name: skill.name })) || [],
-        employer: {
-          name: item.employer?.name,
-          logo_urls: { original: item.employer?.logo_urls?.original }
-        },
-        salary: item.salary ? {
-          from: item.salary.from,
-          to: item.salary.to,
-          currency: item.salary.currency
-        } : null,
-        address: item.address ? {
-          city: item.address.city,
-          street: item.address.street,
-          building: item.address.building
-        } : null,
-        alternate_url: item.alternate_url,
-        published_at: item.published_at
-      }));
-    } catch (error) {
-      throw new Error(`Ошибка поиска на HH.ru: ${error}`);
-    }
-  }
-
-  private async searchSuperJobVacanciesDirectly(params: any): Promise<Vacancy[]> {
-    try {
-      const queryParams = new URLSearchParams();
-      
-      Object.keys(params).forEach(key => {
-        if (key !== 'platform' && params[key] !== undefined && params[key] !== null && params[key] !== '') {
-          queryParams.append(key, params[key].toString());
-        }
-      });
-  
-      const url = `https://api.superjob.ru/2.0/vacancies/?${queryParams}`;
-      
-      const response = await fetch('/api/cors-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: url,
-          headers: {
-            'X-Api-App-Id': this.superJobService.clientSecret
-          }
-        })
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      
-      return data.objects.map((item: any) => ({
-        id: item.id.toString(),
-        name: item.profession,
-        description: item.vacancyRichText || '',
-        key_skills: item.catalogues?.map((c: any) => ({ name: c.title })) || [],
-        employer: {
-          name: item.firm_name,
-          logo_urls: { original: '' }
-        },
-        salary: (item.payment_from || item.payment_to) ? {
-          from: item.payment_from,
-          to: item.payment_to,
-          currency: item.currency || 'RUR'
-        } : null,
-        address: item.town ? { city: item.town.title } : null,
-        alternate_url: item.link || `https://www.superjob.ru/vacancy/${item.id}.html`,
-        published_at: item.date_published ? new Date(item.date_published * 1000).toISOString() : undefined
-      }));
-    } catch (error) {
-      console.error('SuperJob search error:', error);
-      throw new Error(`Ошибка поиска на SuperJob: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-  
-  private async getSuperJobVacancyDirectly(vacancyId: string): Promise<Vacancy> {
-    try {
-      const url = `https://api.superjob.ru/2.0/vacancies/${vacancyId}/`;
-      
-      const response = await fetch('/api/cors-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: url,
-          headers: {
-            'X-Api-App-Id': this.superJobService.clientSecret
-          }
-        })
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      
-      return {
-        id: data.id.toString(),
-        name: data.profession,
-        description: data.vacancyRichText || '',
-        key_skills: data.catalogues?.map((c: any) => ({ name: c.title })) || [],
-        employer: {
-          name: data.firm_name,
-          logo_urls: { original: '' }
-        },
-        salary: (data.payment_from || data.payment_to) ? {
-          from: data.payment_from,
-          to: data.payment_to,
-          currency: data.currency || 'RUR'
-        } : null,
-        address: data.town ? { city: data.town.title } : null,
-        alternate_url: data.link || `https://www.superjob.ru/vacancy/${data.id}.html`,
-        published_at: data.date_published ? new Date(data.date_published * 1000).toISOString() : undefined
-      };
-    } catch (error) {
-      throw new Error(`Ошибка получения вакансии SuperJob: ${error}`);
-    }
-  }
-
   async searchVacancies(): Promise<void> {
     if (this.isLoading) return;
   
@@ -965,6 +503,290 @@ export class VacancySearchComponent implements OnInit {
       });
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  getVacancyPlatform(vacancy: any): string {
+    if (vacancy.platform) {
+      return vacancy.platform;
+    }
+    if (vacancy.alternate_url?.includes('hh.ru')) return 'hh.ru';
+    if (vacancy.alternate_url?.includes('superjob.ru')) return 'superjob.ru';
+    return 'unknown';
+  }
+  
+  getPlatformLabel(platform: string): string {
+    const platformLabels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob',
+      'hh': 'HH.ru', 
+      'superjob': 'SuperJob'
+    };
+    return platformLabels[platform] || platform;
+  }
+
+  sortVacancies(): void {
+    const sortBy = this.searchForm.get('sortBy')?.value || 'relevance';
+    
+    this.sortedVacancies = [...this.vacancies].sort((a, b) => {
+      switch (sortBy) {
+        case 'date_desc':
+          return new Date(b.published_at || '').getTime() - new Date(a.published_at || '').getTime();
+        case 'date_asc':
+          return new Date(a.published_at || '').getTime() - new Date(b.published_at || '').getTime();
+        case 'salary_desc':
+          return (b.salary?.from || 0) - (a.salary?.from || 0);
+        case 'salary_asc':
+          return (a.salary?.from || 0) - (b.salary?.from || 0);
+        case 'relevance':
+        default:
+          return new Date(b.published_at || '').getTime() - new Date(a.published_at || '').getTime();
+      }
+    });
+  
+    this.applyPagination();
+  }
+
+  calculatePagination(): void {
+    this.totalPages = Math.ceil(this.vacancies.length / this.itemsPerPage);
+    this.applyPagination();
+  }
+
+  applyPagination(): void {
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    this.sortedVacancies = this.sortedVacancies.slice(start, end);
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.applyPagination();
+    }
+  }
+
+  onVacancySelected(vacancy: any): void {
+    this.selectedVacancy = vacancy;
+    this.showDetailsDialog = true;
+    
+    if (!vacancy.isFavorite) {
+      this.toggleFavorite(vacancy);
+    }
+  }
+
+  openVacancySelector(): void {
+    this.showVacancySelector = true;
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.applyPagination();
+    }
+  }
+
+  resetFilters(): void {
+    this.searchForm.reset({
+      text: '',
+      salary: '',
+      area: '',
+      experience: '',
+      employment: '',
+      schedule: '',
+      platforms: ['hh', 'superjob'],
+      only_with_salary: false,
+      remote: false,
+      sortBy: 'relevance'
+    });
+    
+    this.vacancies = [];
+    this.searchPerformed = false;
+  }
+
+  showVacancyDetails(vacancy: FavoriteVacancy): void {
+    this.selectedVacancy = vacancy;
+    this.showDetailsDialog = true;
+  }
+
+  closeDetailsDialog(): void {
+    this.showDetailsDialog = false;
+    this.selectedVacancy = null;
+  }
+
+
+  toggleFavorite(vacancy: any): void {
+    if (this.favoritesService.isFavorite(vacancy.id)) {
+      this.favoritesService.removeFromFavorites(vacancy.id);
+    } else {
+      this.favoritesService.addToFavorites(vacancy);
+    }
+  }
+
+  removeFromFavorites(vacancyId: string): void {
+    this.favoritesService.removeFromFavorites(vacancyId);
+  }
+
+  // Новые методы для генерации контента
+  async generateCoverLetterForFavorite(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy || !this.selectedResume) return;
+
+    try {
+      const request = {
+        resume_id: this.selectedResume.id,
+        vacancy_id: vacancy.id,
+        style: 'formal',
+        tone: 'professional',
+        selected_resume: this.selectedResume
+      };
+
+      const response = await this.coverLetterService.generateCoverLetter(request).toPromise();
+      this.favoritesService.updateFavorite(vacancyId, {
+        coverLetter: response.content,
+        lastGenerated: new Date().toISOString()
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Сопроводительное письмо сгенерировано'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации письма', 'VacancySearchComponent');
+    }
+  }
+
+  async generateDevelopmentPlanForFavorite(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy) return;
+
+    try {
+      // Здесь будет логика генерации плана развития
+      const developmentPlan = await this.generateDevelopmentPlan(vacancy);
+      this.favoritesService.updateFavorite(vacancyId, {
+        developmentPlan: developmentPlan,
+        lastGenerated: new Date().toISOString()
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'План развития сгенерирован'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации плана развития', 'VacancySearchComponent');
+    }
+  }
+  private async generateDevelopmentPlan(vacancy: FavoriteVacancy): Promise<string> {
+        return `
+    # План профессионального развития
+    ## Для вакансии: ${vacancy.name}
+
+    ### 1. Технические навыки
+    ${vacancy.key_skills?.map(skill => `- Изучить/улучшить: ${skill.name}`).join('\n') || 'Навыки не указаны'}
+
+    ### 2. Проектная практика
+    - Реализовать pet-проект с использованием требуемых технологий
+    - Участвовать в open-source проектах
+
+    ### 3. Подготовка к собеседованию
+    - Изучить компанию: ${vacancy.employer?.name}
+    - Подготовить ответы на типовые вопросы
+    - Практиковать технические задачи
+        `;
+  }
+  
+  async generateResumeForFavorite(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy) return;
+
+    try {
+      const resume = await this.resumeService.generateResume().toPromise();
+      this.favoritesService.updateFavorite(vacancyId, {
+        generatedResume: resume,
+        lastGenerated: new Date().toISOString()
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Резюме сгенерировано'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации резюме', 'VacancySearchComponent');
+    }
+  }
+  async generateAllContent(): Promise<void> {
+    if (this.favoriteVacancies.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Нет избранных вакансий'
+      });
+      return;
+    }
+
+    if (!this.selectedResume) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Выберите резюме для отправки'
+      });
+      return;
+    }
+
+    // Временно отключаем кнопку через локальную переменную
+    const generateButton = document.querySelector('.generate-all-button') as HTMLButtonElement;
+    if (generateButton) {
+      generateButton.disabled = true;
+    }
+
+    try {
+      for (const vacancy of this.favoriteVacancies) {
+        await this.generateCoverLetterForFavorite(vacancy.id);
+        // Добавьте задержку между запросами
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Генерация завершена для всех вакансий'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка массовой генерации', 'VacancySearchComponent');
+    } finally {
+      if (generateButton) {
+        generateButton.disabled = false;
+      }
+    }
+  }
+
+  async sendCoverLetter(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy?.coverLetter || !this.selectedResume) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Сначала сгенерируйте сопроводительное письмо'
+      });
+      return;
+    }
+
+    try {
+      const hhToken = localStorage.getItem('hh_access_token');
+      if (!hhToken) {
+        throw new Error('Требуется авторизация в HH.ru');
+      }
+
+      await this.coverLetterService.sendToHH(
+        vacancy.coverLetter,
+        vacancy.id,
+        this.selectedResume.id,
+        hhToken
+      ).toPromise();
+
+      this.messageService.add({
+        severity: 'success',
+        summary: `Отклик отправлен на вакансию "${vacancy.name}"`
+      });
+
+      this.favoritesService.removeFromFavorites(vacancy.id);
+    } catch (error: any) {
+      this.errorHandler.showError('Ошибка отправки письма', 'VacancySearchComponent');
     }
   }
 }

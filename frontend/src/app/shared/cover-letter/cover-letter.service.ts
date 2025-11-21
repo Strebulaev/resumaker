@@ -8,7 +8,6 @@ import { ConfigService } from '../config/config.service';
 import { AIService } from '../ai/ai.service';
 import { VacancyService } from '../vacancy/vacancy.service';
 import { SuperJobAuthService } from '../job-platforms/super-job/superjob-auth.service';
-import { ErrorToastComponent } from '../../components/Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../error-handler.service';
 
 export interface CoverLetterRequest {
@@ -41,15 +40,15 @@ export interface CoverLetterTemplate {
   providedIn: 'root'
 })
 export class CoverLetterService {
-  private readonly API_URL = 'https://api.together.xyz/v1/completions';
+  // private readonly API_URL = 'https://api.together.xyz/v1/completions';
   currentVacancy: any = null;
 
   constructor(
-    private http: HttpClient,
+    // private http: HttpClient,
     private hhAuthService: HHAuthService,
-    private superJobService: SuperJobAuthService,
+    // private superJobService: SuperJobAuthService,
     private profileService: ProfileService,
-    private configService: ConfigService,
+    // private configService: ConfigService,
     private aiService: AIService,
     private vacancyService: VacancyService,
     private errorHandler: ErrorHandlerService
@@ -161,101 +160,6 @@ export class CoverLetterService {
         this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
         throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
       })
-    );
-  }
-  
-  private mapHHVacancyData(response: any): any {
-    console.log('🔍 MAPPING HH.RU VACANCY DATA:', response);
-    
-    return {
-      employer: { 
-        name: response.employer?.name || 'Компания',
-        id: response.employer?.id
-      },
-      name: response.name || 'Сотрудник',
-      description: response.description || '',
-      key_skills: response.key_skills || [],
-      salary: response.salary,
-      address: response.address,
-      area: response.area,
-      experience: response.experience,
-      employment: response.employment,
-      schedule: response.schedule,
-      professional_roles: response.professional_roles,
-      snippet: response.snippet,
-      published_at: response.published_at,
-      alternate_url: response.alternate_url,
-      platform: 'hh'
-    };
-  }
-  
-  private mapSuperJobVacancyData(response: any): any {
-    console.log('🔍 MAPPING SUPERJOB VACANCY DATA:', response);
-    
-    // SuperJob returns data in different structure
-    const vacancy = response.objects?.[0] || response;
-    
-    return {
-      employer: { 
-        name: vacancy.firm_name || 'Компания',
-        id: vacancy.firm_id
-      },
-      name: vacancy.profession || 'Сотрудник',
-      description: vacancy.vacancyRichText || vacancy.candidat || '',
-      key_skills: vacancy.catalogues?.map((cat: any) => ({ name: cat.title })) || [],
-      salary: {
-        from: vacancy.payment_from,
-        to: vacancy.payment_to,
-        currency: vacancy.currency || 'rub'
-      },
-      address: vacancy.town ? { city: vacancy.town.title } : null,
-      area: vacancy.town ? { name: vacancy.town.title } : null,
-      experience: vacancy.experience ? { name: vacancy.experience.title } : null,
-      employment: vacancy.type_of_work ? { name: vacancy.type_of_work.title } : null,
-      schedule: vacancy.place_of_work ? { name: vacancy.place_of_work.title } : null,
-      published_at: vacancy.date_published ? new Date(vacancy.date_published * 1000).toISOString() : '',
-      alternate_url: vacancy.link || `https://www.superjob.ru/vacancy/${vacancy.id}.html`,
-      platform: 'superjob',
-      // SuperJob specific fields
-      firm_name: vacancy.firm_name,
-      profession: vacancy.profession,
-      payment_from: vacancy.payment_from,
-      payment_to: vacancy.payment_to,
-      currency: vacancy.currency,
-      town: vacancy.town
-    };
-  }
-  
-  private createFallbackVacancyData(): any {
-    return {
-      employer: { name: 'Компания' },
-      name: 'Сотрудник',
-      description: 'Информация о вакансии недоступна',
-      key_skills: [],
-      salary: null,
-      address: null,
-      platform: 'unknown'
-    };
-  }
-  
-  private detectPlatformFromId(vacancyId: string): string {
-    if (/^\d+$/.test(vacancyId)) {
-      return 'superjob';
-    }
-    return 'hh';
-  }
-  private getStoredToken(): string | null {
-    return localStorage.getItem('hh_access_token');
-  }
-  
-  private getHHResume(resumeId: string): Observable<any> {
-    if (!this.hhAuthService.isTokenValid()) {
-      return throwError(() => new Error('Требуется авторизация в HH.ru'));
-    }
-  
-    return from(this.hhAuthService.getUserResumes()).pipe(
-      map(resumes => resumes.find((r: any) => r.id === resumeId)),
-      catchError(() => of(null))
     );
   }
 
@@ -383,42 +287,6 @@ export class CoverLetterService {
       return `до ${salary.to} ${salary.currency}`;
     }
     return '';
-  }
-  
-  // Новые вспомогательные методы
-  private filterRelevantSkills(profileSkills: any[], vacancySkills: string[], requirements: string): string[] {
-    const relevant: string[] = [];
-    const allKeywords = [...vacancySkills, ...requirements.toLowerCase().split(' ')];
-    
-    profileSkills.forEach(skill => {
-      const skillName = skill.name.toLowerCase();
-      if (allKeywords.some(keyword => 
-        keyword.toLowerCase().includes(skillName) || skillName.includes(keyword.toLowerCase())
-      )) {
-        relevant.push(skill.name);
-      }
-    });
-    
-    return relevant;
-  }
-  
-  private hasRelevantExperience(profile: any, vacancy: any): boolean {
-    const vacancySkills = this.vacancyService.extractKeySkills(vacancy);
-    const requirements = this.vacancyService.extractRequirements(vacancy);
-    const profileSkills = profile?.skills || [];
-    
-    return this.filterRelevantSkills(profileSkills, vacancySkills, requirements).length > 0;
-  }
-  
-  private getRelevantExperience(profile: any, vacancy: any): string {
-    const relevantSkills = this.filterRelevantSkills(profile.skills || [], 
-      this.vacancyService.extractKeySkills(vacancy), 
-      this.vacancyService.extractRequirements(vacancy));
-    
-    if (relevantSkills.length === 0) return 'нет релевантного опыта';
-    
-    const experienceYears = profile.experience?.length || 0;
-    return `${experienceYears} ${this.pluralize(experienceYears, ['год', 'года', 'лет'])} в смежных областях`;
   }
   
   private getStyleDescription(style: string): string {

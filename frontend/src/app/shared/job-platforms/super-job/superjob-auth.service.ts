@@ -1,9 +1,6 @@
-// Файл: C:\Users\Serezhka\Documents\CollectiveProjects\resume\frontend\src\app\shared\superjob\superjob-auth.service.ts
-
 import { Injectable } from '@angular/core';
 import { ConfigService } from '../../config/config.service';
 import { BehaviorSubject, filter, first } from 'rxjs';
-import { ErrorToastComponent } from '../../../components/Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../error-handler.service';
 
 export interface SuperJobTokenResponse {

@@ -473,7 +473,10 @@
     "PLATFORM_SUPERJOB": "https://www.superjob.ru/vakansii/nazvanie-vacancy-id.html",
     "QUICK_DOWNLOAD": "Quick Download by URL",
     "LINK_SUPPORTED": "Supported platforms",
-    "VACANCY_URL": "Vacancy URL"
+    "VACANCY_URL": "Vacancy URL",
+    "PLATFORM_HH_NAME": "HH.ru",
+    "PLATFORM_SUPERJOB_NAME": "SuperJob",
+    "LINK_PLACEHOLDER_PLATFORMS": "https://hh.ru/vacancy/12345678 or SuperJob link"
   },
   "SEARCH": {
     "ALL_PLATFORMS": "Search on all platforms",
@@ -648,6 +651,32 @@
     "MODAL_TITLE": "AI Providers Configuration", 
     "CONFIGURE_BUTTON": "Configure AI",
     "CURRENT_PROVIDER": "Current provider"
+  },
+  "RESUME_SELECTOR": {
+    "TITLE": "Select Resume",
+    "LOADING": "Loading resumes...", 
+    "CREATED": "Created",
+    "UPDATED": "Updated",
+    "UPLOAD_NEW": "Upload new resume",
+    "SUPPORTED_FORMATS": "Supported formats: TXT, PDF, DOC, DOCX, RTF",
+    "NO_RESUMES": "No resumes found",
+    "NO_RESUMES_HINT": "Connect platform accounts or upload a resume file",
+    "SELECT": "Select"
+  },
+  "VACANCY_SELECTOR": {
+    "TITLE": "Select Vacancy",
+    "TAB_LINK": "By Link",
+    "TAB_FILE": "From File", 
+    "TAB_FAVORITES": "From Favorites",
+    "LINK_TITLE": "Load by Link",
+    "FILE_TITLE": "Load from File",
+    "FAVORITES_TITLE": "Select from Favorites",
+    "RECENT_LINKS": "Recent Links",
+    "FILE_SUPPORTED_FORMATS": "Supported formats: TXT, PDF, DOC, DOCX, RTF, JSON, YAML",
+    "NO_FAVORITES": "No favorite vacancies",
+    "SELECTED_VACANCY": "Selected Vacancy",
+    "SELECT": "Select",
+    "QUICK_LOAD_HINT": "Quick vacancy loading from any source"
   },
   "FILTER": "Filter",
   "ACTIONS": "Actions",

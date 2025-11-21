@@ -1,224 +1,262 @@
 <div class="interview-prep-container">
-    <p-card [header]="'INTERVIEW_PREP.TITLE' | translate">
-      <form [formGroup]="interviewForm">
+  <p-card [header]="'INTERVIEW_PREP.TITLE' | translate">
+    <form [formGroup]="interviewForm">
+      
+      <div class="section">
+        <h3>2. {{ 'INTERVIEW_PREP.VACANCY_SECTION' | translate }}</h3>
         
-        <!-- Резюме -->
-        <div class="section">
-          <h3>1. {{ 'INTERVIEW_PREP.RESUME_SECTION' | translate }}</h3>
-          <div class="file-upload">
-            <app-translated-file-input 
-              (fileSelected)="onFileSelect($event, 'resume')"
-              accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
-            </app-translated-file-input>
-            
-            <div class="file-info" *ngIf="resumeFile">
-              <span>{{ resumeFile.name }}</span>
-              <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
-                      (click)="removeFile('resume')">
-              </button>
-            </div>
-
-            <div *ngIf="!resumeFile">
-              <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-              <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.RESUME_SECTION' | translate"
-                       formControlName="customResume">
-              </textarea>
-            </div>
-            
-            <small>{{ 'INTERVIEW_PREP.FILE_TYPES_ALL' | translate }}</small>
-          </div>
-        </div>
-
-        <!-- Вакансия -->
-        <div class="section">
-          <h3>2. {{ 'INTERVIEW_PREP.VACANCY_SECTION' | translate }}</h3>
-          <div class="file-upload">
-            <app-translated-file-input 
-              (fileSelected)="onFileSelect($event, 'vacancy')"
-              accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
-            </app-translated-file-input>
-            
-            <div class="file-info" *ngIf="vacancyFile">
-              <span>{{ vacancyFile.name }}</span>
-              <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                      (click)="removeFile('vacancy')">
-              </button>
-            </div>
-
-            <div *ngIf="!vacancyFile">
-              <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-              <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.VACANCY_SECTION' | translate"
-                       formControlName="customVacancy">
-              </textarea>
-            </div>
-          </div>
-        </div>
-        <div class="vacancy-url-field">
-          <label>{{ 'INTERVIEW_PREP.VACANCY_URL' | translate }}</label>
-          <div class="url-input-container">
-            <input 
-              type="url" 
-              [(ngModel)]="vacancyUrl" 
-              [ngModelOptions]="{standalone: true}"
-              placeholder="https://hh.ru/vacancy/12345678"
-              (blur)="loadVacancyInfo()"
-              [disabled]="isLoading">
-            <button 
-              pButton 
-              icon="pi pi-download" 
-              (click)="loadVacancyInfo()"
-              [disabled]="isLoading || !vacancyUrl"
-              class="p-button-outlined">
-            </button>
-          </div>
-          <small>{{ 'INTERVIEW_PREP.VACANCY_URL_HINT' | translate }}</small>
-        </div>
-        <!-- Информация о компании -->
-        <div class="section">
-          <h3>3. {{ 'INTERVIEW_PREP.COMPANY_SECTION' | translate }}</h3>
-          <div class="file-upload">
-            <app-translated-file-input 
-              (fileSelected)="onFileSelect($event, 'company')"
-              accept=".txt,.pdf,.doc,.docx,.rtf">
-            </app-translated-file-input>
-            
-            <div class="file-info" *ngIf="companyFile">
-              <span>{{ companyFile.name }}</span>
-              <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                      (click)="removeFile('company')">
-              </button>
-            </div>
-
-            <div *ngIf="!companyFile">
-              <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-              <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.COMPANY_SECTION' | translate"
-                       formControlName="customCompany">
-              </textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Персональный контекст -->
-        <div class="section">
-          <h3>4. {{ 'INTERVIEW_PREP.PERSONAL_CONTEXT_SECTION' | translate }}</h3>
-          <div class="file-upload">
-            <app-translated-file-input 
-              (fileSelected)="onFileSelect($event, 'personalContext')"
-              accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
-            </app-translated-file-input>
-            <div class="file-info" *ngIf="personalContextFile">
-              <span>{{ personalContextFile.name }}</span>
-              <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                      (click)="removeFile('personalContext')">
-              </button>
-            </div>
-
-            <div *ngIf="!personalContextFile">
-              <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-              <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.PERSONAL_CONTEXT_SECTION' | translate"
-                       formControlName="customPersonalContext">
-              </textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Сопроводительное письмо -->
-        <div class="section">
-          <h3>5. {{ 'INTERVIEW_PREP.COVER_LETTER_SECTION' | translate }}</h3>
-          <div class="file-upload">
-            <app-translated-file-input 
-              (fileSelected)="onFileSelect($event, 'coverLetter')"
-              accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
-            </app-translated-file-input>
-            
-            <div class="file-info" *ngIf="coverLetterFile">
-              <span>{{ coverLetterFile.name }}</span>
-              <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                      (click)="removeFile('coverLetter')">
-              </button>
-            </div>
-
-            <div *ngIf="!coverLetterFile">
-              <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-              <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.COVER_LETTER_SECTION' | translate"
-                       formControlName="customCoverLetter">
-              </textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Внутренний контекст -->
-        <div class="section">
-          <h3>6. {{ 'INTERVIEW_PREP.INTERNAL_CONTEXT_SECTION' | translate }}</h3>
-          <div class="file-upload">
-            <app-translated-file-input 
-              (fileSelected)="onFileSelect($event, 'internalContext')"
-              accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
-            </app-translated-file-input>
-            
-            <div class="file-info" *ngIf="internalContextFile">
-              <span>{{ internalContextFile.name }}</span>
-              <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                      (click)="removeFile('internalContext')">
-              </button>
-            </div>
-
-            <div *ngIf="!internalContextFile">
-              <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-              <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.INTERNAL_CONTEXT_SECTION' | translate"
-                       formControlName="customInternalContext">
-              </textarea>
-            </div>
-          </div>
-        </div>
-
-        <!-- Кнопка генерации -->
-        <div class="actions">
+        <div class="vacancy-selection-header">
           <button pButton 
-                  [label]="'INTERVIEW_PREP.GENERATE_PLAN' | translate" 
-                  icon="pi pi-brain"
-                  (click)="generateInterviewPlan()"
-                  [disabled]="isLoading">
-            <p-progressSpinner *ngIf="isLoading" 
-                             [style]="{'width': '20px', 'height': '20px'}" 
-                             strokeWidth="4">
-            </p-progressSpinner>
+                  type="button"
+                  [label]="'VACANCY_SELECTOR.TITLE' | translate"
+                  icon="pi pi-briefcase"
+                  (click)="openVacancySelector()"
+                  class="p-button-outlined p-button-sm">
           </button>
         </div>
 
-      </form>
-    </p-card>
+        <div *ngIf="selectedVacancyForInterview" class="selected-vacancy-info">
+          <div class="vacancy-details">
+            <h5>{{ selectedVacancyForInterview.name }}</h5>
+            <p><strong>Компания:</strong> {{ selectedVacancyForInterview.employer?.name }}</p>
+            <p><strong>Платформа:</strong> {{ getPlatformLabel(selectedVacancyForInterview.platform) }}</p>
+            <p *ngIf="selectedVacancyForInterview.salary">
+              <strong>Зарплата:</strong> {{ getSalaryText(selectedVacancyForInterview) }}
+            </p>
+          </div>
+          <button pButton 
+                  icon="pi pi-times" 
+                  class="p-button-text p-button-danger"
+                  (click)="clearSelectedVacancy()">
+          </button>
+        </div>
 
-    <!-- Диалог с результатом -->
-    <p-dialog [header]="'INTERVIEW_PREP.PLAN_TITLE' | translate" 
-             [(visible)]="showPlanDialog" 
-             [modal]="true"
-             [style]="{ width: '90vw', height: '80vh' }"
-             [maximizable]="true">
-      
-      <div class="plan-content">
-        <markdown [data]="generatedPlan"></markdown>
+        <div class="file-upload" *ngIf="!selectedVacancyForInterview">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'vacancy')"
+            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+          </app-translated-file-input>
+          
+          <div class="file-info" *ngIf="vacancyFile">
+            <span>{{ vacancyFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('vacancy')">
+            </button>
+          </div>
+
+          <div *ngIf="!vacancyFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.VACANCY_SECTION' | translate"
+                    formControlName="customVacancy">
+            </textarea>
+          </div>
+        </div>
       </div>
 
-      <ng-template pTemplate="footer">
-        <button pButton [label]="'INTERVIEW_PREP.DOWNLOAD_PLAN' | translate" icon="pi pi-download"
-                (click)="downloadPlan()"></button>
-        <button pButton [label]="'INTERVIEW_PREP.COPY_PLAN' | translate" icon="pi pi-copy"
-                class="p-button-secondary"
-                (click)="copyToClipboard()"></button>
-        <button pButton [label]="'CLOSE' | translate" 
-                class="p-button-secondary"
-                (click)="closePlanDialog()"></button>
-      </ng-template>
-    </p-dialog>
-    <p-dialog 
-      header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
-      [(visible)]="showAIConfigModal" 
-      [modal]="true"
-      [style]="{ width: '70vw', maxWidth: '900px' }">
+      <!-- Вакансия -->
+      <div class="section">
+        <h3>2. {{ 'INTERVIEW_PREP.VACANCY_SECTION' | translate }}</h3>
+        <div class="file-upload">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'vacancy')"
+            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+          </app-translated-file-input>
+          
+          <div class="file-info" *ngIf="vacancyFile">
+            <span>{{ vacancyFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('vacancy')">
+            </button>
+          </div>
+
+          <div *ngIf="!vacancyFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.VACANCY_SECTION' | translate"
+                     formControlName="customVacancy">
+            </textarea>
+          </div>
+        </div>
+      </div>
       
-      <app-ai-config-modal 
-        (closed)="showAIConfigModal = false">
-      </app-ai-config-modal>
-    </p-dialog>
-  </div>
+      <div class="vacancy-url-field">
+        <label>{{ 'INTERVIEW_PREP.VACANCY_URL' | translate }}</label>
+        <div class="url-input-container">
+          <input 
+            type="url" 
+            [(ngModel)]="vacancyUrl" 
+            [ngModelOptions]="{standalone: true}"
+            placeholder="https://hh.ru/vacancy/12345678"
+            (blur)="loadVacancyInfo()"
+            [disabled]="isLoading">
+          <button 
+            pButton 
+            icon="pi pi-download" 
+            (click)="loadVacancyInfo()"
+            [disabled]="isLoading || !vacancyUrl"
+            class="p-button-outlined">
+          </button>
+        </div>
+        <small>{{ 'INTERVIEW_PREP.VACANCY_URL_HINT' | translate }}</small>
+      </div>
+      
+      <!-- Информация о компании -->
+      <div class="section">
+        <h3>3. {{ 'INTERVIEW_PREP.COMPANY_SECTION' | translate }}</h3>
+        <div class="file-upload">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'company')"
+            accept=".txt,.pdf,.doc,.docx,.rtf">
+          </app-translated-file-input>
+          
+          <div class="file-info" *ngIf="companyFile">
+            <span>{{ companyFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('company')">
+            </button>
+          </div>
+
+          <div *ngIf="!companyFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.COMPANY_SECTION' | translate"
+                     formControlName="customCompany">
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Персональный контекст -->
+      <div class="section">
+        <h3>4. {{ 'INTERVIEW_PREP.PERSONAL_CONTEXT_SECTION' | translate }}</h3>
+        <div class="file-upload">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'personalContext')"
+            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+          </app-translated-file-input>
+          <div class="file-info" *ngIf="personalContextFile">
+            <span>{{ personalContextFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('personalContext')">
+            </button>
+          </div>
+
+          <div *ngIf="!personalContextFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.PERSONAL_CONTEXT_SECTION' | translate"
+                     formControlName="customPersonalContext">
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Сопроводительное письмо -->
+      <div class="section">
+        <h3>5. {{ 'INTERVIEW_PREP.COVER_LETTER_SECTION' | translate }}</h3>
+        <div class="file-upload">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'coverLetter')"
+            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+          </app-translated-file-input>
+          
+          <div class="file-info" *ngIf="coverLetterFile">
+            <span>{{ coverLetterFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('coverLetter')">
+            </button>
+          </div>
+
+          <div *ngIf="!coverLetterFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.COVER_LETTER_SECTION' | translate"
+                     formControlName="customCoverLetter">
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Внутренний контекст -->
+      <div class="section">
+        <h3>6. {{ 'INTERVIEW_PREP.INTERNAL_CONTEXT_SECTION' | translate }}</h3>
+        <div class="file-upload">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'internalContext')"
+            accept=".txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json">
+          </app-translated-file-input>
+          
+          <div class="file-info" *ngIf="internalContextFile">
+            <span>{{ internalContextFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('internalContext')">
+            </button>
+          </div>
+
+          <div *ngIf="!internalContextFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.INTERNAL_CONTEXT_SECTION' | translate"
+                     formControlName="customInternalContext">
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопка генерации -->
+      <div class="actions">
+        <button pButton 
+                [label]="'INTERVIEW_PREP.GENERATE_PLAN' | translate" 
+                icon="pi pi-brain"
+                (click)="generateInterviewPlan()"
+                [disabled]="isLoading">
+          <p-progressSpinner *ngIf="isLoading" 
+                           [style]="{'width': '20px', 'height': '20px'}" 
+                           strokeWidth="4">
+          </p-progressSpinner>
+        </button>
+      </div>
+
+    </form>
+  </p-card>
+
+  <!-- Диалог с результатом -->
+  <p-dialog [header]="'INTERVIEW_PREP.PLAN_TITLE' | translate" 
+           [(visible)]="showPlanDialog" 
+           [modal]="true"
+           [style]="{ width: '90vw', height: '80vh' }"
+           [maximizable]="true">
+    
+    <div class="plan-content">
+      <markdown [data]="generatedPlan"></markdown>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton [label]="'INTERVIEW_PREP.DOWNLOAD_PLAN' | translate" icon="pi pi-download"
+              (click)="downloadPlan()"></button>
+      <button pButton [label]="'INTERVIEW_PREP.COPY_PLAN' | translate" icon="pi pi-copy"
+              class="p-button-secondary"
+              (click)="copyToClipboard()"></button>
+      <button pButton [label]="'CLOSE' | translate" 
+              class="p-button-secondary"
+              (click)="closePlanDialog()"></button>
+    </ng-template>
+  </p-dialog>
+  
+  <!-- Компонент выбора резюме -->
+  <app-resume-selector
+    [(showSelector)]="showResumeSelector"
+    (resumeSelected)="onResumeSelected($event)">
+  </app-resume-selector>
+  
+  <p-dialog 
+    header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
+    [(visible)]="showAIConfigModal" 
+    [modal]="true"
+    [style]="{ width: '70vw', maxWidth: '900px' }">
+    
+    <app-ai-config-modal 
+      (closed)="showAIConfigModal = false">
+    </app-ai-config-modal>
+  </p-dialog>
+</div>
+
+<app-vacancy-selector
+[(showSelector)]="showVacancySelector"
+(vacancySelected)="onVacancySelected($event)">
+</app-vacancy-selector>
