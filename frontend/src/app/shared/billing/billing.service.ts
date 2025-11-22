@@ -68,7 +68,6 @@ export class BillingService {
   ];
 
   private currentSubscription = new BehaviorSubject<UserSubscription | null>(null);
-  private isDemoMode = false;
   private plans: TariffPlan[] = [];
 
   constructor(
@@ -77,17 +76,132 @@ export class BillingService {
     private translate: TranslateService
   ) {
     this.initializePlans();
-    
-    this.configService.isConfigLoaded().subscribe(loaded => {
-      if (loaded) {
-        const config = this.configService.getConfig();
-        console.log('Billing service initialized in PRODUCTION mode');
-      }
-    });
-
     this.translate.onLangChange.subscribe(() => {
       this.initializePlans();
     });
+  }
+
+  async getUserSubscription(): Promise<UserSubscription> {
+    const userId = this.supabase.currentUser?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      console.log('Loading subscription from Supabase for user:', userId);
+      
+      const { data, error } = await this.supabase.client
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        
+        if (error.code === 'PGRST116') {
+          // Подписка не найдена - создаем новую
+          console.log('Subscription not found, creating free subscription');
+          return await this.createFreeSubscription(userId);
+        }
+        
+        // Для других ошибок пробуем создать подписку
+        console.warn('Error loading subscription, creating new one:', error.message);
+        return await this.createFreeSubscription(userId);
+      }
+
+      console.log('Subscription loaded from DB:', data);
+      
+      const subscription = this.mapDbSubscriptionToModel(data);
+      this.currentSubscription.next(subscription);
+      return subscription;
+
+    } catch (error) {
+      console.error('Unexpected error loading subscription:', error);
+      // Создаем бесплатную подписку как fallback
+      return await this.createFreeSubscription(userId!);
+    }
+  }
+
+  async saveSubscription(subscription: UserSubscription): Promise<void> {
+    const userId = this.supabase.currentUser?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    subscription.updatedAt = new Date();
+    
+    try {
+      console.log('Saving subscription to Supabase:', subscription);
+
+      const { error } = await this.supabase.client
+        .from('user_subscriptions')
+        .upsert({
+          user_id: subscription.userId,
+          plan_id: subscription.planId,
+          status: subscription.status,
+          current_period_start: subscription.currentPeriodStart.toISOString(),
+          current_period_end: subscription.currentPeriodEnd.toISOString(),
+          usage: subscription.usage,
+          payment_id: subscription.paymentId,
+          updated_at: subscription.updatedAt.toISOString()
+        }, { 
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('Error saving subscription to Supabase:', error);
+        throw new Error(`Failed to save subscription: ${error.message}`);
+      }
+
+      console.log('Subscription saved successfully');
+      this.currentSubscription.next(subscription);
+      
+    } catch (error) {
+      console.error('Failed to save subscription:', error);
+      throw error; // Пробрасываем ошибку дальше
+    }
+  }
+
+  private mapDbSubscriptionToModel(dbData: any): UserSubscription {
+    return {
+      userId: dbData.user_id,
+      planId: dbData.plan_id || 'free',
+      status: dbData.status || 'active',
+      currentPeriodStart: new Date(dbData.current_period_start),
+      currentPeriodEnd: new Date(dbData.current_period_end),
+      usage: dbData.usage || {
+        resumeGenerations: 0,
+        coverLetters: 0,
+        interviewPlans: 0,
+        lastReset: new Date()
+      },
+      paymentId: dbData.payment_id,
+      createdAt: new Date(dbData.created_at),
+      updatedAt: new Date(dbData.updated_at)
+    };
+  }
+
+  private async createFreeSubscription(userId: string): Promise<UserSubscription> {
+    const freeSubscription: UserSubscription = {
+      userId,
+      planId: 'free',
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 год
+      usage: {
+        resumeGenerations: 0,
+        coverLetters: 0,
+        interviewPlans: 0,
+        lastReset: new Date()
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    await this.saveSubscription(freeSubscription);
+    
+    return freeSubscription;
   }
 
 
@@ -168,109 +282,6 @@ export class BillingService {
   getCurrentPlan(): TariffPlan {
     const subscription = this.currentSubscription.value;
     return this.getPlan(subscription?.planId || 'free');
-  }
-
-  async getUserSubscription(): Promise<UserSubscription> {
-    const userId = this.supabase.currentUser?.id;
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
-
-    try {
-      const { data, error } = await this.supabase.client
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Подписка не найдена - создаем бесплатную
-          return await this.createFreeSubscription(userId);
-        }
-        throw error;
-      }
-
-      // Преобразуем данные из БД в нашу модель
-      const subscription = this.mapDbSubscriptionToModel(data);
-      this.currentSubscription.next(subscription);
-      return subscription;
-
-    } catch (error) {
-      console.error('Error loading subscription from DB:', error);
-      // Fallback: создаем бесплатную подписку
-      return await this.createFreeSubscription(userId);
-    }
-  }
-
-  private async createFreeSubscription(userId: string): Promise<UserSubscription> {
-    const freeSubscription: UserSubscription = {
-      userId,
-      planId: 'free',
-      status: 'active',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-      usage: {
-        resumeGenerations: 0,
-        coverLetters: 0,
-        interviewPlans: 0,
-        lastReset: new Date()
-      },
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    await this.saveSubscription(freeSubscription);
-    return freeSubscription;
-  }
-
-  async saveSubscription(subscription: UserSubscription): Promise<void> {
-    subscription.updatedAt = new Date();
-    
-    try {
-      // Исправленный upsert - убраны неверные параметры
-      const { error } = await this.supabase.client
-        .from('user_subscriptions')
-        .upsert({
-          user_id: subscription.userId,
-          plan_id: subscription.planId,
-          status: subscription.status,
-          current_period_start: subscription.currentPeriodStart.toISOString(),
-          current_period_end: subscription.currentPeriodEnd.toISOString(),
-          usage: subscription.usage,
-          payment_id: subscription.paymentId,
-          updated_at: subscription.updatedAt.toISOString()
-        }, { 
-          onConflict: 'user_id'
-        });
-
-      if (error) {
-        console.error('Error saving subscription to DB:', error);
-        localStorage.setItem(`subscription_${subscription.userId}`, JSON.stringify(subscription));
-      } else {
-        localStorage.removeItem(`subscription_${subscription.userId}`);
-      }
-
-      this.currentSubscription.next(subscription);
-      
-    } catch (error) {
-      console.error('Error in saveSubscription:', error);
-      localStorage.setItem(`subscription_${subscription.userId}`, JSON.stringify(subscription));
-    }
-  }
-
-  private mapDbSubscriptionToModel(dbData: any): UserSubscription {
-    return {
-      userId: dbData.user_id,
-      planId: dbData.plan_id,
-      status: dbData.status,
-      currentPeriodStart: new Date(dbData.current_period_start),
-      currentPeriodEnd: new Date(dbData.current_period_end),
-      usage: dbData.usage,
-      paymentId: dbData.payment_id,
-      createdAt: new Date(dbData.created_at),
-      updatedAt: new Date(dbData.updated_at)
-    };
   }
 
   async activateFreePlan(): Promise<void> {
