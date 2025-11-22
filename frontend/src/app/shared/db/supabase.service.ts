@@ -234,14 +234,12 @@ export class SupabaseService {
   
     } catch (error) {
       console.error('Auth initialization failed:', error);
-      // Всегда помечаем как инициализированное, даже при ошибке
       this.initializedSubject.next(true);
     }
   }
 
   private async tryRecoverSession(): Promise<void> {
     try {
-      // Пытаемся восстановить сессию из localStorage
       const storageKey = `sb-${environment.supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
       const storedSession = localStorage.getItem(storageKey);
       
@@ -314,16 +312,16 @@ export class SupabaseService {
       role: 'authenticated',
       updated_at: new Date().toISOString()
     };
-
-    const mockSession = {
+  
+    const mockSession: any = {
       user: mockUser,
       access_token: 'mock-access-token-' + Math.random().toString(36).substring(2),
       refresh_token: 'mock-refresh-token-' + Math.random().toString(36).substring(2),
       expires_in: 3600,
       expires_at: Math.floor(Date.now() / 1000) + 3600,
-      token_type: 'bearer'
+      token_type: 'bearer' as const
     };
-
+  
     localStorage.setItem('sb-mock-session', JSON.stringify(mockSession));
     this.session = mockSession;
     this.userSubject.next(mockUser);
@@ -332,7 +330,7 @@ export class SupabaseService {
     
     return { data: { user: mockUser }, error: null };
   }
-
+  
   async signInWithGoogle() {
     // Если Supabase недоступен, используем мок
     if (!this.supabase) {

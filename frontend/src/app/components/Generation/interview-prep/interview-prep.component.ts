@@ -458,7 +458,10 @@ export class InterviewPrepComponent implements OnInit {
     this.showResumeSelector = true;
   }
 
-
+  clearSelectedResume(): void {
+    this.selectedResumeForInterview = null;
+  }
+  
   onVacancySelected(vacancy: any): void {
     this.selectedVacancyForInterview = vacancy;
     this.currentVacancy = vacancy;

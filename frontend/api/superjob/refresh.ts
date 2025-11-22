@@ -1,4 +1,3 @@
-  // /api/superjob/refresh.ts
   import { VercelRequest, VercelResponse } from '@vercel/node';
 
   export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -21,7 +20,6 @@
     }
 
     try {
-      // Исправлено: доступ через квадратные скобки
       const clientId = process.env['SUPERJOB_CLIENT_ID'];
       const clientSecret = process.env['SUPERJOB_CLIENT_SECRET'];
 
@@ -52,10 +50,10 @@
       }
 
       const tokenData = await response.json();
-      return res.status(200).json(tokenData); // Добавлен return
+      return res.status(200).json(tokenData);
 
     } catch (error) {
       console.error('SuperJob refresh error:', error);
-      return res.status(500).json({ error: 'Internal server error' }); // Добавлен return
+      return res.status(500).json({ error: 'Internal server error' });
     }
   }

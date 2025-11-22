@@ -62,7 +62,7 @@ export class SuperJobAuthService {
   private readonly SJ_REFRESH_TOKEN_KEY = 'superjob_refresh_token';
   private readonly SJ_TOKEN_EXPIRY_KEY = 'superjob_token_expiry';
   public clientId: string = '';
-  public clientSecret: string = ''; // Сделаем public для отладки
+  public clientSecret: string = '';
   private readonly API_URL = 'https://api.superjob.ru/2.0';
   private configLoaded = new BehaviorSubject<boolean>(false);
 
@@ -75,20 +75,12 @@ export class SuperJobAuthService {
 
   async initializeConfig(): Promise<void> {
     try {
-      // Ждем загрузки конфигурации
       await this.configService.loadConfig();
       const config = this.configService.getConfig();
       
       this.clientId = config.superJobClientId;
       this.clientSecret = config.superJobClientSecret;
-      
-      // console.log('SuperJob config initialized:', {
-      //   hasClientId: !!this.clientId,
-      //   hasClientSecret: !!this.clientSecret,
-      //   clientId: this.clientId ? '***' + this.clientId.slice(-4) : 'MISSING',
-      //   clientSecret: this.clientSecret ? '***' + this.clientSecret.slice(-4) : 'MISSING'
-      // });
-      
+
       if (!this.clientId || !this.clientSecret) {
         console.warn('SuperJob OAuth credentials not configured');
       }
@@ -97,7 +89,7 @@ export class SuperJobAuthService {
       
     } catch (error) {
       console.error('Failed to initialize SuperJob config:', error);
-      this.configLoaded.next(true); // Все равно помечаем как загруженное
+      this.configLoaded.next(true);
     }
   }
 
@@ -112,7 +104,6 @@ export class SuperJobAuthService {
         }
       });
   
-      // Используем ваш CORS прокси вместо прямого вызова
       const response = await fetch('/api/cors-proxy', {
         method: 'POST',
         headers: {
@@ -136,7 +127,6 @@ export class SuperJobAuthService {
   }
   
   async getVacancyDetails(vacancyId: number): Promise<SuperJobVacancy> {
-    // Используем ваш CORS прокси
     const response = await fetch('/api/cors-proxy', {
       method: 'POST',
       headers: {
@@ -312,7 +302,6 @@ export class SuperJobAuthService {
     }
   
     try {
-      // Используем серверный endpoint для refresh token
       const response = await fetch('/api/superjob/refresh', {
         method: 'POST',
         headers: {
@@ -430,14 +419,13 @@ export class SuperJobAuthService {
     }
 
     try {
-      // ПРАВИЛЬНЫЙ ENDPOINT для получения списка резюме пользователя
       const response = await fetch('/api/cors-proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: `${this.API_URL}/user_cvs/`, // ИЗМЕНЕНО: правильный endpoint для списка резюме
+          url: `${this.API_URL}/user_cvs/`,
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -455,7 +443,6 @@ export class SuperJobAuthService {
       const data = await response.json();
       console.log('SuperJob user resumes response:', data);
       
-      // ПРАВИЛЬНОЕ ИЗВЛЕЧЕНИЕ ДАННЫХ ИЗ user_cvs
       if (data.objects && Array.isArray(data.objects)) {
         return data.objects.map((resume: any) => this.mapUserCvData(resume));
       }
@@ -470,7 +457,6 @@ export class SuperJobAuthService {
     }
   }
 
-  // НОВЫЙ МЕТОД ДЛЯ МАППИНГА ДАННЫХ ИЗ user_cvs
   private mapUserCvData(resumeData: any): SuperJobResume {
     return {
       id: resumeData.id || 0,
@@ -479,11 +465,10 @@ export class SuperJobAuthService {
       created: resumeData.date_published || Date.now() / 1000,
       modified: resumeData.date_published || Date.now() / 1000,
       status: this.mapCvStatus(resumeData.published),
-      skills: '', // В кратком списке навыков нет
-      education: [], // В кратком списке образования нет
-      experience: [], // В кратком списке опыта нет
+      skills: '',
+      education: [],
+      experience: [],
       platform: 'superjob',
-      // Дополнительные поля из user_cvs
       payment: resumeData.payment,
       currency: resumeData.currency,
       name: resumeData.name,

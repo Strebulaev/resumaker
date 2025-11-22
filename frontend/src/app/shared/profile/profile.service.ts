@@ -215,7 +215,6 @@ export class ProfileService {
     try {
       console.log('Starting YAML import...');
       
-      // Очистка YAML строки от возможных лишних символов
       const cleanYamlStr = yamlStr.trim();
       
       const data = yaml.load(cleanYamlStr) as { person: Person };
@@ -233,7 +232,6 @@ export class ProfileService {
       } else {
         console.error('YAML validation error:', validation.error);
         
-        // Попробуем частичный импорт с базовыми полями
         const fallbackProfile = this.createPartialProfile(data.person);
         return of(fallbackProfile);
       }
@@ -244,7 +242,6 @@ export class ProfileService {
   }
   
   private createPartialProfile(partialData: any): Person {
-    // Создаем базовый профиль и заполняем только валидные поля
     return {
       name: partialData.name || '',
       gender: (partialData.gender || 'unknown') as 'unknown' | 'male' | 'female',

@@ -29,7 +29,6 @@ export class VacancyService {
     private errorHandler: ErrorHandlerService
   ) {}
 
-  // Основной метод для получения вакансии по ID или URL
   getVacancy(identifier: string): Observable<Vacancy> {
     const platform = this.detectPlatform(identifier);
     
@@ -44,7 +43,6 @@ export class VacancyService {
     }
   }
 
-  // Метод с кэшированием для использования в компонентах
   async getVacancyWithCache(identifier: string): Promise<Vacancy> {
     const cacheKey = identifier;
     
@@ -64,7 +62,6 @@ export class VacancyService {
     }
   }
 
-  // Поиск вакансий на всех платформах
   searchVacancies(params: VacancySearchParams): Observable<{ platform: string; results: any }[]> {
     const searches = [
       this.searchHHVacancies(params).pipe(
@@ -164,14 +161,12 @@ export class VacancyService {
       }
     });
 
-    // Используем ваш существующий CORS прокси
     return this.http.post<any>('/api/cors-proxy', {
       url: `https://api.superjob.ru/2.0/vacancies/?${queryParams}`,
       method: 'GET'
     });
   }
 
-  // Вспомогательные методы
   private detectPlatform(url: string): string | null {
     if (url.includes('hh.ru') || url.includes('hh.') || /\/vacancy\//.test(url)) {
       return 'hh';
@@ -249,7 +244,6 @@ export class VacancyService {
       .trim();
   }
 
-  // Экспорт вакансии
   exportVacancy(vacancy: Vacancy, format: 'txt' | 'json' = 'txt'): string {
     if (format === 'json') {
       return JSON.stringify(vacancy, null, 2);
@@ -312,11 +306,10 @@ export class VacancyService {
         requirement: vacancy.snippet.requirement,
         responsibility: vacancy.snippet.responsibility
       } : undefined,
-      platform: 'hh.ru' // ОСТАВЬТЕ ЭТУ СТРОКУ - теперь она в схеме
+      platform: 'hh.ru'
     };
   }
   
-  // В методе mapSuperJobVacancyToCommon
   private mapSuperJobVacancyToCommon(vacancy: any): Vacancy {
     return {
       id: vacancy.id.toString(),
@@ -337,11 +330,10 @@ export class VacancyService {
       employment: vacancy.type_of_work ? { name: vacancy.type_of_work.title } : undefined,
       alternate_url: vacancy.link || `https://www.superjob.ru/vacancy/${vacancy.id}.html`,
       published_at: vacancy.date_published ? new Date(vacancy.date_published * 1000).toISOString() : undefined,
-      platform: 'superjob.ru' // ОСТАВЬТЕ ЭТУ СТРОКУ - теперь она в схеме
+      platform: 'superjob.ru'
     };
   }
   
-  // В методе getVacancyPlatform
   getVacancyPlatform(vacancy: any): string {
     return vacancy.platform || 'unknown';
   }

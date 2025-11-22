@@ -1,7 +1,56 @@
 <div class="interview-prep-container">
   <p-card [header]="'INTERVIEW_PREP.TITLE' | translate">
     <form [formGroup]="interviewForm">
-      
+      <!-- Резюме -->
+      <div class="section">
+        <h3>1. {{ 'INTERVIEW_PREP.RESUME_SECTION' | translate }}</h3>
+        
+        <div class="resume-selection-header">
+          <button pButton 
+                  type="button"
+                  [label]="'RESUME_SELECTOR.TITLE' | translate"
+                  icon="pi pi-briefcase"
+                  (click)="openResumeSelector()"
+                  class="p-button-outlined p-button-sm">
+          </button>
+        </div>
+
+        <div *ngIf="selectedResumeForInterview" class="selected-resume-info">
+          <div class="resume-details">
+            <h5>{{ selectedResumeForInterview.title }}</h5>
+            <p><strong>Платформа:</strong> {{ getPlatformLabel(selectedResumeForInterview.platform) }}</p>
+          </div>
+          <button pButton 
+                  icon="pi pi-times" 
+                  class="p-button-text p-button-danger"
+                  (click)="clearSelectedResume()">
+          </button>
+        </div>
+
+        <div class="file-upload" *ngIf="!selectedResumeForInterview">
+          <app-translated-file-input 
+            (fileSelected)="onFileSelect($event, 'resume')"
+            [fieldName]="'interview-resume'"
+            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
+          </app-translated-file-input>
+          
+          <div class="file-info" *ngIf="resumeFile">
+            <span>{{ resumeFile.name }}</span>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
+                    (click)="removeFile('resume')">
+            </button>
+          </div>
+
+          <div *ngIf="!resumeFile">
+            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
+            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.RESUME_SECTION' | translate"
+                    formControlName="customResume">
+            </textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Вакансия -->
       <div class="section">
         <h3>2. {{ 'INTERVIEW_PREP.VACANCY_SECTION' | translate }}</h3>
         
@@ -33,34 +82,8 @@
 
         <div class="file-upload" *ngIf="!selectedVacancyForInterview">
           <app-translated-file-input 
-            (fileSelected)="onFileSelect($event, 'resume')"
-            [fieldName]="'interview-resume'"
-            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
-          </app-translated-file-input>
-          
-          <div class="file-info" *ngIf="vacancyFile">
-            <span>{{ vacancyFile.name }}</span>
-            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                    (click)="removeFile('vacancy')">
-            </button>
-          </div>
-
-          <div *ngIf="!vacancyFile">
-            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.VACANCY_SECTION' | translate"
-                    formControlName="customVacancy">
-            </textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Вакансия -->
-      <div class="section">
-        <h3>2. {{ 'INTERVIEW_PREP.VACANCY_SECTION' | translate }}</h3>
-        <div class="file-upload">
-          <app-translated-file-input 
             (fileSelected)="onFileSelect($event, 'vacancy')"
-            [fieldName]="'interview-resume'"
+            [fieldName]="'interview-vacancy'"
             [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
           </app-translated-file-input>
           
@@ -78,27 +101,6 @@
             </textarea>
           </div>
         </div>
-      </div>
-      
-      <div class="vacancy-url-field">
-        <label>{{ 'INTERVIEW_PREP.VACANCY_URL' | translate }}</label>
-        <div class="url-input-container">
-          <input 
-            type="url" 
-            [(ngModel)]="vacancyUrl" 
-            [ngModelOptions]="{standalone: true}"
-            placeholder="https://hh.ru/vacancy/12345678"
-            (blur)="loadVacancyInfo()"
-            [disabled]="isLoading">
-          <button 
-            pButton 
-            icon="pi pi-download" 
-            (click)="loadVacancyInfo()"
-            [disabled]="isLoading || !vacancyUrl"
-            class="p-button-outlined">
-          </button>
-        </div>
-        <small>{{ 'INTERVIEW_PREP.VACANCY_URL_HINT' | translate }}</small>
       </div>
       
       <!-- Информация о компании -->

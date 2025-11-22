@@ -16,7 +16,6 @@ module.exports = function handler(req: VercelRequest, res: VercelResponse): void
   }
 
   try {
-    // Используем квадратные скобки для доступа к свойствам process.env
     const supabaseUrl = process.env['POSTGRES_SUPABASE_URL'];
     const supabaseKey = process.env['POSTGRES_SUPABASE_ANON_KEY'];
     const togetherApiKey = process.env['TOGETHER_API_KEY'];

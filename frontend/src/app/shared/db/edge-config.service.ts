@@ -10,7 +10,6 @@ export class EdgeConfigService {
     };
   }
 
-  // Feature flags для A/B тестирования
   async getFeatureFlags() {
     return await get('featureFlags') || {
       aiResumeGeneration: true,
@@ -20,7 +19,6 @@ export class EdgeConfigService {
     };
   }
 
-  // Кэш промптов для AI
   async getAIPrompts() {
     return await get('aiPrompts') || {
       resume: "Сгенерируй профессиональное резюме...",
@@ -29,12 +27,11 @@ export class EdgeConfigService {
     };
   }
 
-  // Настройки кэширования
   async getCacheConfig() {
     return await get('cacheConfig') || {
-      vacancyCacheTtl: 3600, // 1 час
-      resumeCacheTtl: 7200,  // 2 часа
-      profileCacheTtl: 1800  // 30 минут
+      vacancyCacheTtl: 3600,
+      resumeCacheTtl: 7200,
+      profileCacheTtl: 1800
     };
   }
 }

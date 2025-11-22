@@ -206,7 +206,6 @@ export class HabrAuthService {
     return token;
   }
 
-  // Методы для работы с API Habr Career
   async getVacancies(params: any = {}): Promise<{ data: HabrVacancy[]; meta: any }> {
     const token = await this.getValidToken();
     

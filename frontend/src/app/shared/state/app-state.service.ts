@@ -11,7 +11,6 @@ export class AppStateService {
   }
 
   private setupRouterListener(): void {
-    // Сохраняем URL при каждой навигации
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
@@ -53,7 +52,6 @@ export class AppStateService {
     return state.currentUrl || null;
   }
 
-  // Сохраняем состояние конкретного компонента
   saveComponentState(componentId: string, state: any): void {
     const appState = this.getState();
     appState.components = appState.components || {};
@@ -61,7 +59,6 @@ export class AppStateService {
     this.saveState(appState);
   }
 
-  // Получаем состояние конкретного компонента
   getComponentState(componentId: string): any {
     const appState = this.getState();
     return appState.components?.[componentId] || null;

@@ -44,11 +44,8 @@ export class CoverLetterService {
   currentVacancy: any = null;
 
   constructor(
-    // private http: HttpClient,
     private hhAuthService: HHAuthService,
-    // private superJobService: SuperJobAuthService,
     private profileService: ProfileService,
-    // private configService: ConfigService,
     private aiService: AIService,
     private vacancyService: VacancyService,
     private errorHandler: ErrorHandlerService
@@ -109,7 +106,6 @@ export class CoverLetterService {
         } else {
           this.errorHandler.showError('Ошибка генерации письма', 'CoverLetterService');
         }
-        // Возвращаем новый Observable с ошибкой
         return throwError(() => error);
       })
     );
@@ -120,14 +116,12 @@ export class CoverLetterService {
     
     console.log('🧹 Raw AI response length:', content.length);
     
-    // Базовая очистка
     let cleaned = content
-      .replace(/```/g, '') // Убираем markdown код
-      .replace(/[\*\_]{2,}/g, '') // Убираем лишнее форматирование
-      .replace(/\n{3,}/g, '\n\n') // Убираем множественные переносы
+      .replace(/```/g, '')
+      .replace(/[\*\_]{2,}/g, '')
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
 
-    // Валидация содержания
     const invalidPhrases = [
       'комиссия по отбору',
       'члены комиссии', 
@@ -145,7 +139,6 @@ export class CoverLetterService {
     return cleaned;
   }
 
-  // Улучшенный fallback
   private createFallbackLetterContent(vacancy?: any, profile?: any): string {
     const companyName = vacancy?.employer?.name || vacancy?.firm_name || 'компании';
     const vacancyName = vacancy?.name || vacancy?.profession || 'должности';
@@ -166,7 +159,6 @@ export class CoverLetterService {
   private buildPrompt(vacancy: any, profile: any, style: string, tone: string): string {
     console.log('🔍 BUILDING IMPROVED PROMPT WITH VACANCY:', vacancy);
     
-    // Extract data based on platform
     let companyName, vacancyName, city, salary, description, requirements, keySkills, experience, employment;
     
     if (vacancy.platform === 'superjob') {

@@ -66,7 +66,6 @@ export class HHVacancyService {
           return throwError(() => new Error(`Invalid vacancy ID: ${vacancyId}`));
         }
 
-        // ПРЯМОЙ ЗАПРОС К API HH.RU
         return this.http.get<any>(`https://api.hh.ru/vacancies/${vacancyId}`, {
           headers: {
             'User-Agent': 'RezulutionApp/1.0 (serezhka@example.com)',
@@ -100,7 +99,6 @@ export class HHVacancyService {
           }
         });
 
-        // ПРЯМОЙ ЗАПРОС К API HH.RU
         return this.http.get<any>('https://api.hh.ru/vacancies', {
           headers: {
             'User-Agent': 'RezulutionApp/1.0 (serezhka@example.com)',
@@ -144,7 +142,6 @@ export class HHVacancyService {
     );
   }
   
-  // Метод для получения по ID
   getVacancyById(id: string): Observable<Vacancy> {
     return this.getVacancy(id);
   }
@@ -152,12 +149,10 @@ export class HHVacancyService {
   async getVacancyWithCache(vacancyIdOrUrl: string): Promise<any> {
     const vacancyId = this.extractVacancyIdFromUrl(vacancyIdOrUrl) || vacancyIdOrUrl;
     
-    // Проверяем кэш
     if (this.vacancyCache.has(vacancyId)) {
       return this.vacancyCache.get(vacancyId);
     }
     
-    // Загружаем и кэшируем
     const vacancy = await this.getVacancyDetails(vacancyId).toPromise();
     this.vacancyCache.set(vacancyId, vacancy);
     return vacancy;
@@ -218,7 +213,6 @@ export class HHVacancyService {
     if (!url) return null;
     
     try {
-      // Нормализуем URL
       let normalizedUrl = url;
       if (!url.startsWith('http')) {
         normalizedUrl = 'https://' + url;
@@ -232,10 +226,7 @@ export class HHVacancyService {
         return null;
       }
       
-      // Основной случай: /vacancy/12345678 или /vacancies/12345678
       const pathParts = urlObj.pathname.split('/').filter(part => part);
-      
-      // Ищем индекс 'vacancy' или 'vacancies'
       const vacancyIndex = pathParts.findIndex(part => 
         part === 'vacancy' || part === 'vacancies'
       );
@@ -243,17 +234,14 @@ export class HHVacancyService {
       if (vacancyIndex !== -1 && vacancyIndex + 1 < pathParts.length) {
         let id = pathParts[vacancyIndex + 1];
         
-        // Убираем параметры и дополнительные пути
         if (id.includes('?')) id = id.split('?')[0];
         if (id.includes('/')) id = id.split('/')[0];
         
-        // Проверяем, что это число
         if (/^\d+$/.test(id)) {
           return id;
         }
       }
       
-      // Случай, когда ID уже извлечен или это прямой ID
       const directIdMatch = url.match(/\b\d{5,10}\b/);
       if (directIdMatch) {
         return directIdMatch[0];
@@ -264,7 +252,6 @@ export class HHVacancyService {
     } catch (error) {
       console.error('Error parsing URL:', error);
       
-      // Простой fallback: ищем последовательность цифр
       const digitMatch = url.match(/\d{5,10}/);
       return digitMatch ? digitMatch[0] : null;
     }
@@ -347,7 +334,6 @@ export class HHVacancyService {
           throw new Error('Требуется авторизация в HH.ru');
         }
   
-        // ПРЯМОЙ ВЫЗОВ API HH.RU
         return this.http.get<any>(`https://api.hh.ru/vacancies/${vacancyId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,

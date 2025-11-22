@@ -37,7 +37,7 @@
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
     "@primeng/themes": "^20.0.1",
-    "@supabase/supabase-js": "^2.53.0",
+    "@supabase/supabase-js": "^2.84.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/google.accounts": "^0.0.17",
     "@vercel/edge-config": "^1.4.3",
