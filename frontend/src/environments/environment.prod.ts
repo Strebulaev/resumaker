@@ -20,5 +20,12 @@ export const environment = {
   },
 
   yookassaShopId: '',
-  yookassaSecretKey: ''
+  yookassaSecretKey: '',
+
+  analytics: {
+    googleAnalyticsId: '',
+    yandexMetrikaId: '',
+    microsoftClarityId: '',
+    hotjarId: '',
+  }
 };

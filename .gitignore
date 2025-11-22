@@ -6,6 +6,7 @@ frontend/.angular
 frontend/.vscode
 frontend/.vercel
 .gitignore
+frontend\src\environments\environment.ts
 
 # Логи
 logs

@@ -112,7 +112,6 @@ export class ConfigService {
     } catch (error) {
       this.errorHandler.showError('Ошибка загрузки конфигурации', 'ConfigService');
 
-      // Fallback к пустому конфигу
       const emptyConfig: AppConfig = {
         supabaseUrl: '',
         supabaseKey: '',
