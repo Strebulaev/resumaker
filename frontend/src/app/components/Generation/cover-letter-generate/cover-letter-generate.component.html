@@ -31,49 +31,7 @@
         </div>
       </div>
 
-      <!-- Старый способ выбора резюме из HH (оставляем для обратной совместимости) -->
-      <div class="field" *ngIf="userResumes.length > 0 && !selectedResumeFromSelector">
-        <label for="hh_resume">{{ 'COVER_LETTER.SELECT_RESUME' | translate }}</label>
-        <p-select 
-          id="hh_resume"
-          [options]="userResumes" 
-          optionLabel="title"
-          formControlName="selected_resume"
-          [placeholder]="'COVER_LETTER.SELECT_RESUME_PLACEHOLDER' | translate"
-          (onChange)="selectedResume = $event.value">
-          <ng-template let-resume pTemplate="item">
-            <div class="resume-option">
-              <div class="resume-title">{{ resume.title }}</div>
-              <div class="resume-skills">
-                {{ resume.skills?.slice(0, 3).join(', ') }}...
-              </div>
-            </div>
-          </ng-template>
-        </p-select>
-      </div>
-
-      <div class="field" *ngIf="!selectedResumeFromSelector">
-        <label>{{ 'COVER_LETTER.UPLOAD_RESUME' | translate }}</label>
-        <app-translated-file-input
-          [accept]="'.txt,.pdf,.doc,.docx,.rtf'"
-          [fieldName]="'cover-letter-resume'"
-          (fileSelected)="onFileSelect($event)"
-          [showFileTypes]="true">
-        </app-translated-file-input>
-      </div>
-      
-      <!-- Обновите поле resume_id -->
-      <div class="field">
-        <label for="resume_id">{{ 'COVER_LETTER.RESUME_ID' | translate }}</label>
-        <input 
-          id="resume_id" 
-          type="text" 
-          pInputText 
-          formControlName="resume_id"
-          [placeholder]="'COVER_LETTER.RESUME_ID_PLACEHOLDER' | translate">
-        <small>{{ 'COVER_LETTER.RESUME_ID_HINT' | translate }}</small>
-      </div>
-
+      <!-- Поле для вакансии -->
       <div class="field">
         <label for="vacancy_id">{{ 'COVER_LETTER.VACANCY_ID' | translate }} *</label>
         <div class="vacancy-selection">
@@ -101,38 +59,8 @@
             </button>
           </div>
         </div>
-      
-        <!-- Старое поле для обратной совместимости -->
-        <input 
-          id="vacancy_id" 
-          type="text" 
-          pInputText 
-          formControlName="vacancy_id"
-          [placeholder]="'COVER_LETTER.VACANCY_ID_PLACEHOLDER' | translate"
-          [class]="{'ng-invalid ng-dirty': coverLetterForm.get('vacancy_id')?.invalid && coverLetterForm.get('vacancy_id')?.touched}">
       </div>
 
-      <div class="vacancy-url-field">
-        <label>{{ 'COVER_LETTER.VACANCY_URL' | translate }}</label>
-        <div class="url-input-container">
-          <input 
-            type="url" 
-            [(ngModel)]="vacancyUrl" 
-            [ngModelOptions]="{standalone: true}"
-            placeholder="https://hh.ru/vacancy/12345678"
-            (blur)="loadVacancyInfo()"
-            [disabled]="isLoading">
-          <button 
-            pButton 
-            icon="pi pi-download" 
-            (click)="loadVacancyInfo()"
-            [disabled]="isLoading || !vacancyUrl"
-            class="p-button-outlined">
-          </button>
-        </div>
-        <small>{{ 'COVER_LETTER.VACANCY_URL_HINT' | translate }}</small>
-      </div>
-      
       <div class="field">
         <label for="style">{{ 'COVER_LETTER.STYLE' | translate }}</label>
         <p-select 

@@ -58,6 +58,8 @@
     "INFO": "Information",
     "RESUMES": "Resumes",
     "COMPLETION": "Profile Completion",
+    "DOWNLOAD": "Download",
+    "CLOSE": "Close",
     "PERSONAL_INFO": {
       "TITLE": "Personal Information",
       "NAME": "Full Name",
@@ -71,7 +73,8 @@
       "DESIRED_POSITIONS": "Desired Positions",
       "ADD_POSITION": "Add Position",
       "VIEW": "View Profile",
-      "EDIT": "Edit Profile"
+      "EDIT": "Edit Profile",
+      "NOT_SPECIFIED": "Not specified"
     },
     "CONTACT_INFO": {
       "TITLE": "Contact Information",
@@ -193,7 +196,8 @@
     },
     "PREVIEW_TITLE": "Preview",
     "PROFILE_VIEW": {
-      "LOGIN_PROMPT": "Please log in to view profile"
+      "LOGIN_PROMPT": "Please log in to view profile",
+      "EMPTY": "Profile not filled"
     },
     "COMPLETE": "Completed",
     "IN_PROGRESS": "In Progress"
@@ -508,7 +512,8 @@
     "SEARCH_BUTTON": "Search",
     "ONLY_WITH_SALARY": "Only with salary",
     "REMOTE": "Remote work",
-    "RESET": "Reset"
+    "RESET": "Reset",
+    "RESET_FILTERS": "Reset Filters"
   },
   "EXPORT": {
     "SETTINGS": "Export Settings",
@@ -544,7 +549,8 @@
     "LOCATION": "Location",
     "DESCRIPTION": "Description",
     "REQUIREMENTS": "Requirements",
-    "ORIGINAL_LINK": "Original Link"
+    "ORIGINAL_LINK": "Original Link",
+    "VIEW_ORIGINAL": "View Original"
   },
   "EXAMPLE": {
     "SUPPORTED": "Supported link formats"
@@ -553,7 +559,8 @@
     "VACANCY": "Loading vacancy...",
     "SEARCH": "Searching...",
     "DETAILS": "Loading details...",
-    "PROFILE": "Loading profile..."
+    "PROFILE": "Loading profile...",
+    "RESUMES": "Loading resumes..."
   },
   "VIEW": {
     "EMPTY": "Profile not filled"
@@ -640,7 +647,9 @@
   "PLATFORM": {
     "HH": "HH.ru",
     "SUPERJOB": "SuperJob",
-    "UNKNOWN": "Unknown platform"
+    "UNKNOWN": "Unknown platform",
+    "CONNECT_HH": "Connect HH.ru",
+    "CONNECT_SUPERJOB": "Connect SuperJob"
   },
   "AI_CONFIG": {
     "BUTTON_TOOLTIP": "Configure AI providers",
@@ -657,7 +666,18 @@
     "SUPPORTED_FORMATS": "Supported formats: TXT, PDF, DOC, DOCX, RTF",
     "NO_RESUMES": "No resumes found",
     "NO_RESUMES_HINT": "Connect platform accounts or upload resume file",
-    "SELECT": "Select"
+    "SELECT": "Select",
+    "TAB_PLATFORM": "Platform Resumes",
+    "TAB_FILE": "From File",
+    "FILE_TITLE": "Upload Resume File",
+    "TAB_TEXT": "Text Input",
+    "TEXT_TITLE": "Enter Resume Text",
+    "TEXT_PLACEHOLDER": "Paste your resume text here...",
+    "TEXT_HINT": "Enter your resume content manually"
+  },
+  "VACANCY_SEARCH": {
+    "TAB_SEARCH": "Vacancy Search",
+    "TAB_FAVORITES": "Favorites"
   },
   "VACANCY_SELECTOR": {
     "TITLE": "Vacancy Selection",
@@ -672,7 +692,10 @@
     "NO_FAVORITES": "No favorite vacancies",
     "SELECTED_VACANCY": "Selected Vacancy",
     "SELECT": "Select",
-    "QUICK_LOAD_HINT": "Quick vacancy loading from any source"
+    "QUICK_LOAD_HINT": "Quick vacancy loading from any source",
+    "TEXT_TITLE": "Enter Text",
+    "TEXT_PLACEHOLDER": "Paste vacancy description text",
+    "TEXT_HINT": "Enter vacancy description manually"
   },
   "FILTER": "Filter",
   "ACTIONS": "Actions",
@@ -692,5 +715,15 @@
   "RESET": "Reset",
   "CLOSE": "Close",
   "DELETE_CONFIRMATION": "Are you sure you want to delete this?",
-  "UNSAVED_CHANGES": "You have unsaved changes. Are you sure you want to leave?"
+  "UNSAVED_CHANGES": "You have unsaved changes. Are you sure you want to leave?",
+  "GENERATE_ALL_CONTENT": "Generate all content for all",
+  "FAVORITE_VACANCIES": "Favorite vacancies",
+  "NO_FAVORITES": "No favorite vacancies",
+  "REMOVE_FROM_FAVORITES": "Remove from favorites",
+  "ADD_TO_FAVORITES": "Add to favorites",
+  "DEVELOPMENT_PLAN": "Development plan",
+  "SEND_TO_PLATFORM": "Send to platform",
+  "LAST_GENERATED": "Last generated",
+  "RESUME_FOR_SENDING": "Resume for sending",
+  "SELECT_RESUME": "Select resume"
 }

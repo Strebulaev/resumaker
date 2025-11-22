@@ -1,10 +1,13 @@
 .ai-config-modal {
   padding: 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   h2 {
     margin-bottom: 1.5rem;
     color: var(--text-color);
     text-align: center;
+    font-size: 1.8rem;
+    font-weight: 600;
   }
 }
 
@@ -17,10 +20,11 @@
 
 .provider-card {
   border: 2px solid var(--surface-300);
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: 12px;
+  padding: 1.5rem;
   background: var(--surface-0);
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   
   /* Стили для подключенного (настроенного) провайдера - ЗЕЛЕНЫЙ */
   &.configured {
@@ -36,7 +40,7 @@
   &.current {
     border-color: var(--blue-500);
     background: var(--blue-50);
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
     
     /* Убираем все анимации и трансформации для активного провайдера */
     transform: none !important;
@@ -63,15 +67,17 @@
     position: relative;
     
     &::before {
+      content: 'По умолчанию';
       position: absolute;
       top: -10px;
       right: 10px;
       background: var(--yellow-500);
       color: white;
-      padding: 2px 8px;
+      padding: 4px 8px;
       border-radius: 4px;
       font-size: 0.75rem;
       font-weight: 600;
+      z-index: 1;
     }
   }
   
@@ -93,6 +99,7 @@
     margin: 0;
     color: var(--text-color);
     font-size: 1.2rem;
+    font-weight: 600;
   }
 }
 
@@ -154,15 +161,17 @@
     margin-bottom: 0.5rem;
     font-weight: 600;
     color: var(--text-color);
+    font-size: 0.9rem;
   }
 
   input {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: 1px solid var(--surface-300);
-    border-radius: 4px;
+    border-radius: 6px;
     background: var(--surface-0);
     color: var(--text-color);
+    font-size: 0.9rem;
 
     &:disabled {
       background: var(--surface-100);
@@ -199,29 +208,45 @@
   border-top: 1px solid var(--surface-200);
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-  .providers-grid {
-    grid-template-columns: 1fr;
-  }
+// Консистентные стили для всего компонента
+:host {
+  display: block;
+}
+
+// Стили для состояний загрузки
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
   
-  .provider-header {
-    flex-direction: column;
-    gap: 0.5rem;
+  p {
+    margin-top: 1rem;
+    color: #6c757d;
   }
-  
-  .provider-status {
-    align-items: flex-start;
-  }
-  
-  .config-actions,
-  .provider-actions {
-    flex-direction: column;
-    
-    button {
-      width: 100%;
-    }
-  }
+}
+
+// Стили для ошибок
+.error-message {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  border: 1px solid #fecaca;
+  text-align: center;
+}
+
+// Стили для успешных операций
+.success-message {
+  background: #dcfce7;
+  color: #166534;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  border: 1px solid #bbf7d0;
+  text-align: center;
 }
 
 .provider-card {
@@ -256,6 +281,7 @@
   h4 {
     margin-bottom: 10px;
     color: #333;
+    font-weight: 600;
   }
   
   ul {
@@ -265,6 +291,74 @@
     li {
       padding: 5px 0;
       font-size: 0.9em;
+      line-height: 1.5;
     }
+  }
+}
+
+// Стили для кнопок в разных состояниях
+.p-button {
+  transition: all 0.3s ease !important;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+// Адаптивность
+@media (max-width: 768px) {
+  .providers-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .provider-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .provider-status {
+    align-items: flex-start;
+  }
+  
+  .config-actions,
+  .provider-actions {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Улучшенные стили для диалогов
+::ng-deep .p-dialog {
+  .p-dialog-header {
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #e9ecef !important;
+    font-weight: 600 !important;
+  }
+
+  .p-dialog-content {
+    padding: 1.5rem !important;
   }
 }

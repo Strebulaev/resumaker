@@ -4,23 +4,15 @@
     <p>{{ 'VACANCY.SUBTITLE' | translate }}</p>
   </div>
 
-  <!-- Навигация между секциями -->
   <div class="section-navigation">
     <div class="nav-buttons">
-      <button 
-        [class]="['nav-button', activeSection === 'search' ? 'active' : '']"
-        (click)="showSection('search')">
+      <button (click)="showSection('search')" [class]="['nav-button', activeSection === 'search' ? 'active' : '']">
         <i class="pi pi-search"></i>
-        Поиск вакансий
+        {{ 'VACANCY_SEARCH.TAB_SEARCH' | translate }}
       </button>
-      <button 
-        [class]="['nav-button', activeSection === 'favorites' ? 'active' : '']"
-        (click)="showSection('favorites')">
+      <button (click)="showSection('favorites')" [class]="['nav-button', activeSection === 'favorites' ? 'active' : '']">
         <i class="pi pi-heart"></i>
-        Избранные
-        <span class="badge" *ngIf="favoriteVacancies.length > 0">
-          {{ favoriteVacancies.length }}
-        </span>
+        {{ 'VACANCY_SEARCH.TAB_FAVORITES' | translate }}
       </button>
     </div>
   </div>

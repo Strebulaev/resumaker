@@ -334,7 +334,8 @@ export class VacancySearchComponent implements OnInit {
   }
 
   formatDescription(description: string = ''): string {
-    return this.cleanHtml(description)
+    const cleanDesc = this.cleanHtml(description || '');
+    return cleanDesc
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -434,7 +435,7 @@ export class VacancySearchComponent implements OnInit {
       
       if (searchResults) {
         this.vacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
-          if (result.results.items) {
+          if (result.results && result.results.items) {
             return result.results.items.map((vacancy: any) => {
               const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
               return {

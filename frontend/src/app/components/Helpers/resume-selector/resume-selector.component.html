@@ -14,79 +14,124 @@
   
       <!-- Список резюме -->
       <div *ngIf="!isLoading" class="resumes-section">
-        <div class="resumes-list">
-          <div *ngFor="let resume of resumes" 
-               class="resume-card"
-               [class.selected]="selectedResume?.id === resume.id"
-               (click)="selectedResume = resume">
-            
-            <div class="resume-header">
-              <i [class]="getPlatformIcon(resume.platform)" 
-                 [class.hh-icon]="resume.platform === 'hh'"
-                 [class.sj-icon]="resume.platform === 'superjob'"
-                 [class.file-icon]="resume.platform === 'file'"></i>
+        <div class="selector-tabs">
+          <button 
+            [class]="['tab', activeTab === 'platform' ? 'active' : '']"
+            (click)="activeTab = 'platform'">
+            <i class="pi pi-briefcase"></i>
+            {{ 'RESUME_SELECTOR.TAB_PLATFORM' | translate }}
+          </button>
+          
+          <button 
+            [class]="['tab', activeTab === 'file' ? 'active' : '']"
+            (click)="activeTab = 'file'">
+            <i class="pi pi-file"></i>
+            {{ 'RESUME_SELECTOR.TAB_FILE' | translate }}
+          </button>
+          
+          <button 
+            [class]="['tab', activeTab === 'text' ? 'active' : '']"
+            (click)="activeTab = 'text'">
+            <i class="pi pi-pencil"></i>
+            {{ 'RESUME_SELECTOR.TAB_TEXT' | translate }}
+          </button>
+        </div>
+
+        <!-- Выбор резюме с платформы -->
+        <div *ngIf="activeTab === 'platform'" class="tab-content">
+          <div class="resumes-list">
+            <div *ngFor="let resume of resumes" 
+                 class="resume-card"
+                 [class.selected]="selectedResume?.id === resume.id"
+                 (click)="selectedResume = resume">
               
-              <div class="resume-info">
-                <h4 class="resume-title">{{ resume.title }}</h4>
-                <span class="resume-platform">{{ getPlatformLabel(resume.platform) }}</span>
+              <div class="resume-header">
+                <i [class]="getPlatformIcon(resume.platform)" 
+                   [class.hh-icon]="resume.platform === 'hh'"
+                   [class.sj-icon]="resume.platform === 'superjob'"
+                   [class.file-icon]="resume.platform === 'file'"></i>
+                
+                <div class="resume-info">
+                  <h4 class="resume-title">{{ resume.title }}</h4>
+                  <span class="resume-platform">{{ getPlatformLabel(resume.platform) }}</span>
+                </div>
+              </div>
+    
+              <div class="resume-meta" *ngIf="resume.created || resume.updated">
+                <small *ngIf="resume.created">
+                  {{ 'RESUME_SELECTOR.CREATED' | translate }}: {{ formatDate(resume.created) }}
+                </small>
+                <small *ngIf="resume.updated">
+                  {{ 'RESUME_SELECTOR.UPDATED' | translate }}: {{ formatDate(resume.updated) }}
+                </small>
+              </div>
+    
+              <div class="resume-skills" *ngIf="resume.skills && resume.skills.length > 0">
+                <small>{{ resume.skills.join(', ') }}</small>
               </div>
             </div>
+          </div>
   
-            <div class="resume-meta" *ngIf="resume.created || resume.updated">
-              <small *ngIf="resume.created">
-                {{ 'RESUME_SELECTOR.CREATED' | translate }}: {{ formatDate(resume.created) }}
-              </small>
-              <small *ngIf="resume.updated">
-                {{ 'RESUME_SELECTOR.UPDATED' | translate }}: {{ formatDate(resume.updated) }}
-              </small>
-            </div>
-  
-            <div class="resume-skills" *ngIf="resume.skills && resume.skills.length > 0">
-              <small>{{ resume.skills.join(', ') }}</small>
+          <!-- Сообщение если нет резюме -->
+          <div *ngIf="resumes.length === 0" class="no-resumes">
+            <i class="pi pi-inbox" style="font-size: 3rem; color: #6c757d;"></i>
+            <h4>{{ 'RESUME_SELECTOR.NO_RESUMES' | translate }}</h4>
+            <p>{{ 'RESUME_SELECTOR.NO_RESUMES_HINT' | translate }}</p>
+            
+            <div class="platform-actions">
+              <button pButton 
+                      [label]="'PLATFORM.CONNECT_HH' | translate" 
+                      routerLink="/auth/callback"
+                      icon="pi pi-link"
+                      class="p-button-outlined">
+              </button>
+              
+              <button pButton 
+                      [label]="'PLATFORM.CONNECT_SUPERJOB' | translate" 
+                      routerLink="/auth/superjob-callback"
+                      icon="pi pi-link"
+                      class="p-button-outlined">
+              </button>
             </div>
           </div>
         </div>
-  
+
         <!-- Загрузка файла -->
-        <div class="file-upload-section">
-          <h4>{{ 'RESUME_SELECTOR.UPLOAD_NEW' | translate }}</h4>
-          
-          <div class="file-upload">
-            <input 
-              type="file" 
-              (change)="onFileSelect($event)"
-              accept=".txt,.pdf,.doc,.docx,.rtf"
-              class="file-input">
+        <div *ngIf="activeTab === 'file'" class="tab-content">
+          <div class="file-section">
+            <h4>{{ 'RESUME_SELECTOR.FILE_TITLE' | translate }}</h4>
             
-            <small>{{ 'RESUME_SELECTOR.SUPPORTED_FORMATS' | translate }}</small>
-          </div>
-  
-          <div class="file-info" *ngIf="uploadedFile">
-            <i class="pi pi-file"></i>
-            <span>{{ uploadedFile.name }}</span>
+            <div class="file-upload">
+              <input 
+                type="file" 
+                (change)="onFileSelect($event)"
+                accept=".txt,.pdf,.doc,.docx,.rtf"
+                class="file-input">
+              
+              <small>{{ 'RESUME_SELECTOR.SUPPORTED_FORMATS' | translate }}</small>
+            </div>
+    
+            <div class="file-info" *ngIf="uploadedFile">
+              <i class="pi pi-file"></i>
+              <span>{{ uploadedFile.name }}</span>
+            </div>
           </div>
         </div>
-  
-        <!-- Сообщение если нет резюме -->
-        <div *ngIf="resumes.length === 0 && !uploadedFile" class="no-resumes">
-          <i class="pi pi-inbox" style="font-size: 3rem; color: #6c757d;"></i>
-          <h4>{{ 'RESUME_SELECTOR.NO_RESUMES' | translate }}</h4>
-          <p>{{ 'RESUME_SELECTOR.NO_RESUMES_HINT' | translate }}</p>
-          
-          <div class="platform-actions">
-            <button pButton 
-                    [label]="'PLATFORM.CONNECT_HH' | translate" 
-                    routerLink="/auth/callback"
-                    icon="pi pi-link"
-                    class="p-button-outlined">
-            </button>
+
+        <!-- Ввод текста резюме -->
+        <div *ngIf="activeTab === 'text'" class="tab-content">
+          <div class="text-section">
+            <h4>{{ 'RESUME_SELECTOR.TEXT_TITLE' | translate }}</h4>
             
-            <button pButton 
-                    [label]="'PLATFORM.CONNECT_SUPERJOB' | translate" 
-                    routerLink="/auth/superjob-callback"
-                    icon="pi pi-link"
-                    class="p-button-outlined">
-            </button>
+            <textarea 
+              pInputTextarea 
+              [(ngModel)]="resumeTextContent"
+              [rows]="10" 
+              [placeholder]="'RESUME_SELECTOR.TEXT_PLACEHOLDER' | translate"
+              style="width: 100%">
+            </textarea>
+            
+            <small>{{ 'RESUME_SELECTOR.TEXT_HINT' | translate }}</small>
           </div>
         </div>
       </div>
@@ -101,7 +146,7 @@
         <button pButton 
                 [label]="'RESUME_SELECTOR.SELECT' | translate" 
                 (click)="selectResume()"
-                [disabled]="!selectedResume"
+                [disabled]="!selectedResume && !uploadedFile && !resumeTextContent"
                 class="p-button-primary">
         </button>
       </ng-template>

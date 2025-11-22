@@ -26,28 +26,6 @@
                   (click)="clearSelectedResume()">
           </button>
         </div>
-
-        <div class="file-upload" *ngIf="!selectedResumeForInterview">
-          <app-translated-file-input 
-            (fileSelected)="onFileSelect($event, 'resume')"
-            [fieldName]="'interview-resume'"
-            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
-          </app-translated-file-input>
-          
-          <div class="file-info" *ngIf="resumeFile">
-            <span>{{ resumeFile.name }}</span>
-            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                    (click)="removeFile('resume')">
-            </button>
-          </div>
-
-          <div *ngIf="!resumeFile">
-            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.RESUME_SECTION' | translate"
-                    formControlName="customResume">
-            </textarea>
-          </div>
-        </div>
       </div>
 
       <!-- Вакансия -->
@@ -78,28 +56,6 @@
                   class="p-button-text p-button-danger"
                   (click)="clearSelectedVacancy()">
           </button>
-        </div>
-
-        <div class="file-upload" *ngIf="!selectedVacancyForInterview">
-          <app-translated-file-input 
-            (fileSelected)="onFileSelect($event, 'vacancy')"
-            [fieldName]="'interview-vacancy'"
-            [accept]="'.txt, .pdf, .doc, .docx, .rtf, .md, .yaml, .yml, .json'">
-          </app-translated-file-input>
-          
-          <div class="file-info" *ngIf="vacancyFile">
-            <span>{{ vacancyFile.name }}</span>
-            <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
-                    (click)="removeFile('vacancy')">
-            </button>
-          </div>
-
-          <div *ngIf="!vacancyFile">
-            <small>{{ 'INTERVIEW_PREP.OR_TEXT' | translate }}</small>
-            <textarea pInputTextarea [rows]="3" [placeholder]="'INTERVIEW_PREP.VACANCY_SECTION' | translate"
-                     formControlName="customVacancy">
-            </textarea>
-          </div>
         </div>
       </div>
       

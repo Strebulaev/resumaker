@@ -1,4 +1,3 @@
-// Файл: C:\Users\Serezhka\Documents\CollectiveProjects\resume\frontend\src\app\resume-generation\resume-generation.component.ts
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MarkdownComponent } from 'ngx-markdown';
@@ -18,6 +17,7 @@ import { FileProcessorService } from '../../../shared/utils/file-processor.servi
 import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { AIGuardService } from '../../../shared/ai/ai-guard.service';
+import { VacancySelectorComponent } from '../../Helpers/vacancy-selector/vacancy-selector.component';
 
 @Component({
   selector: 'app-resume-generation',
@@ -26,12 +26,14 @@ import { AIGuardService } from '../../../shared/ai/ai-guard.service';
     CommonModule,
     MarkdownComponent,
     TranslatePipe,
+    FormsModule,
     ButtonModule,
     DialogModule,
     ProgressSpinnerModule,
     FormsModule,
     InputTextModule,
     TranslatedFileInputComponent,
+    VacancySelectorComponent
 ],
   templateUrl: './resume-generation.component.html',
   styleUrls: ['./resume-generation.component.scss']
@@ -43,11 +45,10 @@ export class ResumeGenerationComponent {
   private fileProcessor = inject(FileProcessorService);
   
   vacancyUrl: string = '';
-  currentVacancy: any = null;
+  selectedVacancy: any = null;
   generatedResume: string | null = null;
   coverLetterContent: string = '';
   coverLetterFile: File | null = null;
-  vacancyFile: File | null = null;
   isLoading = false;
   error: string | null = null;
   hhAuthModalVisible = false;
@@ -55,6 +56,7 @@ export class ResumeGenerationComponent {
   publishStatus: 'idle' | 'success' | 'error' = 'idle';
   hhResumeUrl: string | null = null;
   showAIConfigModal = false;
+  showVacancySelector = false;
   
   constructor(
     private resumeService: ResumeGenerationService,
@@ -70,13 +72,46 @@ export class ResumeGenerationComponent {
     }
   }
 
+  // Новые методы для работы с селектором вакансий
+  onVacancySelected(vacancy: any): void {
+    this.selectedVacancy = vacancy;
+    this.resumeService.currentVacancy = vacancy;
+    
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Вакансия выбрана',
+      detail: `${vacancy.name} - ${vacancy.employer?.name}`
+    });
+  }
+
+  openVacancySelector(): void {
+    this.showVacancySelector = true;
+  }
+
+  clearSelectedVacancy(): void {
+    this.selectedVacancy = null;
+    this.resumeService.currentVacancy = null;
+  }
+
+  getPlatformIcon(platform: string): string {
+    const icons: { [key: string]: string } = {
+      'hh.ru': 'pi pi-briefcase',
+      'superjob.ru': 'pi pi-briefcase'
+    };
+    return icons[platform] || 'pi pi-question-circle';
+  }
+
+  getPlatformLabel(platform: string): string {
+    const labels: { [key: string]: string } = {
+      'hh.ru': 'HH.ru',
+      'superjob.ru': 'SuperJob'
+    };
+    return labels[platform] || platform;
+  }
+
   removeCoverLetterFile(): void {
     this.coverLetterFile = null;
     this.coverLetterContent = '';
-  }
-
-  removeVacancyFile(): void {
-    this.vacancyFile = null;
   }
 
   async loadVacancyInfo(): Promise<void> {
@@ -84,9 +119,9 @@ export class ResumeGenerationComponent {
     
     this.isLoading = true;
     try {
-      this.currentVacancy = await this.vacancyService.getVacancyWithCache(this.vacancyUrl);
+      this.selectedVacancy = await this.vacancyService.getVacancyWithCache(this.vacancyUrl);
       
-      if (this.currentVacancy) {
+      if (this.selectedVacancy) {
         this.messageService.add({
           severity: 'success',
           summary: 'Информация о вакансии загружена'
@@ -114,13 +149,7 @@ export class ResumeGenerationComponent {
     this.isLoading = true;
     this.error = null;
 
-    if (this.vacancyUrl) {
-      this.loadVacancyInfo().then(() => {
-        this.generateResumeWithContext();
-      });
-    } else {
-      this.generateResumeWithContext();
-    }
+    this.generateResumeWithContext();
   }
 
   private generateResumeWithContext(): void {
@@ -169,8 +198,7 @@ export class ResumeGenerationComponent {
     this.generatedResume = null;
     this.coverLetterContent = '';
     this.coverLetterFile = null;
-    this.vacancyFile = null;
-    this.vacancyUrl = '';
+    this.selectedVacancy = null;
     this.messageService.add({
       severity: 'info',
       summary: 'Резюме удалено'
@@ -367,7 +395,6 @@ export class ResumeGenerationComponent {
 
   async onCoverLetterFileSelect(file: File | File[]): Promise<void> {
     try {
-      // Обрабатываем как одиночный файл
       const selectedFile = file instanceof File ? file : (Array.isArray(file) ? file[0] : null);
       
       if (selectedFile) {
@@ -383,28 +410,6 @@ export class ResumeGenerationComponent {
       this.messageService.add({
         severity: 'error',
         summary: 'Ошибка загрузки файла'
-      });
-    }
-  }
-  
-  async onVacancyFileSelect(file: File | File[]): Promise<void> {
-    try {
-      // Обрабатываем как одиночный файл
-      const selectedFile = file instanceof File ? file : (Array.isArray(file) ? file[0] : null);
-      
-      if (selectedFile) {
-        this.vacancyFile = selectedFile;
-        const content = await this.fileProcessor.extractTextFromFile(selectedFile);
-        // Можно сохранить содержимое вакансии для использования при генерации
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Файл вакансии загружен'
-        });
-      }
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка загрузки файла вакансии'
       });
     }
   }

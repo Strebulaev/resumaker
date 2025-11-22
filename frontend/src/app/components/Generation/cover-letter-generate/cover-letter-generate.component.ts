@@ -46,7 +46,6 @@ import { VacancySelectorComponent } from "../../Helpers/vacancy-selector/vacancy
     DialogModule,
     TextareaModule,
     TooltipModule,
-    TranslatedFileInputComponent,
     ResumeSelectorComponent,
     AiConfigModalComponent,
     VacancySelectorComponent

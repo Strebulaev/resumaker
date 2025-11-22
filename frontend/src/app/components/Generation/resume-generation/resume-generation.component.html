@@ -1,6 +1,35 @@
-<!-- Файл: src/app/components/Generation/resume-generation/resume-generation.component.html -->
 <div class="resume-container">
   <h2>{{ 'RESUME_GENERATION.HEADER' | translate }}</h2>
+
+  <!-- Выбор вакансии -->
+  <div class="vacancy-section">
+    <h3>{{ 'VACANCY.VACANCY_INFO' | translate }}</h3>
+    
+    <div class="vacancy-selection">
+      <button pButton 
+              type="button"
+              [label]="'VACANCY_SELECTOR.TITLE' | translate"
+              icon="pi pi-briefcase"
+              (click)="openVacancySelector()"
+              class="p-button-outlined">
+      </button>
+
+      <!-- Информация о выбранной вакансии -->
+      <div *ngIf="selectedVacancy" class="selected-vacancy-info">
+        <div class="vacancy-details">
+          <i [class]="getPlatformIcon(selectedVacancy.platform)"></i>
+          <span class="vacancy-title">{{ selectedVacancy.name }}</span>
+          <span class="vacancy-platform">({{ getPlatformLabel(selectedVacancy.platform) }})</span>
+          <span class="vacancy-company">{{ selectedVacancy.employer?.name }}</span>
+        </div>
+        <button pButton 
+                icon="pi pi-times" 
+                class="p-button-text p-button-danger"
+                (click)="clearSelectedVacancy()">
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Поле для сопроводительного письма -->
   <div class="cover-letter-section">
@@ -35,40 +64,6 @@
       }
     </div>
     <small>{{ 'RESUME_GENERATION.COVER_LETTER_HINT' | translate }}</small>
-  </div>
-
-  <!-- Поле для вакансии -->
-  <div class="vacancy-section">
-    <h3>{{ 'VACANCY.VACANCY_INFO' | translate }}</h3>
-    <div class="input-field">
-      <label>{{ 'VACANCY.VACANCY_URL' | translate }}</label>
-      <input 
-        type="url" 
-        pInputText
-        [(ngModel)]="vacancyUrl" 
-        [ngModelOptions]="{standalone: true}"
-        [placeholder]="'VACANCY.LINK_PLACEHOLDER' | translate"
-        style="width: 100%">
-    </div>
-    
-    <div class="file-upload-field">
-      <app-translated-file-input
-        [accept]="'.txt,.pdf,.doc,.docx,.rtf,.json,.yaml,.yml'"
-        [fieldName]="'resume-generation-vacancy'"
-        (fileSelected)="onVacancyFileSelect($event)"
-        [showFileTypes]="true">
-      </app-translated-file-input>
-      
-      @if (vacancyFile) {
-        <div class="file-info">
-          <span>{{ vacancyFile.name }}</span>
-          <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
-                  (click)="removeVacancyFile()">
-          </button>
-        </div>
-      }
-    </div>
-    <small>{{ 'VACANCY.LINK_HINT' | translate }}</small>
   </div>
 
   <!-- Кнопка генерации -->
@@ -168,3 +163,8 @@
     </ng-template>
   </p-dialog>
 </div>
+
+<app-vacancy-selector
+  [(showSelector)]="showVacancySelector"
+  (vacancySelected)="onVacancySelected($event)">
+</app-vacancy-selector>

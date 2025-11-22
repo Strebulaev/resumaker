@@ -14,7 +14,7 @@ import { FileProcessorService } from '../../../shared/utils/file-processor.servi
 export interface Resume {
   id: string;
   title: string;
-  platform: 'hh' | 'superjob' | 'file';
+  platform: 'hh' | 'superjob' | 'file' | 'text';
   skills?: string[];
   created?: string;
   updated?: string;
@@ -46,6 +46,8 @@ export class ResumeSelectorComponent implements OnInit {
   isLoading = false;
   selectedResume: Resume | null = null;
   uploadedFile: File | null = null;
+  resumeTextContent: string = '';
+  activeTab: 'platform' | 'file' | 'text' = 'platform';
 
   constructor(
     private hhAuthService: HHAuthService,
@@ -127,17 +129,12 @@ export class ResumeSelectorComponent implements OnInit {
     }
 
     this.uploadedFile = file;
-    
-    // Создаем объект резюме из файла
-    const fileResume: Resume = {
+    this.selectedResume = {
       id: 'file-' + Date.now(),
       title: file.name,
       platform: 'file',
       file: file
     };
-
-    this.resumes.push(fileResume);
-    this.selectedResume = fileResume;
 
     this.messageService.add({
       severity: 'success',
@@ -146,19 +143,20 @@ export class ResumeSelectorComponent implements OnInit {
   }
 
   async selectResume(): Promise<void> {
-    if (!this.selectedResume) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Выберите резюме'
-      });
-      return;
-    }
+    let selectedResume: Resume | null = null;
 
-    // Если выбран файл, читаем его содержимое
-    if (this.selectedResume.platform === 'file' && this.selectedResume.file) {
+    if (this.activeTab === 'platform' && this.selectedResume) {
+      selectedResume = this.selectedResume;
+    } else if (this.activeTab === 'file' && this.uploadedFile) {
       try {
-        const content = await this.fileProcessor.extractTextFromFile(this.selectedResume.file);
-        this.selectedResume.content = content;
+        const content = await this.fileProcessor.extractTextFromFile(this.uploadedFile);
+        selectedResume = {
+          id: 'file-' + Date.now(),
+          title: this.uploadedFile.name,
+          platform: 'file',
+          file: this.uploadedFile,
+          content: content
+        };
       } catch (error) {
         this.messageService.add({
           severity: 'error',
@@ -166,9 +164,24 @@ export class ResumeSelectorComponent implements OnInit {
         });
         return;
       }
+    } else if (this.activeTab === 'text' && this.resumeTextContent.trim()) {
+      selectedResume = {
+        id: 'text-' + Date.now(),
+        title: 'Текстовое резюме',
+        platform: 'text',
+        content: this.resumeTextContent
+      };
     }
 
-    this.resumeSelected.emit(this.selectedResume);
+    if (!selectedResume) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Выберите резюме или введите текст'
+      });
+      return;
+    }
+
+    this.resumeSelected.emit(selectedResume);
     this.closeSelector();
   }
 
@@ -177,13 +190,16 @@ export class ResumeSelectorComponent implements OnInit {
     this.showSelectorChange.emit(false);
     this.selectedResume = null;
     this.uploadedFile = null;
+    this.resumeTextContent = '';
+    this.activeTab = 'platform';
   }
 
   getPlatformLabel(platform: string): string {
     const labels: { [key: string]: string } = {
       'hh': 'HH.ru',
       'superjob': 'SuperJob',
-      'file': 'Файл'
+      'file': 'Файл',
+      'text': 'Текст'
     };
     return labels[platform] || platform;
   }
@@ -192,7 +208,8 @@ export class ResumeSelectorComponent implements OnInit {
     const icons: { [key: string]: string } = {
       'hh': 'pi pi-briefcase',
       'superjob': 'pi pi-briefcase',
-      'file': 'pi pi-file'
+      'file': 'pi pi-file',
+      'text': 'pi pi-pencil'
     };
     return icons[platform] || 'pi pi-question-circle';
   }

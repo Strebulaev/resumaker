@@ -1,39 +1,83 @@
 .resume-selector-container {
-    .resumes-section {
-      max-height: 60vh;
-      overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  .resumes-section {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .selector-tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 1rem;
+
+    .tab {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #6b7280;
+      font-size: 0.875rem;
+
+      i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+      }
+
+      &:hover {
+        color: #374151;
+        background: #f9fafb;
+      }
+
+      &.active {
+        color: #3b82f6;
+        border-bottom-color: #3b82f6;
+        font-weight: 500;
+      }
     }
-  
+  }
+
+  .tab-content {
+    min-height: 300px;
+
     .resumes-list {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
       margin-bottom: 1.5rem;
     }
-  
+
     .resume-card {
       border: 2px solid #e9ecef;
       border-radius: 8px;
       padding: 1rem;
       cursor: pointer;
       transition: all 0.2s ease;
-  
+      background: white;
+
       &:hover {
         border-color: #007bff;
         background-color: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
-  
+
       &.selected {
         border-color: #007bff;
         background-color: #e7f3ff;
       }
-  
+
       .resume-header {
         display: flex;
         align-items: center;
         gap: 0.75rem;
         margin-bottom: 0.5rem;
-  
+
         i {
           font-size: 1.25rem;
           
@@ -49,102 +93,290 @@
             color: #28a745;
           }
         }
-  
+
         .resume-info {
           flex: 1;
-  
+
           .resume-title {
             margin: 0;
             font-size: 1rem;
             font-weight: 600;
+            color: #2c3e50;
           }
-  
+
           .resume-platform {
             font-size: 0.875rem;
             color: #6c757d;
           }
         }
       }
-  
+
       .resume-meta {
         display: flex;
         gap: 1rem;
         margin-bottom: 0.5rem;
-  
+
         small {
           color: #6c757d;
+          font-size: 0.8rem;
         }
       }
-  
+
       .resume-skills {
         small {
           color: #495057;
           line-height: 1.4;
+          font-size: 0.85rem;
         }
       }
     }
-  
-    .file-upload-section {
-      border-top: 1px solid #e9ecef;
-      padding-top: 1.5rem;
-  
+
+    .file-section,
+    .text-section {
+      padding: 1rem;
+
       h4 {
         margin-bottom: 1rem;
-        font-size: 1rem;
+        color: #2c3e50;
+        font-weight: 600;
       }
-  
+
       .file-upload {
         margin-bottom: 1rem;
-  
+
         .file-input {
           width: 100%;
           margin-bottom: 0.5rem;
+          padding: 0.75rem;
+          border: 2px dashed #dee2e6;
+          border-radius: 6px;
+          background: #f8f9fa;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: #007bff;
+            background: #e7f3ff;
+          }
         }
-  
+
         small {
           color: #6c757d;
+          font-size: 0.875rem;
         }
       }
-  
+
       .file-info {
         display: flex;
         align-items: center;
         gap: 0.5rem;
         padding: 0.75rem;
-        background-color: #f8f9fa;
+        background-color: #e8f5e8;
         border-radius: 4px;
-        border: 1px dashed #dee2e6;
-  
+        border: 1px dashed #28a745;
+        margin-top: 0.5rem;
+
         i {
           color: #28a745;
         }
+
+        span {
+          font-weight: 500;
+          color: #155724;
+        }
       }
-    }
-  
-    .no-resumes {
-      text-align: center;
-      padding: 2rem;
-      color: #6c757d;
-  
-      h4 {
-        margin: 1rem 0 0.5rem 0;
+
+      textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 0.75rem;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        resize: vertical;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+        }
       }
-  
-      .platform-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin-top: 1.5rem;
-      }
-    }
-  
-    .loading-section {
-      text-align: center;
-      padding: 2rem;
-  
-      p {
-        margin-top: 1rem;
+
+      small {
         color: #6c757d;
+        font-size: 0.875rem;
+        display: block;
+        margin-top: 0.5rem;
       }
     }
   }
+
+  .no-resumes {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+
+    h4 {
+      margin: 1rem 0 0.5rem 0;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .platform-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      button {
+        min-width: 160px;
+      }
+    }
+  }
+
+  .loading-section {
+    text-align: center;
+    padding: 2rem;
+
+    p {
+      margin-top: 1rem;
+      color: #6c757d;
+    }
+  }
+}
+
+// Консистентные стили для всего компонента
+:host {
+  display: block;
+}
+
+// Стили для состояний загрузки
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: #6c757d;
+  }
+}
+
+// Стили для ошибок
+.error-message {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  border: 1px solid #fecaca;
+  text-align: center;
+}
+
+// Стили для успешных операций
+.success-message {
+  background: #dcfce7;
+  color: #166534;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  border: 1px solid #bbf7d0;
+  text-align: center;
+}
+
+// Улучшенные стили для диалогов
+::ng-deep .p-dialog {
+  .p-dialog-header {
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #e9ecef !important;
+    font-weight: 600 !important;
+    color: #2c3e50 !important;
+  }
+
+  .p-dialog-content {
+    padding: 0 !important;
+  }
+
+  .p-dialog-footer {
+    padding: 1rem 1.5rem !important;
+    border-top: 1px solid #e9ecef !important;
+    background: #f8f9fa !important;
+  }
+}
+
+// Адаптивность
+@media (max-width: 768px) {
+  .resume-selector-container {
+    .selector-tabs {
+      flex-direction: column;
+      
+      .tab {
+        justify-content: center;
+      }
+    }
+
+    .tab-content {
+      .file-section,
+      .text-section {
+        padding: 0.5rem;
+      }
+
+      .resume-card {
+        padding: 0.75rem;
+        
+        .resume-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+
+        .resume-meta {
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+      }
+
+      .no-resumes {
+        .platform-actions {
+          flex-direction: column;
+          align-items: center;
+          
+          button {
+            width: 100%;
+            max-width: 250px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Стили для кнопок в разных состояниях
+.p-button {
+  transition: all 0.3s ease !important;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
