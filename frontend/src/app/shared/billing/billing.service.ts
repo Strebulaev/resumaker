@@ -91,6 +91,7 @@ export class BillingService {
     });
   }
 
+
   private initializePlans(): void {
     this.plans = [
       {
@@ -176,27 +177,40 @@ export class BillingService {
       throw new Error('User not authenticated');
     }
 
-    // Проверяем в localStorage для демо
-    const stored = localStorage.getItem(`subscription_${userId}`);
-    if (stored) {
-      const subscription = JSON.parse(stored);
-      subscription.currentPeriodStart = new Date(subscription.currentPeriodStart);
-      subscription.currentPeriodEnd = new Date(subscription.currentPeriodEnd);
-      subscription.usage.lastReset = new Date(subscription.usage.lastReset);
-      subscription.createdAt = new Date(subscription.createdAt);
-      subscription.updatedAt = new Date(subscription.updatedAt);
-      
+    try {
+      const { data, error } = await this.supabase.client
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Подписка не найдена - создаем бесплатную
+          return await this.createFreeSubscription(userId);
+        }
+        throw error;
+      }
+
+      // Преобразуем данные из БД в нашу модель
+      const subscription = this.mapDbSubscriptionToModel(data);
       this.currentSubscription.next(subscription);
       return subscription;
-    }
 
-    // Создаем бесплатный тариф по умолчанию
+    } catch (error) {
+      console.error('Error loading subscription from DB:', error);
+      // Fallback: создаем бесплатную подписку
+      return await this.createFreeSubscription(userId);
+    }
+  }
+
+  private async createFreeSubscription(userId: string): Promise<UserSubscription> {
     const freeSubscription: UserSubscription = {
       userId,
       planId: 'free',
       status: 'active',
       currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 год
+      currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
       usage: {
         resumeGenerations: 0,
         coverLetters: 0,
@@ -214,16 +228,11 @@ export class BillingService {
   async saveSubscription(subscription: UserSubscription): Promise<void> {
     subscription.updatedAt = new Date();
     
-    // Сохраняем в localStorage для демо
-    localStorage.setItem(`subscription_${subscription.userId}`, JSON.stringify(subscription));
-    this.currentSubscription.next(subscription);
-    
-    // В продакшене сохраняем в Supabase
-    if (this.supabase.currentUser) {
+    try {
+      // Исправленный upsert - убраны неверные параметры
       const { error } = await this.supabase.client
         .from('user_subscriptions')
         .upsert({
-          id: subscription.userId,
           user_id: subscription.userId,
           plan_id: subscription.planId,
           status: subscription.status,
@@ -231,14 +240,38 @@ export class BillingService {
           current_period_end: subscription.currentPeriodEnd.toISOString(),
           usage: subscription.usage,
           payment_id: subscription.paymentId,
-          created_at: subscription.createdAt.toISOString(),
           updated_at: subscription.updatedAt.toISOString()
-        }, { onConflict: 'user_id' });
+        }, { 
+          onConflict: 'user_id'
+        });
 
       if (error) {
-        console.error('Error saving subscription:', error);
+        console.error('Error saving subscription to DB:', error);
+        localStorage.setItem(`subscription_${subscription.userId}`, JSON.stringify(subscription));
+      } else {
+        localStorage.removeItem(`subscription_${subscription.userId}`);
       }
+
+      this.currentSubscription.next(subscription);
+      
+    } catch (error) {
+      console.error('Error in saveSubscription:', error);
+      localStorage.setItem(`subscription_${subscription.userId}`, JSON.stringify(subscription));
     }
+  }
+
+  private mapDbSubscriptionToModel(dbData: any): UserSubscription {
+    return {
+      userId: dbData.user_id,
+      planId: dbData.plan_id,
+      status: dbData.status,
+      currentPeriodStart: new Date(dbData.current_period_start),
+      currentPeriodEnd: new Date(dbData.current_period_end),
+      usage: dbData.usage,
+      paymentId: dbData.payment_id,
+      createdAt: new Date(dbData.created_at),
+      updatedAt: new Date(dbData.updated_at)
+    };
   }
 
   async activateFreePlan(): Promise<void> {
@@ -262,6 +295,25 @@ export class BillingService {
     };
 
     await this.saveSubscription(subscription);
+  }
+
+  async resetDailyUsageIfNeeded(subscription: UserSubscription): Promise<void> {
+    const now = new Date();
+    const lastReset = new Date(subscription.usage.lastReset);
+    
+    if (now.getDate() !== lastReset.getDate() || 
+        now.getMonth() !== lastReset.getMonth() || 
+        now.getFullYear() !== lastReset.getFullYear()) {
+      
+      subscription.usage = {
+        resumeGenerations: 0,
+        coverLetters: 0,
+        interviewPlans: 0,
+        lastReset: now
+      };
+      
+      await this.saveSubscription(subscription);
+    }
   }
 
   getCurrentSubscriptionObservable(): Observable<UserSubscription | null> {

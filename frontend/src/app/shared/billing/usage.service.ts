@@ -10,10 +10,63 @@ export class UsageService {
     private supabase: SupabaseService
   ) {}
 
+  async getUsageStats(): Promise<{feature: string, used: number, limit: number, remaining: number}[]> {
+    const subscription = await this.billingService.getUserSubscription();
+    const plan = this.billingService.getPlan(subscription.planId);
+
+    return [
+      {
+        feature: 'Резюме',
+        used: subscription.usage.resumeGenerations,
+        limit: plan.dailyLimits.resumeGenerations,
+        remaining: plan.dailyLimits.resumeGenerations === -1 ? -1 : plan.dailyLimits.resumeGenerations - subscription.usage.resumeGenerations
+      },
+      {
+        feature: 'Сопроводительные письма',
+        used: subscription.usage.coverLetters,
+        limit: plan.dailyLimits.coverLetters,
+        remaining: plan.dailyLimits.coverLetters === -1 ? -1 : plan.dailyLimits.coverLetters - subscription.usage.coverLetters
+      },
+      {
+        feature: 'Планы собеседований',
+        used: subscription.usage.interviewPlans,
+        limit: plan.dailyLimits.interviewPlans,
+        remaining: plan.dailyLimits.interviewPlans === -1 ? -1 : plan.dailyLimits.interviewPlans - subscription.usage.interviewPlans
+      }
+    ];
+  }
+
+  private async resetDailyUsageIfNeeded(subscription: any): Promise<void> {
+    const now = new Date();
+    const lastReset = new Date(subscription.usage.lastReset);
+    
+    // Сбрасываем счетчики если прошло больше 24 часов
+    if (now.getDate() !== lastReset.getDate() || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
+      subscription.usage = {
+        resumeGenerations: 0,
+        coverLetters: 0,
+        interviewPlans: 0,
+        lastReset: now
+      };
+      await this.billingService.saveSubscription(subscription);
+    }
+  }
+
+  private getFeatureName(feature: string): string {
+    const names: {[key: string]: string} = {
+      'resumeGenerations': 'Генерация резюме',
+      'coverLetters': 'Генерация сопроводительных писем',
+      'interviewPlans': 'Генерация планов собеседований'
+    };
+    return names[feature] || feature;
+  }
+
   async checkLimit(feature: 'resumeGenerations' | 'coverLetters' | 'interviewPlans'): Promise<UsageLimit> {
     try {
       const subscription = await this.billingService.getUserSubscription();
-      await this.resetDailyUsageIfNeeded(subscription);
+      
+      // Сбрасываем дневное использование если нужно
+      await this.billingService.resetDailyUsageIfNeeded(subscription);
       
       const plan = this.billingService.getPlan(subscription.planId);
       const limit = plan.dailyLimits[feature];
@@ -65,56 +118,5 @@ export class UsageService {
     } catch (error) {
       console.error('Error incrementing usage:', error);
     }
-  }
-
-  async getUsageStats(): Promise<{feature: string, used: number, limit: number, remaining: number}[]> {
-    const subscription = await this.billingService.getUserSubscription();
-    const plan = this.billingService.getPlan(subscription.planId);
-
-    return [
-      {
-        feature: 'Резюме',
-        used: subscription.usage.resumeGenerations,
-        limit: plan.dailyLimits.resumeGenerations,
-        remaining: plan.dailyLimits.resumeGenerations === -1 ? -1 : plan.dailyLimits.resumeGenerations - subscription.usage.resumeGenerations
-      },
-      {
-        feature: 'Сопроводительные письма',
-        used: subscription.usage.coverLetters,
-        limit: plan.dailyLimits.coverLetters,
-        remaining: plan.dailyLimits.coverLetters === -1 ? -1 : plan.dailyLimits.coverLetters - subscription.usage.coverLetters
-      },
-      {
-        feature: 'Планы собеседований',
-        used: subscription.usage.interviewPlans,
-        limit: plan.dailyLimits.interviewPlans,
-        remaining: plan.dailyLimits.interviewPlans === -1 ? -1 : plan.dailyLimits.interviewPlans - subscription.usage.interviewPlans
-      }
-    ];
-  }
-
-  private async resetDailyUsageIfNeeded(subscription: any): Promise<void> {
-    const now = new Date();
-    const lastReset = new Date(subscription.usage.lastReset);
-    
-    // Сбрасываем счетчики если прошло больше 24 часов
-    if (now.getDate() !== lastReset.getDate() || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
-      subscription.usage = {
-        resumeGenerations: 0,
-        coverLetters: 0,
-        interviewPlans: 0,
-        lastReset: now
-      };
-      await this.billingService.saveSubscription(subscription);
-    }
-  }
-
-  private getFeatureName(feature: string): string {
-    const names: {[key: string]: string} = {
-      'resumeGenerations': 'Генерация резюме',
-      'coverLetters': 'Генерация сопроводительных писем',
-      'interviewPlans': 'Генерация планов собеседований'
-    };
-    return names[feature] || feature;
   }
 }
