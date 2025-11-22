@@ -27,6 +27,29 @@ export interface AppConfig {
   analytics: AnalyticsConfig;
 }
 
+export interface EnvironmentConfig {
+  production: boolean;
+  supabaseUrl: string;
+  supabaseKey: string;
+  togetherApiKey: string;
+  hh?: {
+    hhClientId: string;
+    hhClientSecret: string;
+  };
+  superJob?: {
+    superJobClientId: string;
+    superJobClientSecret: string;
+  };
+  habr?: {
+    habrClientId: string;
+    habrClientSecret: string;
+  };
+  yookassaShopId?: string;
+  yookassaSecretKey?: string;
+  demoMode?: boolean;
+  analytics?: AnalyticsConfig;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ConfigService {
   private configLoaded = new BehaviorSubject<boolean>(false);
@@ -42,8 +65,6 @@ export class ConfigService {
     if (this.configCache) {
       return this.configCache;
     }
-
-    // В development используем environment.ts
     if (!environment.production) {
       console.log('Using development config from environment.ts');
       const devConfig: AppConfig = {

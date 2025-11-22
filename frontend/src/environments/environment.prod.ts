@@ -1,8 +1,11 @@
 export const environment = {
   production: true,
+  
   supabaseUrl: '',
   supabaseKey: '',
   togetherApiKey: '',
+  demoMode: false,
+  
   hh: {
     hhClientId: '',
     hhClientSecret: ''
@@ -14,5 +17,8 @@ export const environment = {
   habr: {
     habrClientId: '',
     habrClientSecret: ''
-  }
+  },
+
+  yookassaShopId: '',
+  yookassaSecretKey: ''
 };
