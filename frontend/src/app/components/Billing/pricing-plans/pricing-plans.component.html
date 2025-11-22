@@ -1,62 +1,92 @@
 <div class="pricing-container">
-    <div class="pricing-header">
-      <h1>{{ 'BILLING.PRICING_TITLE' | translate }}</h1>
-      <p>{{ 'BILLING.PRICING_SUBTITLE' | translate }}</p>
-    </div>
-  
-    <div class="pricing-cards">
-      <p-card *ngFor="let plan of plans" 
-              [class]="plan.popular ? 'popular-plan' : ''"
-              [header]="plan.name">
-        
-        <div class="plan-price">
-          <span class="price-amount">{{ plan.price === 0 ? 'Бесплатно' : (plan.price + ' ₽') }}</span>
-          <span *ngIf="plan.price > 0" class="price-period">/месяц</span>
-        </div>
-  
-        <p class="plan-description">{{ plan.description }}</p>
-  
-        <ul class="plan-features">
-          <li *ngFor="let feature of plan.features">{{ feature }}</li>
-        </ul>
-  
-        <button pButton 
-                [label]="getButtonLabel(plan)"
-                [class]="getButtonClass(plan)"
-                [loading]="isLoading"
-                (click)="selectPlan(plan)">
-        </button>
-  
-        <div *ngIf="plan.popular" class="popular-badge">
-          {{ 'BILLING.POPULAR_CHOICE' | translate }}
-        </div>
-      </p-card>
-    </div>
-  
-    <p-dialog [(visible)]="showPaymentDialog" 
-              [modal]="true" 
-              [style]="{ width: '500px' }"
-              (onHide)="closeDialog()">
+  <div class="pricing-header">
+    <h1>{{ 'BILLING.PRICING_TITLE' | translate }}</h1>
+    <p>{{ 'BILLING.PRICING_SUBTITLE' | translate }}</p>
+  </div>
+
+  <!-- Добавьте отладочную информацию -->
+  <div *ngIf="plans.length === 0" class="no-plans-warning">
+    <p>Планы не загружены. Пожалуйста, обновите страницу.</p>
+  </div>
+
+  <div class="pricing-cards">
+    <p-card *ngFor="let plan of plans" 
+            [class]="plan.popular ? 'popular-plan' : ''"
+            [header]="plan.name"
+            class="plan-card">
       
-      <ng-template pTemplate="header">
-        <span class="text-xl font-bold">Оплата тарифа {{ selectedPlan?.name }}</span>
-      </ng-template>
-  
-      <div *ngIf="selectedPlan">
-        <p>Вы выбрали тариф <strong>{{ selectedPlan.name }}</strong></p>
-        <p>Стоимость: <strong>{{ selectedPlan.price }} ₽</strong></p>
-        <p>После оплаты тариф будет активирован автоматически.</p>
+      <div class="plan-price">
+        <span class="price-amount">{{ plan.price === 0 ? 'Бесплатно' : (plan.price + ' ₽') }}</span>
+        <span *ngIf="plan.price > 0" class="price-period">/месяц</span>
       </div>
-  
-      <ng-template pTemplate="footer">
-        <button pButton 
-                label="Отмена" 
-                class="p-button-text"
-                (click)="closeDialog()"></button>
-        <button pButton 
-                label="Перейти к оплате" 
-                [loading]="isLoading"
-                (click)="processPayment()"></button>
-      </ng-template>
-    </p-dialog>
+
+      <p class="plan-description">{{ plan.description }}</p>
+
+      <ul class="plan-features">
+        <li *ngFor="let feature of plan.features">{{ feature }}</li>
+      </ul>
+
+      <div class="plan-limits">
+        <div class="limit-item">
+          <span class="limit-label">Резюме:</span>
+          <span class="limit-value">
+            {{ plan.dailyLimits.resumeGenerations === -1 ? '∞' : plan.dailyLimits.resumeGenerations }}/день
+          </span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-label">Письма:</span>
+          <span class="limit-value">
+            {{ plan.dailyLimits.coverLetters === -1 ? '∞' : plan.dailyLimits.coverLetters }}/день
+          </span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-label">Собеседования:</span>
+          <span class="limit-value">
+            {{ plan.dailyLimits.interviewPlans === -1 ? '∞' : plan.dailyLimits.interviewPlans }}/день
+          </span>
+        </div>
+      </div>
+
+      <button pButton 
+              [label]="getButtonLabel(plan)"
+              [class]="getButtonClass(plan)"
+              [loading]="isLoading"
+              (click)="selectPlan(plan)"
+              class="plan-button">
+      </button>
+
+      <div *ngIf="plan.popular" class="popular-badge">
+        {{ 'BILLING.POPULAR_CHOICE' | translate }}
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Диалог оплаты -->
+  <p-dialog [(visible)]="showPaymentDialog" 
+            [modal]="true" 
+            [style]="{ width: '500px' }"
+            (onHide)="closeDialog()">
+    
+    <ng-template pTemplate="header">
+      <span class="text-xl font-bold">Оплата тарифа {{ selectedPlan?.name }}</span>
+    </ng-template>
+
+    <div *ngIf="selectedPlan" class="payment-dialog-content">
+      <p>Вы выбрали тариф <strong>{{ selectedPlan.name }}</strong></p>
+      <p>Стоимость: <strong>{{ selectedPlan.price }} ₽</strong></p>
+      <p>После оплаты тариф будет активирован автоматически.</p>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button pButton 
+              label="Отмена" 
+              class="p-button-text"
+              (click)="closeDialog()"></button>
+      <button pButton 
+              label="Перейти к оплате" 
+              [loading]="isLoading"
+              (click)="processPayment()"
+              class="p-button-primary"></button>
+    </ng-template>
+  </p-dialog>
 </div>

@@ -29,7 +29,7 @@ import { AnalyticsService } from '../../../shared/analytics.service';
     DialogModule,
     ProgressSpinnerModule,
     TranslatePipe
-]
+  ]
 })
 export class PricingPlansComponent implements OnInit {
   plans: TariffPlan[] = [];
@@ -50,25 +50,109 @@ export class PricingPlansComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.plans = this.billingService.getPlans();
+    this.initializePlans();
     this.loadCurrentSubscription();
+  }
+
+  private initializePlans(): void {
+    try {
+      console.log('Initializing plans...');
+      this.plans = this.billingService.getPlans();
+      console.log('Plans loaded:', this.plans);
+      
+      if (this.plans.length === 0) {
+        console.error('No plans found!');
+        // Создаем fallback планы на случай ошибки
+        this.plans = this.createFallbackPlans();
+      }
+    } catch (error) {
+      console.error('Error initializing plans:', error);
+      this.plans = this.createFallbackPlans();
+    }
+  }
+
+  private createFallbackPlans(): TariffPlan[] {
+    return [
+      {
+        id: 'free',
+        name: 'Бесплатный',
+        price: 0,
+        dailyLimits: { 
+          resumeGenerations: 1, 
+          coverLetters: 1, 
+          interviewPlans: 1 
+        },
+        features: [
+          'Базовые функции генерации',
+          '1 резюме в день',
+          '1 сопроводительное письмо в день', 
+          '1 план собеседования в день',
+          'Поддержка по email'
+        ],
+        description: 'Для начала карьерного пути'
+      },
+      {
+        id: 'basic',
+        name: 'Базовый',
+        price: 290,
+        dailyLimits: { 
+          resumeGenerations: 5, 
+          coverLetters: 5, 
+          interviewPlans: 5 
+        },
+        features: [
+          'Все функции генерации',
+          '5 резюме в день',
+          '5 сопроводительных писем в день',
+          '5 планов собеседования в день', 
+          'Приоритетная поддержка',
+          'Расширенные шаблоны'
+        ],
+        description: 'Для активного поиска работы',
+        popular: true
+      },
+      {
+        id: 'pro',
+        name: 'PRO',
+        price: 790,
+        dailyLimits: { 
+          resumeGenerations: -1, 
+          coverLetters: -1, 
+          interviewPlans: -1 
+        },
+        features: [
+          'Безлимитная генерация',
+          'Все функции платформы',
+          'Премиум шаблоны',
+          'Персональная поддержка',
+          'Ранний доступ к новым функциям',
+          'Аналитика эффективности'
+        ],
+        description: 'Для профессионалов и рекрутеров'
+      }
+    ];
   }
 
   async loadCurrentSubscription() {
     try {
       const subscription = await this.billingService.getUserSubscription();
       this.currentPlanId = subscription.planId;
+      console.log('Current subscription:', this.currentPlanId);
     } catch (error) {
       console.error('Error loading subscription:', error);
+      this.currentPlanId = 'free';
     }
   }
 
   selectPlan(plan: TariffPlan) {
+    console.log('Selected plan:', plan);
+    
     this.analyticsService.trackEvent('select_plan', {
       plan_name: plan.name,
       plan_price: plan.price,
       plan_id: plan.id
     });
+    
     if (plan.id === this.currentPlanId) {
       this.messageService.add({
         severity: 'info',
@@ -147,7 +231,6 @@ export class PricingPlansComponent implements OnInit {
     }
   }
 
-
   getButtonClass(plan: TariffPlan): string {
     if (plan.id === this.currentPlanId) {
       return 'p-button-outlined';
@@ -160,10 +243,6 @@ export class PricingPlansComponent implements OnInit {
     this.selectedPlan = null;
   }
 
-  getPaymentInfoText(): string {
-    return this.translate.instant('BILLING.PAYMENT_INFO');
-  }
-  
   getButtonLabel(plan: any): string {
     if (this.isLoading) {
       return '';

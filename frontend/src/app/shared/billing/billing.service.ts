@@ -68,7 +68,7 @@ export class BillingService {
   ];
 
   private currentSubscription = new BehaviorSubject<UserSubscription | null>(null);
-  private plans: TariffPlan[] = [];
+  private plans: TariffPlan[] = this.PLANS; // Используем статические планы
 
   constructor(
     private supabase: SupabaseService,
@@ -80,8 +80,76 @@ export class BillingService {
       configService: !!configService,
       translate: !!translate
     });
+    
+    this.initializePlans();
   }
   
+  initializePlans(): void {
+    console.log('BillingService: Initializing plans...');
+    
+    this.plans = [
+      {
+        id: 'free',
+        name: 'Бесплатный',
+        price: 0,
+        dailyLimits: { 
+          resumeGenerations: 1, 
+          coverLetters: 1, 
+          interviewPlans: 1 
+        },
+        features: [
+          'Базовые функции генерации',
+          '1 резюме в день',
+          '1 сопроводительное письмо в день', 
+          '1 план собеседования в день',
+          'Поддержка по email'
+        ],
+        description: 'Для начала карьерного пути'
+      },
+      {
+        id: 'basic',
+        name: 'Базовый',
+        price: 290,
+        dailyLimits: { 
+          resumeGenerations: 5, 
+          coverLetters: 5, 
+          interviewPlans: 5 
+        },
+        features: [
+          'Все функции генерации',
+          '5 резюме в день',
+          '5 сопроводительных писем в день',
+          '5 планов собеседования в день', 
+          'Приоритетная поддержка',
+          'Расширенные шаблоны'
+        ],
+        description: 'Для активного поиска работы',
+        popular: true
+      },
+      {
+        id: 'pro',
+        name: 'PRO',
+        price: 790,
+        dailyLimits: { 
+          resumeGenerations: -1, 
+          coverLetters: -1, 
+          interviewPlans: -1 
+        },
+        features: [
+          'Безлимитная генерация',
+          'Все функции платформы',
+          'Премиум шаблоны',
+          'Персональная поддержка',
+          'Ранний доступ к новым функциям',
+          'Аналитика эффективности'
+        ],
+        description: 'Для профессионалов и рекрутеров'
+      }
+    ];
+    
+    console.log('BillingService: Plans initialized:', this.plans);
+  }
+
   async getUserSubscription(): Promise<UserSubscription> {
     const userId = this.supabase.currentUser?.id;
     if (!userId) {
@@ -160,7 +228,7 @@ export class BillingService {
       
     } catch (error) {
       console.error('Failed to save subscription:', error);
-      throw error; // Пробрасываем ошибку дальше
+      throw error;
     }
   }
 
@@ -205,69 +273,6 @@ export class BillingService {
     return freeSubscription;
   }
 
-
-  private initializePlans(): void {
-    this.plans = [
-      {
-        id: 'free',
-        name: this.translate.instant('BILLING.PLANS.FREE.NAME'),
-        price: 0,
-        dailyLimits: { 
-          resumeGenerations: 1, 
-          coverLetters: 1, 
-          interviewPlans: 1 
-        },
-        features: [
-          this.translate.instant('BILLING.PLANS.FREE.FEATURES.BASIC_GENERATION'),
-          this.translate.instant('BILLING.PLANS.FREE.FEATURES.RESUME_LIMIT'),
-          this.translate.instant('BILLING.PLANS.FREE.FEATURES.COVER_LETTER_LIMIT'),
-          this.translate.instant('BILLING.PLANS.FREE.FEATURES.INTERVIEW_PLAN_LIMIT'),
-          this.translate.instant('BILLING.PLANS.FREE.FEATURES.EMAIL_SUPPORT')
-        ],
-        description: this.translate.instant('BILLING.PLANS.FREE.DESCRIPTION')
-      },
-      {
-        id: 'basic',
-        name: this.translate.instant('BILLING.PLANS.BASIC.NAME'),
-        price: 290,
-        dailyLimits: { 
-          resumeGenerations: 5, 
-          coverLetters: 5, 
-          interviewPlans: 5 
-        },
-        features: [
-          this.translate.instant('BILLING.PLANS.BASIC.FEATURES.ALL_GENERATION'),
-          this.translate.instant('BILLING.PLANS.BASIC.FEATURES.RESUME_LIMIT'),
-          this.translate.instant('BILLING.PLANS.BASIC.FEATURES.COVER_LETTER_LIMIT'),
-          this.translate.instant('BILLING.PLANS.BASIC.FEATURES.INTERVIEW_PLAN_LIMIT'),
-          this.translate.instant('BILLING.PLANS.BASIC.FEATURES.PRIORITY_SUPPORT'),
-          this.translate.instant('BILLING.PLANS.BASIC.FEATURES.EXTENDED_TEMPLATES')
-        ],
-        description: this.translate.instant('BILLING.PLANS.BASIC.DESCRIPTION'),
-        popular: true
-      },
-      {
-        id: 'pro',
-        name: this.translate.instant('BILLING.PLANS.PRO.NAME'),
-        price: 790,
-        dailyLimits: { 
-          resumeGenerations: -1, 
-          coverLetters: -1, 
-          interviewPlans: -1 
-        },
-        features: [
-          this.translate.instant('BILLING.PLANS.PRO.FEATURES.UNLIMITED_GENERATION'),
-          this.translate.instant('BILLING.PLANS.PRO.FEATURES.ALL_FEATURES'),
-          this.translate.instant('BILLING.PLANS.PRO.FEATURES.PREMIUM_TEMPLATES'),
-          this.translate.instant('BILLING.PLANS.PRO.FEATURES.PERSONAL_SUPPORT'),
-          this.translate.instant('BILLING.PLANS.PRO.FEATURES.EARLY_ACCESS'),
-          this.translate.instant('BILLING.PLANS.PRO.FEATURES.ANALYTICS')
-        ],
-        description: this.translate.instant('BILLING.PLANS.PRO.DESCRIPTION')
-      }
-    ];
-  }
-
   getPlans(): TariffPlan[] {
     return this.plans;
   }
@@ -275,7 +280,7 @@ export class BillingService {
   getPlan(planId: string): TariffPlan {
     const plan = this.plans.find(p => p.id === planId);
     if (!plan) {
-      throw new Error(this.translate.instant('BILLING.ERRORS.PLAN_NOT_FOUND', { planId }));
+      throw new Error(`Plan not found: ${planId}`);
     }
     return plan;
   }
