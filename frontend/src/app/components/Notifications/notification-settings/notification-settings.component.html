@@ -1,0 +1,108 @@
+<div class="notification-settings">
+    <div class="settings-header">
+      <h1>Настройки уведомлений</h1>
+      <p>Управляйте тем, какие уведомления вы хотите получать и каким способом</p>
+    </div>
+  
+    <div *ngIf="isLoading" class="loading-section">
+      <p-progressspinner></p-progressspinner>
+      <p>Загрузка настроек...</p>
+    </div>
+  
+    <div *ngIf="preferences && !isLoading" class="settings-content">
+      <form (ngSubmit)="savePreferences()">
+        <p-card header="Каналы уведомлений" class="settings-card">
+          <div class="channel-settings">
+            <div class="setting-item">
+              <label>Внутренние уведомления</label>
+              <p-toggleSwitch [(ngModel)]="preferences.inApp" 
+                            [ngModelOptions]="{standalone: true}">
+              </p-toggleSwitch>
+              <span class="setting-description">Показывать уведомления в приложении</span>
+            </div>
+  
+            <div class="setting-item">
+              <label>Email уведомления</label>
+              <p-toggleSwitch [(ngModel)]="preferences.email" 
+                            [ngModelOptions]="{standalone: true}">
+              </p-toggleSwitch>
+              <span class="setting-description">Отправлять уведомления на email</span>
+            </div>
+  
+            <div class="setting-item">
+              <label>Push-уведомления</label>
+              <p-toggleSwitch [(ngModel)]="preferences.push" 
+                            [ngModelOptions]="{standalone: true}">
+              </p-toggleSwitch>
+              <span class="setting-description">Отправлять браузерные уведомления</span>
+            </div>
+          </div>
+        </p-card>
+  
+        <!-- Настройки типов уведомлений -->
+        <p-card header="Типы уведомлений" class="settings-card">
+          <div class="type-settings">
+            <div *ngFor="let type of notificationTypes" class="setting-item">
+              <div class="type-header">
+                <label>{{ type.label }}</label>
+                <p-toggleSwitch [(ngModel)]="preferences.types[type.value]" 
+                              [ngModelOptions]="{standalone: true}">
+                </p-toggleSwitch>
+              </div>
+              <span class="setting-description">
+                {{ getTypeDescription(type.value) }}
+              </span>
+            </div>
+          </div>
+        </p-card>
+  
+        <!-- Тихие часы -->
+        <p-card header="Тихие часы" class="settings-card">
+          <div class="quiet-hours-settings">
+            <div class="setting-item">
+              <label>Включить тихие часы</label>
+              <p-toggleSwitch [(ngModel)]="preferences.quietHours!.enabled" 
+                            [ngModelOptions]="{standalone: true}"
+                            (onChange)="toggleQuietHours()">
+              </p-toggleSwitch>
+              <span class="setting-description">Не беспокоить в указанное время</span>
+            </div>
+  
+            <div *ngIf="preferences.quietHours?.enabled" class="time-range">
+              <div class="time-inputs">
+                <div class="time-input">
+                  <label>С</label>
+                  <p-select [options]="timeOptions" 
+                           [(ngModel)]="preferences.quietHours!.start"
+                           [ngModelOptions]="{standalone: true}">
+                  </p-select>
+                </div>
+                
+                <div class="time-input">
+                  <label>До</label>
+                  <p-select [options]="timeOptions" 
+                           [(ngModel)]="preferences.quietHours!.end"
+                           [ngModelOptions]="{standalone: true}">
+                  </p-select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </p-card>
+  
+        <!-- Действия -->
+        <div class="settings-actions">
+          <p-button label="Сохранить настройки" 
+                   type="submit"
+                   [loading]="isSaving"
+                   styleClass="p-button-primary">
+          </p-button>
+          
+          <p-button label="Сбросить" 
+                   styleClass="p-button-outlined p-button-secondary"
+                   (onClick)="loadPreferences()">
+          </p-button>
+        </div>
+      </form>
+    </div>
+  </div>

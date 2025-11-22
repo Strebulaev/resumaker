@@ -1,0 +1,139 @@
+.notification-settings {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+  
+    .settings-header {
+      text-align: center;
+      margin-bottom: 2rem;
+  
+      h1 {
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+      }
+  
+      p {
+        color: var(--text-color-secondary);
+        margin: 0;
+      }
+    }
+  
+    .loading-section {
+      text-align: center;
+      padding: 3rem;
+  
+      p {
+        margin-top: 1rem;
+        color: var(--text-color-secondary);
+      }
+    }
+  
+    .settings-content {
+      .settings-card {
+        margin-bottom: 1.5rem;
+  
+        ::ng-deep .p-card-header {
+          font-weight: 600;
+          border-bottom: 1px solid var(--surface-200);
+          padding-bottom: 1rem;
+        }
+  
+        ::ng-deep .p-card-content {
+          padding: 1.5rem 0 0 0;
+        }
+      }
+  
+      .channel-settings,
+      .type-settings,
+      .quiet-hours-settings {
+        .setting-item {
+          display: flex;
+          flex-direction: column;
+          padding: 1rem 0;
+          border-bottom: 1px solid var(--surface-100);
+  
+          &:last-child {
+            border-bottom: none;
+          }
+  
+          .type-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+  
+            label {
+              font-weight: 500;
+              color: var(--text-color);
+            }
+          }
+  
+          label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+          }
+  
+          .setting-description {
+            font-size: 0.9rem;
+            color: var(--text-color-secondary);
+            line-height: 1.4;
+          }
+        }
+      }
+  
+      .time-range {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--surface-50);
+        border-radius: 6px;
+  
+        .time-inputs {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+  
+          .time-input {
+            label {
+              display: block;
+              margin-bottom: 0.5rem;
+              font-weight: 500;
+              color: var(--text-color);
+            }
+          }
+        }
+      }
+  
+      .settings-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--surface-200);
+      }
+    }
+  }
+  
+  // Адаптивность
+  @media (max-width: 768px) {
+    .notification-settings {
+      padding: 0.5rem;
+  
+      .settings-content {
+        .time-range {
+          .time-inputs {
+            grid-template-columns: 1fr;
+          }
+        }
+  
+        .settings-actions {
+          flex-direction: column;
+  
+          ::ng-deep .p-button {
+            width: 100%;
+          }
+        }
+      }
+    }
+  }

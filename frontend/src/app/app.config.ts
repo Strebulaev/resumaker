@@ -146,10 +146,6 @@ export const appConfig: ApplicationConfig = {
         prefix: '/locale/messages.',
         suffix: '.json'
       })
-    }),
-    BillingService,
-    PaymentService,
-    UsageService,
-    AnalyticsService
+    })
   ]
 };

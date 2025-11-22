@@ -24,6 +24,7 @@ import { AIGuardService } from './shared/ai/ai-guard.service';
 import { PersonalDataConsentComponent } from "./components/Pages/personal-data-consent/personal-data-consent.component";
 import { CookiesConsentComponent } from "./components/Pages/cookies-consent/cookies-consent.component";
 import { AnalyticsService } from './shared/analytics.service';
+import { NotificationBellComponent } from './components/Notifications/notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-root',
@@ -45,7 +46,8 @@ import { AnalyticsService } from './shared/analytics.service';
     DialogModule,
     ErrorToastComponent,
     PersonalDataConsentComponent,
-    CookiesConsentComponent
+    CookiesConsentComponent,
+    NotificationBellComponent
 ],
   templateUrl: './app.html',
   styleUrl: './app.scss'

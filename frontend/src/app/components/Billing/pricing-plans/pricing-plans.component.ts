@@ -28,7 +28,6 @@ import { AnalyticsService } from '../../../shared/analytics.service';
     CardModule,
     DialogModule,
     ProgressSpinnerModule,
-    Tag,
     TranslatePipe
 ]
 })
