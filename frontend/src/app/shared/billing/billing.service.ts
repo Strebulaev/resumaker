@@ -81,8 +81,7 @@ export class BillingService {
     this.configService.isConfigLoaded().subscribe(loaded => {
       if (loaded) {
         const config = this.configService.getConfig();
-        this.isDemoMode = config.demoMode;
-        console.log('Billing service initialized in mode:', this.isDemoMode ? 'DEMO' : 'PRODUCTION');
+        console.log('Billing service initialized in PRODUCTION mode');
       }
     });
 
@@ -320,11 +319,7 @@ export class BillingService {
     return this.currentSubscription.asObservable();
   }
 
-  isDemoModeEnabled(): boolean {
-    return this.isDemoMode;
-  }
-
   getPaymentMethod(): string {
-    return this.isDemoMode ? 'demo' : 'yookassa';
+    return 'yookassa';
   }
 }

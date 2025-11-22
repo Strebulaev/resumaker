@@ -1,12 +1,10 @@
 <div class="cover-letter-container">
   <p-card [header]="'COVER_LETTER.TITLE' | translate">
     <form [formGroup]="coverLetterForm" (ngSubmit)="generateCoverLetter()">
-      <!-- Выбор резюме через универсальный селектор -->
       <div class="field">
         <label>{{ 'COVER_LETTER.SELECT_RESUME' | translate }}</label>
         
         <div class="resume-selection">
-          <!-- Кнопка выбора резюме -->
           <button pButton 
                   type="button"
                   [label]="'RESUME_SELECTOR.TITLE' | translate"
@@ -15,7 +13,6 @@
                   class="p-button-outlined">
           </button>
 
-          <!-- Информация о выбранном резюме -->
           <div *ngIf="selectedResumeFromSelector" class="selected-resume-info">
             <div class="resume-details">
               <i [class]="getPlatformIcon(selectedResumeFromSelector.platform)"></i>
@@ -31,11 +28,9 @@
         </div>
       </div>
 
-      <!-- Поле для вакансии -->
       <div class="field">
         <label for="vacancy_id">{{ 'COVER_LETTER.VACANCY_ID' | translate }} *</label>
         <div class="vacancy-selection">
-          <!-- Кнопка выбора вакансии -->
           <button pButton 
                   type="button"
                   [label]="'VACANCY_SELECTOR.TITLE' | translate"
@@ -44,7 +39,6 @@
                   class="p-button-outlined">
           </button>
       
-          <!-- Информация о выбранной вакансии -->
           <div *ngIf="selectedVacancyFromSelector" class="selected-vacancy-info">
             <div class="vacancy-details">
               <i [class]="getPlatformIcon(selectedVacancyFromSelector.platform)"></i>
@@ -198,7 +192,6 @@
     </ng-template>
   </p-dialog>
 
-  <!-- Компонент выбора резюме -->
   <app-resume-selector
     [(showSelector)]="showResumeSelector"
     (resumeSelected)="onResumeSelected($event)">

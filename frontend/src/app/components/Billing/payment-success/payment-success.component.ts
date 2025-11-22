@@ -38,45 +38,38 @@ export class PaymentSuccessComponent implements OnInit {
   async ngOnInit() {
     const paymentId = this.route.snapshot.queryParamMap.get('paymentId');
     const planId = this.route.snapshot.queryParamMap.get('planId');
-    const demo = this.route.snapshot.queryParamMap.get('demo');
 
-    if (demo === 'true' && planId) {
-      await this.handleDemoSuccess(planId);
-    } else if (paymentId && planId) {
+    if (paymentId && planId) {
       await this.handlePaymentSuccess(paymentId, planId);
     } else {
       this.isSuccess = false;
       this.isLoading = false;
-    }
-  }
-
-  async handleDemoSuccess(planId: string) {
-    try {
-      await this.paymentService.handlePaymentSuccess(`demo_${Date.now()}`, planId);
-      const plan = this.billingService.getPlan(planId);
-      this.planName = plan.name;
-      this.isSuccess = true;
-      
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Тариф активирован!',
-        detail: `Тариф "${plan.name}" успешно активирован в демо-режиме`
-      });
-    } catch (error: any) {
-      this.isSuccess = false;
       this.messageService.add({
         severity: 'error',
         summary: 'Ошибка',
-        detail: error.message || 'Не удалось активировать тариф'
+        detail: 'Неверные параметры платежа'
       });
-    } finally {
-      this.isLoading = false;
     }
   }
 
   async handlePaymentSuccess(paymentId: string, planId: string) {
     try {
-      // Проверяем статус платежа
+      // Для бесплатного тарифа
+      if (paymentId.startsWith('free_activation_')) {
+        await this.paymentService.handlePaymentSuccess(paymentId, planId);
+        const plan = this.billingService.getPlan(planId);
+        this.planName = plan.name;
+        this.isSuccess = true;
+        
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Тариф активирован!',
+          detail: `Тариф "${plan.name}" успешно активирован`
+        });
+        return;
+      }
+
+      // Проверяем статус платежа для платных тарифов
       const status = await this.paymentService.checkPaymentStatus(paymentId);
       
       if (status.status === 'succeeded') {

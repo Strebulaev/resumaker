@@ -36,140 +36,418 @@ export class ResumeGenerationService {
           });
           throw new Error(errorMsg);
         }
-
+  
         return this.profileService.loadProfile().pipe(
           switchMap(profile => {
             if (!profile) {
               return of('Ошибка: Профиль пользователя не найден. Пожалуйста, заполните профиль сначала.');
             }
-
+  
+            // Валидация критически важных данных
+            const validationErrors = this.validateProfileForResume(profile);
+            if (validationErrors.length > 0) {
+              const errorMsg = `Для генерации качественного резюме необходимо заполнить: ${validationErrors.join(', ')}`;
+              this.messageService.add({
+                severity: 'warn',
+                summary: 'Недостаточно данных',
+                detail: errorMsg,
+                life: 7000
+              });
+              return of(this.createFallbackResume(profile));
+            }
+  
             const prompt = this.buildResumePrompt(profile, coverLetterContent);
             
+            console.log('🚀 Generating resume with prompt length:', prompt.length);
+            console.log('📊 Profile data used:', {
+              name: profile.name,
+              experience: profile.experience?.length,
+              skills: profile.skills?.length,
+              education: profile.education?.length
+            });
+  
             const request = {
               model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
               prompt: prompt,
-              max_tokens: 2500,
-              temperature: 0.7,
-              top_p: 0.7,
+              max_tokens: 3000, // Увеличил для более детальных резюме
+              temperature: 0.6, // Баланс между креативностью и консистентностью
+              top_p: 0.8,
               top_k: 50,
               repetition_penalty: 1.1,
               stop: ['<|im_end|>', '<|im_start|>'],
               stream: false
             };
-
+  
             return this.aiService.generateText(request).pipe(
               map(resume => this.cleanResumeContent(resume)),
               switchMap(resume => {
-                // Увеличиваем счетчик использования после успешной генерации
+                // Логируем успешную генерацию
+                console.log('✅ Resume generated successfully, length:', resume.length);
                 return from(this.usageService.incrementUsage('resumeGenerations')).pipe(
                   map(() => resume)
                 );
               }),
               catchError(error => {
+                console.error('❌ Resume generation error:', error);
                 this.errorHandler.showError('Ошибка генерации резюме', 'ResumeGenerationService');
                 return of(this.createFallbackResume(profile));
               })
             );
           }),
           catchError(error => {
+            console.error('❌ Profile loading error:', error);
             this.errorHandler.showError('Ошибка загрузки профиля', 'ResumeGenerationService');
             return of('Ошибка загрузки профиля. Пожалуйста, проверьте заполнение профиля.');
           })
         );
       }),
       catchError(error => {
-        // Ошибка проверки лимита
         return of(error.message);
       })
     );
   }
+  
+  private validateProfileForResume(profile: Person): string[] {
+    const errors: string[] = [];
+    
+    if (!profile.name || profile.name.trim().length < 2) {
+      errors.push('ФИО');
+    }
+    
+    if (!profile.contact?.email) {
+      errors.push('email');
+    }
+    
+    if (!profile.experience || profile.experience.length === 0) {
+      errors.push('опыт работы');
+    }
+    
+    if (!profile.skills || profile.skills.length === 0) {
+      errors.push('навыки');
+    }
+    
+    if (!profile.education || profile.education.length === 0) {
+      errors.push('образование');
+    }
+    
+    return errors;
+  }
 
   private buildResumePrompt(profile: Person, coverLetter?: string): string {
-    const experienceText = profile.experience?.map(exp => 
-      `- ${exp.company} (${exp.startDate} - ${exp.endDate || 'по настоящее время'}): ${exp.position}
-       Обязанности: ${exp.tasks.join('; ')}
-       Технологии: ${exp.stack.join(', ')}
-       Достижения: ${exp.achievements.map(a => `${a.name}: ${a.initial_value} → ${a.final_value} ${a.uom || ''}`).join('; ')}`
-    ).join('\n') || 'Опыт работы не указан';
+    const userName = profile.name || 'Кандидат';
+    const userEmail = profile.contact.email;
+    const userPhone = profile.contact.phone || '';
+    const userLinkedIn = profile.contact['linkedin'] || '';
+    const userGitHub = profile.contact['github'] || '';
+    const userTelegram = profile.contact['telegram'] || '';
+    
+    const desiredPositions = profile.desiredPositions?.join(', ') || 'Не указаны';
+    const desiredSalary = 'Не указана'; 
+    
+    const experienceText = profile.experience?.map((exp, index) => {
+      const duration = this.calculateExperienceDuration(exp.startDate, exp.endDate || undefined);
+      const achievements = exp.achievements?.map(ach => 
+        `✓ ${ach.name}${ach.initial_value ? `: ${ach.initial_value} → ${ach.final_value}${ach.uom ? ` ${ach.uom}` : ''}` : ''}`
+      ).join('\n       ') || 'Достижения не указаны'
+      
+      return `### ${exp.position}
+  **Компания:** ${exp.company}
+  **Период:** ${exp.startDate} - ${exp.endDate || 'по настоящее время'} (${duration})
+  **Обязанности:** ${exp.tasks?.join('; ') || 'Не указаны'}
+  **Технологии:** ${exp.stack?.join(', ') || 'Не указаны'}
+  **Достижения:**
+  ${achievements}`;
+    }).join('\n\n') || 'Опыт работы не указан';
+  
+    const skillsByArea = this.groupSkillsByPriority(profile.skills || []);
 
-    const skillsByArea = this.groupSkillsByArea(profile.skills || []);
+    const educationText = profile.education?.map(edu => 
+      `### ${edu.institution}
+  **Специальность:** ${edu.specialty}
+  **Степень:** ${edu.degree || 'Не указана'}
+  **Год окончания:** ${edu.year || 'Не указан'}`
+    ).join('\n\n') || 'Образование не указано';
+  
+    // Языки с уровнями
+    const languagesText = profile.languages?.map(lang => 
+      `- ${lang.language}: ${this.getLanguageLevel(lang.level)}`
+    ).join('\n') || 'Языки не указаны';
+  
+    // Контекст вакансии
     const vacancyContext = this.currentVacancy ? `
-      ИНФОРМАЦИЯ О ВАКАНСИИ:
-      - Должность: ${this.currentVacancy.name}
-      - Компания: ${this.currentVacancy.employer?.name}
-      - Требования: ${this.vacancyService.extractRequirements(this.currentVacancy)}
-      - Ключевые навыки: ${this.vacancyService.extractKeySkills(this.currentVacancy).join(', ')}
-      ` : '';
-
-    return `Сгенерируй качественное, профессиональное резюме на русском языке на основе следующего профиля.
-
-${vacancyContext}
-
-ТРЕБОВАНИЯ К РЕЗЮМЕ:
-- Структурированное резюме с разделами: Контакты, О себе, Опыт работы, Образование, Навыки, Достижения
-- Профессиональный деловой стиль
-- Конкретные достижения с цифрами и метриками
-- Акцент на релевантных для желаемой позиции навыках
-- Формат: Markdown
-- Длина: 1-2 страницы
-
-${coverLetter ? `ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ ИЗ СОПРОВОДИТЕЛЬНОГО ПИСЬМА:
-${coverLetter.substring(0, 500)}...\n\n` : ''}
-
-ПРОФИЛЬ КАНДИДАТА:
-Имя: ${profile.name}
-Желаемые позиции: ${profile.desiredPositions?.join(', ') || 'Не указаны'}
-
-КОНТАКТНАЯ ИНФОРМАЦИЯ:
-Email: ${profile.contact.email}
-Телефон: ${profile.contact.phone || 'Не указан'}
-LinkedIn: ${profile.contact['linkedin'] || 'Не указан'}
-GitHub: ${profile.contact['github'] || 'Не указан'}
-
-МЕСТОПОЛОЖЕНИЕ:
-Город: ${profile.location.city}
-Страна: ${profile.location.country || 'Не указана'}
-Готов к переезду: ${profile.location.relocation ? 'Да' : 'Нет'}
-Удаленная работа: ${profile.location.remote ? 'Да' : 'Нет'}
-Командировки: ${profile.location.business_trips ? 'Да' : 'Нет'}
-
-ЯЗЫКИ:
-${profile.languages?.map(l => `- ${l.language}: ${l.level}`).join('\n') || 'Не указаны'}
-
-ОБРАЗОВАНИЕ:
-${profile.education?.map(edu => 
-  `- ${edu.institution} (${edu.year}): ${edu.degree}, ${edu.specialty}`
-).join('\n') || 'Не указано'}
-
-ОПЫТ РАБОТЫ:
-${experienceText}
-
-НАВЫКИ ПО ОБЛАСТЯМ:
-${Object.entries(skillsByArea).map(([area, skills]) => 
-  `${area}: ${skills.map(s => `${s.name} (${s.level}/10)`).join(', ')}`
-).join('\n')}
-
-ХОББИ: ${profile.hobby?.join(', ') || 'Не указаны'}
-ЛИТЕРАТУРА: ${profile.literature?.join(', ') || 'Не указана'}
-
-Сгенерируй профессиональное резюме:`;
+  ## 🎯 КОНТЕКСТ ВАКАНСИИ
+  
+  **Должность:** ${this.currentVacancy.name}
+  **Компания:** ${this.currentVacancy.employer?.name}
+  **Зарплата:** ${this.currentVacancy.salary ? this.formatSalary(this.currentVacancy.salary) : 'Не указана'}
+  **Требуемый опыт:** ${this.currentVacancy.experience?.name || 'Не указан'}
+  **Ключевые требования:**
+  ${this.vacancyService.extractKeySkills(this.currentVacancy).map(skill => `- ${skill}`).join('\n')}
+  
+  **Описание вакансии:**
+  ${this.currentVacancy.description?.substring(0, 800) || 'Описание не указано'}...
+  ` : '';
+  
+    // Анализ соответствия вакансии
+    const vacancyMatchAnalysis = this.currentVacancy ? this.analyzeVacancyMatch(profile, this.currentVacancy) : '';
+  
+    const promptText = `# ЗАДАЧА: Сгенерировать профессиональное резюме мирового уровня
+  
+  Ты - эксперт по карьере и HR-специалист с 15-летним опытом. Создай ИДЕАЛЬНОЕ резюме на основе предоставленных данных.
+  
+  ## 📋 КРИТИЧЕСКИ ВАЖНЫЕ ТРЕБОВАНИЯ:
+  
+  ### СТРУКТУРА (обязательная):
+  1. **Контактная информация** (имя, телефон, email, LinkedIn, локация)
+  2. **Цель/Краткое описание** (3-4 предложения, хук для рекрутера)
+  3. **Ключевые навыки** (сгруппированные по категориям)
+  4. **Опыт работы** (в обратном хронологическом порядке)
+  5. **Образование**
+  6. **Сертификаты и курсы**
+  7. **Языки**
+  8. **Проекты** (если есть)
+  9. **Дополнительная информация**
+  
+  ### СТИЛЬ И ФОРМАТ:
+  - **Профессиональный деловой стиль**
+  - **Использование action verbs** (разработал, оптимизировал, внедрил, увеличил)
+  - **Конкретные цифры и метрики** везде где возможно
+  - **Длина:** 1.5-2 страницы (800-1200 слов)
+  - **Формат:** Markdown с четкой структуру
+  - **Акцент на достижениях**, а не на обязанностях
+  - **Релевантность** к желаемой позиции
+  
+  ### КОНКРЕТНЫЕ УКАЗАНИЯ:
+  - Преобразуй обычные обязанности в impactful достижения
+  - Используй формулу: "Что сделал + Как + Результат"
+  - Подчеркивай бизнес-ценность каждого достижения
+  - Группируй навыки логически (Technical, Soft Skills, Tools etc.)
+  - Создай compelling summary в начале
+  
+  ${vacancyContext}
+  
+  ${vacancyMatchAnalysis}
+  
+  ## 👤 ДАННЫЕ КАНДИДАТА:
+  
+  ### ОСНОВНАЯ ИНФОРМАЦИЯ
+  **ФИО:** ${userName}
+  **Целевые позиции:** ${desiredPositions}
+  **Желаемая зарплата:** ${desiredSalary}
+  
+  ### КОНТАКТЫ
+  - **Email:** ${userEmail}
+  - **Телефон:** ${userPhone || 'Не указан'}
+  - **LinkedIn:** ${userLinkedIn || 'Не указан'}
+  - **GitHub:** ${userGitHub || 'Не указан'}
+  - **Telegram:** ${userTelegram || 'Не указан'}
+  
+  ### ЛОКАЦИЯ
+  - **Город:** ${profile.location.city}
+  - **Страна:** ${profile.location.country || 'Россия'}
+  - **Переезд:** ${profile.location.relocation ? 'Готов' : 'Не готов'}
+  - **Удаленная работа:** ${profile.location.remote ? 'Доступна' : 'Не доступна'}
+  - **Командировки:** ${profile.location.business_trips ? 'Возможны' : 'Не возможны'}
+  
+  ${coverLetter ? `### ДОПОЛНИТЕЛЬНЫЙ КОНТЕКСТ ИЗ СОПРОВОДИТЕЛЬНОГО ПИСЬМА:
+  ${coverLetter.substring(0, 1000)}...
+  ` : ''}
+  
+  ## 💼 ОПЫТ РАБОТЫ
+  ${experienceText}
+  
+  ## 🎓 ОБРАЗОВАНИЕ
+  ${educationText}
+  
+  ## 🌐 ЯЗЫКИ
+  ${languagesText}
+  
+  ## 🎯 НАВЫКИ
+  ${Object.entries(skillsByArea).map(([area, skills]) => 
+    `### ${area}\n${skills.map(s => `- ${s.name}${s.level ? ` (${s.level}/10)` : ''}`).join('\n')}`
+  ).join('\n\n')}
+  
+  ## 🎨 ДОПОЛНИТЕЛЬНАЯ ИНФОРМАЦИЯ
+  - **Хобби:** ${profile.hobby?.join(', ') || 'Не указаны'}
+  - **Литература:** ${profile.literature?.join(', ') || 'Не указана'}
+  
+  ---
+  
+  **СГЕНЕРИРУЙ ПРОФЕССИОНАЛЬНОЕ РЕЗЮМЕ, КОТОРОЕ:**
+  1. Выделит кандидата среди сотен других
+  2. Покажет измеримую бизнес-ценность
+  3. Будет идеально соответствовать целевым позициям
+  4. Использует лучшие практики современных HR-трендов
+  5. Содержит конкретные достижения с цифрами
+  6. Имеет четкую логическую структуру
+  7. Легко читается и сканируется за 30 секунд
+  
+  Начни резюме сразу с контактной информации, без вступлений.`;
+    
+    return promptText;
+  }
+  
+  // Исправление 3: Добавьте метод pluralize в класс
+  private pluralize(count: number, forms: string[]): string {
+    const cases = [2, 0, 1, 1, 1, 2];
+    return forms[
+      count % 100 > 4 && count % 100 < 20 ? 2 : cases[Math.min(count % 10, 5)]
+    ];
   }
 
-  private groupSkillsByArea(skills: any[]): { [key: string]: any[] } {
-    return skills.reduce((groups: { [key: string]: any[] }, skill) => {
-      const area = skill.area || 'Другие навыки';
-      if (!groups[area]) {
-        groups[area] = [];
+  private calculateExperienceDuration(startDate: string, endDate?: string): string {
+    try {
+      const start = new Date(startDate);
+      const end = endDate ? new Date(endDate) : new Date();
+      
+      const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+      const years = Math.floor(months / 12);
+      const remainingMonths = months % 12;
+      
+      if (years === 0) {
+        return `${remainingMonths} ${this.pluralize(remainingMonths, ['месяц', 'месяца', 'месяцев'])}`;
+      } else if (remainingMonths === 0) {
+        return `${years} ${this.pluralize(years, ['год', 'года', 'лет'])}`;
+      } else {
+        return `${years} ${this.pluralize(years, ['год', 'года', 'лет'])} ${remainingMonths} ${this.pluralize(remainingMonths, ['месяц', 'месяца', 'месяцев'])}`;
       }
-      groups[area].push(skill);
-      return groups;
-    }, {});
+    } catch {
+      return 'Период не указан';
+    }
   }
+  
+  private groupSkillsByPriority(skills: any[]): { [key: string]: any[] } {
+    const areaPriority: { [key: string]: number } = {
+      'Технические навыки': 1,
+      'Программирование': 2,
+      'Фреймворки': 3,
+      'Базы данных': 4,
+      'Инструменты': 5,
+      'Методологии': 6,
+      'Soft Skills': 7,
+      'Языки': 8,
+      'Другие навыки': 9
+    };
+  
+    const groups = skills.reduce((acc: { [key: string]: any[] }, skill) => {
+      const area = skill.area || 'Другие навыки';
+      if (!acc[area]) {
+        acc[area] = [];
+      }
+      
+      // Сортируем навыки внутри группы по уровню
+      acc[area].push(skill);
+      acc[area].sort((a, b) => (b.level || 0) - (a.level || 0));
+      
+      return acc;
+    }, {});
+  
+    // Сортируем группы по приоритету
+    return Object.keys(groups)
+      .sort((a, b) => (areaPriority[a] || 10) - (areaPriority[b] || 10))
+      .reduce((acc, key) => {
+        acc[key] = groups[key];
+        return acc;
+      }, {} as { [key: string]: any[] });
+  }
+  
+  private getLanguageLevel(level: string): string {
+    const levelMap: { [key: string]: string } = {
+      'beginner': 'Начальный',
+      'elementary': 'Элементарный',
+      'intermediate': 'Средний',
+      'upper-intermediate': 'Выше среднего',
+      'advanced': 'Продвинутый',
+      'proficient': 'Свободный',
+      'native': 'Родной',
+      'a1': 'Начальный (A1)',
+      'a2': 'Элементарный (A2)',
+      'b1': 'Средний (B1)',
+      'b2': 'Выше среднего (B2)',
+      'c1': 'Продвинутый (C1)',
+      'c2': 'В совершенстве (C2)'
+    };
+    
+    return levelMap[level.toLowerCase()] || level;
+  }
+  
+  private analyzeVacancyMatch(profile: Person, vacancy: any): string {
+    const vacancySkills = this.vacancyService.extractKeySkills(vacancy);
+    const profileSkills = profile.skills?.map(s => s.name.toLowerCase()) || [];
+    
+    const matchingSkills = vacancySkills.filter(skill => 
+      profileSkills.some(profileSkill => 
+        profileSkill.includes(skill.toLowerCase()) || skill.toLowerCase().includes(profileSkill)
+      )
+    );
+    
+    const matchPercentage = vacancySkills.length > 0 
+      ? Math.round((matchingSkills.length / vacancySkills.length) * 100) 
+      : 0;
+    
+    const missingSkills = vacancySkills.filter(skill => 
+      !profileSkills.some(profileSkill => 
+        profileSkill.includes(skill.toLowerCase()) || skill.toLowerCase().includes(profileSkill)
+      )
+    );
+    
+    return `
+  ## 📊 АНАЛИЗ СООТВЕТСТВИЯ ВАКАНСИИ
+  
+  **Совпадение навыков:** ${matchPercentage}%
+  **Найденные соответствия:** ${matchingSkills.length} из ${vacancySkills.length}
+  
+  ${matchingSkills.length > 0 ? `✅ **Сильные стороны:**
+  ${matchingSkills.map(skill => `- ${skill}`).join('\n')}` : ''}
+  
+  ${missingSkills.length > 0 ? `⚠️ **Рекомендуется развить:**
+  ${missingSkills.map(skill => `- ${skill}`).join('\n')}` : ''}
+  
+  **Рекомендация:** ${this.getMatchRecommendation(matchPercentage)}
+  `;
+  }
+  
+  private getMatchRecommendation(percentage: number): string {
+    if (percentage >= 80) return 'Идеальное соответствие! Сделай акцент на точном совпадении навыков.';
+    if (percentage >= 60) return 'Хорошее соответствие. Подчеркни ключевые совпадающие навыки.';
+    if (percentage >= 40) return 'Умеренное соответствие. Выдели transferable skills и готовность к обучению.';
+    return 'Низкое соответствие. Сделай акцент на быстрой обучаемости и смежных навыках.';
+  }
+  
+  private formatSalary(salary: any): string {
+    if (!salary) return '';
+    
+    if (salary.from && salary.to) {
+      return `${salary.from} - ${salary.to} ${salary.currency}`;
+    } else if (salary.from) {
+      return `от ${salary.from} ${salary.currency}`;
+    } else if (salary.to) {
+      return `до ${salary.to} ${salary.currency}`;
+    }
+    return '';
+  } 
 
   private cleanResumeContent(text: string): string {
     if (!text) return this.createFallbackResume(null);
     
-    return text.trim();
+    let cleaned = text
+      .replace(/```(?:json|html|markdown)?/g, '')
+      .replace(/^#+\s*ЗАДАЧА:.*$/gm, '')
+      .replace(/^#+\s*КРИТИЧЕСКИ.*$/gm, '')
+      .replace(/^#+\s*СТРУКТУРА.*$/gm, '')
+      .replace(/^#+\s*СТИЛЬ И ФОРМАТ.*$/gm, '')
+      .replace(/^#+\s*КОНКРЕТНЫЕ УКАЗАНИЯ.*$/gm, '')
+      .replace(/^#+\s*ДАННЫЕ КАНДИДАТА.*$/gm, '')
+      .replace(/^#+\s*СГЕНЕРИРУЙ ПРОФЕССИОНАЛЬНОЕ РЕЗЮМЕ.*$/gm, '')
+      .replace(/\*{2,}/g, '*')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  
+    if (!cleaned.startsWith('#')) {
+      cleaned = `# Резюме\n\n${cleaned}`;
+    }
+  
+    return cleaned;
   }
 
   private createFallbackResume(profile: Person | null): string {

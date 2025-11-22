@@ -21,7 +21,6 @@ import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { HHAuthService } from '../../../shared/job-platforms/hh/hh-auth.service';
 import { ProfileService } from '../../../shared/profile/profile.service';
 import { VacancyService } from '../../../shared/vacancy/vacancy.service';
-import { TranslatedFileInputComponent } from '../../Helpers/translated-file-input/translated-file-input.component';
 import { ResumeSelectorComponent, Resume } from '../../Helpers/resume-selector/resume-selector.component';
 import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 import { VacancySelectorComponent } from "../../Helpers/vacancy-selector/vacancy-selector.component";
@@ -131,7 +130,6 @@ export class CoverLetterGenerateComponent implements OnInit {
       try {
         this.currentVacancy = await this.vacancyService.getVacancyWithCache(this.vacancyUrl);
         
-        // Автозаполнение поля vacancy_id
         if (this.currentVacancy) {
           this.coverLetterForm.patchValue({
             vacancy_id: this.currentVacancy.id
@@ -149,7 +147,6 @@ export class CoverLetterGenerateComponent implements OnInit {
     
     this.isLoading = true;
     try {
-      // ПРЯМОЙ ВЫЗОВ БЕЗ API ENDPOINTS
       this.currentVacancy = await this.vacancyService.getVacancyWithCache(this.vacancyUrl);
       
       if (this.currentVacancy) {
@@ -353,19 +350,16 @@ export class CoverLetterGenerateComponent implements OnInit {
     }
   }
 
-  // Новые методы для работы с селектором резюме
   onResumeSelected(resume: Resume): void {
     this.selectedResumeFromSelector = resume;
     
     if (resume.platform === 'file' && resume.content) {
-      // Используем содержимое файла
       this.resumeContent = resume.content;
       this.messageService.add({
         severity: 'success',
         summary: 'Резюме загружено из файла'
       });
     } else if (resume.platform === 'hh' || resume.platform === 'superjob') {
-      // Устанавливаем выбранное резюме с платформы
       this.selectedResume = resume;
       this.coverLetterForm.patchValue({
         selected_resume: resume
@@ -380,14 +374,12 @@ export class CoverLetterGenerateComponent implements OnInit {
   onVacancySelected(vacancy: any): void {
     this.selectedVacancyFromSelector = vacancy;
     
-    // Автозаполнение поля vacancy_id
     if (vacancy.id) {
       this.coverLetterForm.patchValue({
         vacancy_id: vacancy.id
       });
     }
     
-    // Сохраняем текущую вакансию для использования в генерации
     this.currentVacancy = vacancy;
     
     this.messageService.add({
@@ -470,18 +462,15 @@ export class CoverLetterGenerateComponent implements OnInit {
     });
   }
   onFileSelect(file: File | File[]): void {
-    // Обрабатываем как одиночный файл
     if (file instanceof File) {
       this.uploadedResumeFile = file;
       this.readResumeFile(file);
     } else if (Array.isArray(file) && file.length > 0) {
-      // Берем первый файл из массива
       this.uploadedResumeFile = file[0];
       this.readResumeFile(file[0]);
     }
   }
   
-  // Обновим метод для работы с новым типом
   private readResumeFile(file: File): void {
     const reader = new FileReader();
     reader.onload = (e) => {

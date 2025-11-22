@@ -24,12 +24,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const yookassaShopId = process.env['YOOKASSA_SHOP_ID'];
     const yookassaSecretKey = process.env['YOOKASSA_SECRET_KEY'];
 
-    // Если нет ключей ЮKassa или это демо-платеж, используем демо-режим
-    if (!yookassaShopId || !yookassaSecretKey || paymentId.startsWith('demo_')) {
-      console.log('Using demo mode for payment status check');
+    // УДАЛИТЬ демо-режим
+    if (!yookassaShopId || !yookassaSecretKey) {
+      throw new Error('Payment system not configured');
+    }
+
+    // Для бесплатного тарифа
+    if (paymentId.startsWith('free_activation_')) {
       return res.status(200).json({
         status: 'succeeded',
-        planId: paymentId.startsWith('demo_') ? paymentId.split('_')[1] : 'basic'
+        planId: 'free'
       });
     }
 

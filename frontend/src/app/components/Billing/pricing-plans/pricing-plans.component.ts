@@ -38,7 +38,6 @@ export class PricingPlansComponent implements OnInit {
   showPaymentDialog = false;
   isLoading = false;
   currentPlanId = 'free';
-  isDemoMode = true;
 
   constructor(
     private billingService: BillingService,
@@ -54,15 +53,8 @@ export class PricingPlansComponent implements OnInit {
   ngOnInit() {
     this.plans = this.billingService.getPlans();
     this.loadCurrentSubscription();
-    
-    // Получаем режим из конфигурации
-    this.configService.isConfigLoaded().subscribe(loaded => {
-      if (loaded) {
-        const config = this.configService.getConfig();
-        this.isDemoMode = config.demoMode;
-      }
-    });
   }
+
   async loadCurrentSubscription() {
     try {
       const subscription = await this.billingService.getUserSubscription();
@@ -136,7 +128,6 @@ export class PricingPlansComponent implements OnInit {
       const result = await this.paymentService.createPayment(this.selectedPlan.id);
       
       if (result.success && result.paymentUrl) {
-        // Перенаправляем на страницу оплаты
         window.location.href = result.paymentUrl;
       } else {
         this.messageService.add({
@@ -157,9 +148,6 @@ export class PricingPlansComponent implements OnInit {
     }
   }
 
-  getDemoBadgeSeverity(): string {
-    return this.isDemoMode ? 'warning' : 'success';
-  }
 
   getButtonClass(plan: TariffPlan): string {
     if (plan.id === this.currentPlanId) {
@@ -173,10 +161,6 @@ export class PricingPlansComponent implements OnInit {
     this.selectedPlan = null;
   }
 
-  getDemoBadgeText(): string {
-    return this.translate.instant('BILLING.DEMO_MODE');
-  }
-  
   getPaymentInfoText(): string {
     return this.translate.instant('BILLING.PAYMENT_INFO');
   }
@@ -187,6 +171,9 @@ export class PricingPlansComponent implements OnInit {
     }
     if (plan.id === this.currentPlanId) {
       return this.translate.instant('BILLING.CURRENT_PLAN_BADGE');
+    }
+    if (plan.price === 0) {
+      return this.translate.instant('BILLING.ACTIVATE_FREE');
     }
     return this.translate.instant('BILLING.SELECT_PLAN');
   }

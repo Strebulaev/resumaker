@@ -86,7 +86,6 @@ module.exports = function handler(req: VercelRequest, res: VercelResponse): void
       habrClientSecret: habrClientSecret || '',
       yookassaShopId: yookassaShopId || '',
       yookassaSecretKey: yookassaSecretKey || '',
-      demoMode: !yookassaShopId || !yookassaSecretKey,
       
       // Аналитика
       analytics: {

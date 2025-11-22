@@ -24,12 +24,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const yookassaShopId = process.env['YOOKASSA_SHOP_ID'];
     const yookassaSecretKey = process.env['YOOKASSA_SECRET_KEY'];
 
-    // Если нет ключей ЮKassa, используем демо-режим
+    // УДАЛИТЬ демо-режим - теперь только реальные платежи
     if (!yookassaShopId || !yookassaSecretKey) {
-      console.log('Using demo mode for payment - YooKassa credentials not configured');
-      return res.status(200).json({
-        paymentUrl: `https://rezulution.vercel.app/payment/success?demo=true&planId=${planId}`,
-        paymentId: `demo_${Date.now()}`
+      console.error('YooKassa credentials not configured');
+      return res.status(500).json({ 
+        error: 'Payment system not configured',
+        message: 'Платежная система временно недоступна. Пожалуйста, попробуйте позже.'
       });
     }
 
@@ -41,6 +41,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const plan = plans[planId];
     if (!plan) {
       throw new Error(`Invalid planId: ${planId}`);
+    }
+
+    // Для бесплатного тарифа сразу активируем
+    if (planId === 'free') {
+      return res.status(200).json({
+        success: true,
+        paymentUrl: null,
+        paymentId: `free_activation_${Date.now()}`
+      });
     }
 
     const paymentPayload = {
@@ -86,6 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     return res.status(200).json({
+      success: true,
       paymentUrl: paymentData.confirmation.confirmation_url,
       paymentId: paymentData.id
     });
