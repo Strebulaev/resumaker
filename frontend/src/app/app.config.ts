@@ -15,6 +15,10 @@ import { AppConfig, ConfigService } from './shared/config/config.service';
 import { SupabaseService } from './shared/db/supabase.service';
 import { environment } from '../environments/environment.prod';
 import { LanguageService } from './shared/utils/language.service';
+import { BillingService } from './shared/billing/billing.service';
+import { PaymentService } from './shared/billing/payment.service';
+import { UsageService } from './shared/billing/usage.service';
+import { AnalyticsService } from './shared/analytics.service';
 
 export function initializeApp(configService: ConfigService, supabaseService: SupabaseService): () => Promise<void> {
   return async () => {
@@ -106,5 +110,46 @@ export const appConfig: ApplicationConfig = {
         suffix: '.json'
       })
     }),
+    provideRouter(routes),
+    provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeApp,
+      deps: [ConfigService, SupabaseService],
+      multi: true
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeTranslation,
+      deps: [TranslateService, LanguageService],
+      multi: true
+    },
+    { 
+      provide: HTTP_INTERCEPTORS, 
+      useClass: AuthInterceptor, 
+      multi: true,
+    },
+    provideAnimationsAsync(),
+    providePrimeNG(
+      {
+        theme: {
+          preset: Aura
+        }
+      }
+    ),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    MarkdownService,
+    MessageService,
+    { provide: SECURITY_CONTEXT, useValue: 0 },
+    provideTranslateService({
+      loader: provideTranslateHttpLoader({
+        prefix: '/locale/messages.',
+        suffix: '.json'
+      })
+    }),
+    BillingService,
+    PaymentService,
+    UsageService,
+    AnalyticsService
   ]
 };

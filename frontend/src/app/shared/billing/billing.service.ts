@@ -75,12 +75,13 @@ export class BillingService {
     private configService: ConfigService,
     private translate: TranslateService
   ) {
-    this.initializePlans();
-    this.translate.onLangChange.subscribe(() => {
-      this.initializePlans();
+    console.log('BillingService initialized with:', {
+      supabase: !!supabase,
+      configService: !!configService,
+      translate: !!translate
     });
   }
-
+  
   async getUserSubscription(): Promise<UserSubscription> {
     const userId = this.supabase.currentUser?.id;
     if (!userId) {

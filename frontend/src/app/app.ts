@@ -1,6 +1,6 @@
-import { Component, inject, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+import { Component, inject, Inject, Injector, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, NavigationStart, Router, RouterModule, RouterOutlet } from '@angular/router';
+import { NavigationEnd, NavigationError, NavigationStart, Router, RouterModule, RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MarkdownModule } from 'ngx-markdown';
 import { MenuItem } from 'primeng/api';
@@ -70,9 +70,18 @@ export class App implements OnInit {
     @Inject(PLATFORM_ID) private platformId: Object,
     private errorHandler: ErrorHandlerService,
     public aiGuard: AIGuardService,
-  ) 
-  {
+    private injector: Injector
+  ) {
     this.setupNavigationHandling();
+    this.setupErrorHandling();
+  }
+
+  private setupErrorHandling(): void {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationError) {
+        console.error('Navigation Error:', event.error);
+      }
+    });
   }
 
   @HostListener('document:click', ['$event'])

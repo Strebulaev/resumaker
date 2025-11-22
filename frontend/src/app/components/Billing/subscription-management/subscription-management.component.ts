@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -23,9 +23,9 @@ import { ProgressSpinner } from "primeng/progressspinner";
     ProgressBarModule,
     ProgressSpinner,
     TranslatePipe
-]
+  ]
 })
-export class SubscriptionManagementComponent implements OnInit {
+export class SubscriptionManagementComponent implements OnInit, OnDestroy {
   currentSubscription: UserSubscription | null = null;
   currentPlan: TariffPlan | null = null;
   usageStats: any[] = [];
@@ -36,17 +36,33 @@ export class SubscriptionManagementComponent implements OnInit {
     private usageService: UsageService,
     private messageService: MessageService,
     private router: Router
-  ) {}
+  ) {
+    console.log('SubscriptionManagementComponent constructor');
+  }
 
   async ngOnInit() {
-    await this.loadSubscriptionData();
+    console.log('SubscriptionManagementComponent ngOnInit');
+    try {
+      await this.loadSubscriptionData();
+    } catch (error) {
+      console.error('Error in ngOnInit:', error);
+      this.isLoading = false;
+    }
   }
 
   async loadSubscriptionData() {
     try {
+      console.log('Loading subscription data...');
+      
       this.currentSubscription = await this.billingService.getUserSubscription();
+      console.log('Current subscription:', this.currentSubscription);
+      
       this.currentPlan = this.billingService.getCurrentPlan();
+      console.log('Current plan:', this.currentPlan);
+      
       this.usageStats = await this.usageService.getUsageStats();
+      console.log('Usage stats:', this.usageStats);
+      
     } catch (error) {
       console.error('Error loading subscription data:', error);
       this.messageService.add({
@@ -87,5 +103,9 @@ export class SubscriptionManagementComponent implements OnInit {
 
   isTrial(): boolean {
     return this.currentPlan?.id === 'free';
+  }
+
+  ngOnDestroy() {
+    console.log('SubscriptionManagementComponent destroyed');
   }
 }

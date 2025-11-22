@@ -5,10 +5,13 @@ import { SupabaseService } from '../db/supabase.service';
 
 @Injectable({ providedIn: 'root' })
 export class UsageService {
+  
   constructor(
     private billingService: BillingService,
     private supabase: SupabaseService
-  ) {}
+  ) {
+    console.log('UsageService initialized');
+  }
 
   async getUsageStats(): Promise<{feature: string, used: number, limit: number, remaining: number}[]> {
     const subscription = await this.billingService.getUserSubscription();
