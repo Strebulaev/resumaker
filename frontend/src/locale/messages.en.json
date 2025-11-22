@@ -655,7 +655,36 @@
     "BUTTON_TOOLTIP": "Configure AI providers",
     "MODAL_TITLE": "AI Providers Configuration",
     "CONFIGURE_BUTTON": "Configure AI",
-    "CURRENT_PROVIDER": "Current provider"
+    "CURRENT_PROVIDER": "Current provider",
+    "NOT_CONFIGURED_TOOLTIP": "AI not configured - click to configure",
+    "CURRENT_PROVIDER_TOOLTIP": "Current provider: {{provider}} - click to change",
+    "STATUS": {
+      "DEFAULT": "⚡ Default",
+      "CONFIGURED": "✓ Configured", 
+      "ACTIVE": "● Active"
+    },
+    "FIELDS": {
+      "API_KEY": "API Key",
+      "BASE_URL": "Base URL",
+      "API_KEY_PLACEHOLDER_DEFAULT": "Automatically from config",
+      "API_KEY_PLACEHOLDER": "Enter your API key"
+    },
+    "BUTTONS": {
+      "SAVE": "Save",
+      "CANCEL": "Cancel",
+      "TEST_CONNECTION": "Test Connection",
+      "EDIT": "Edit",
+      "CONFIGURE": "Configure", 
+      "USE": "Use",
+      "CONNECT": "Connect"
+    },
+    "HELP": {
+      "TITLE": "Connection troubleshooting:",
+      "CHECK_API_KEY": "✅ Check API key correctness",
+      "CHECK_PERMISSIONS": "✅ Ensure API key has required permissions",
+      "TOGETHER_AI_AUTO": "✅ For Together AI - key loads automatically from config",
+      "CORS_ERRORS": "❌ CORS errors require server-side configuration"
+    }
   },
   "RESUME_SELECTOR": {
     "TITLE": "Resume Selection",

@@ -1,4 +1,3 @@
-<!-- Файл: src/app/components/Pages/ai-config-modal/ai-config-modal.component.html -->
 <div class="ai-config-modal">
   <div class="providers-grid">
     <div *ngFor="let provider of providers" 
@@ -11,28 +10,30 @@
         <h3>{{ provider.name }}</h3>
         <div class="provider-status">
           <span *ngIf="provider.isDefault" class="status-badge default">
-            ⚡ По умолчанию
+            {{ 'AI_CONFIG.STATUS.DEFAULT' | translate }}
           </span>
           <span *ngIf="provider.isConfigured" class="status-badge configured">
-            ✓ Настроен
+            {{ 'AI_CONFIG.STATUS.CONFIGURED' | translate }}
           </span>
           <span *ngIf="isCurrentProvider(provider.id)" class="status-badge active-text">
-            ● Активный
+            {{ 'AI_CONFIG.STATUS.ACTIVE' | translate }}
           </span>
         </div>
       </div>
 
       <div class="provider-config" *ngIf="editingProvider === provider.id">
         <div class="config-field">
-          <label>API Key:</label>
+          <label>{{ 'AI_CONFIG.FIELDS.API_KEY' | translate }}:</label>
           <input type="password" 
                  [(ngModel)]="provider.apiKey"
-                 [placeholder]="provider.isDefault ? 'Автоматически из конфига' : 'Введите ваш API ключ'"
+                 [placeholder]="provider.isDefault ? 
+                   ('AI_CONFIG.FIELDS.API_KEY_PLACEHOLDER_DEFAULT' | translate) : 
+                   ('AI_CONFIG.FIELDS.API_KEY_PLACEHOLDER' | translate)"
                  [disabled]="!!(provider.isDefault && provider.isConfigured)">
         </div>
         
         <div class="config-field">
-          <label>Base URL:</label>
+          <label>{{ 'AI_CONFIG.FIELDS.BASE_URL' | translate }}:</label>
           <input type="text" 
                  [(ngModel)]="provider.baseUrl"
                  [placeholder]="provider.baseUrl"
@@ -41,19 +42,19 @@
 
         <div class="config-actions">
           <button pButton 
-                  label="Сохранить" 
+                  [label]="'AI_CONFIG.BUTTONS.SAVE' | translate" 
                   (click)="saveProviderConfig(provider)"
                   class="p-button-success"
                   [disabled]="!!provider.isDefault">
           </button>
           <button pButton 
-                  label="Отмена" 
+                  [label]="'AI_CONFIG.BUTTONS.CANCEL' | translate" 
                   (click)="cancelEdit()"
                   class="p-button-secondary">
           </button>
           <button *ngIf="provider.isConfigured"
                   pButton 
-                  label="Проверить подключение"
+                  [label]="'AI_CONFIG.BUTTONS.TEST_CONNECTION' | translate" 
                   (click)="testConnection(provider.id)"
                   class="p-button-info">
           </button>
@@ -62,7 +63,9 @@
 
       <div class="provider-actions" *ngIf="editingProvider !== provider.id">
         <button pButton 
-                [label]="provider.isConfigured ? 'Изменить' : 'Настроить'"
+                [label]="provider.isConfigured ? 
+                  ('AI_CONFIG.BUTTONS.EDIT' | translate) : 
+                  ('AI_CONFIG.BUTTONS.CONFIGURE' | translate)"
                 (click)="editProvider(provider.id)"
                 class="p-button-outlined"
                 [disabled]="!!(provider.isDefault && provider.isConfigured)">
@@ -70,15 +73,14 @@
         
         <button *ngIf="provider.isConfigured && !isCurrentProvider(provider.id)"
                 pButton 
-                label="Использовать"
+                [label]="'AI_CONFIG.BUTTONS.USE' | translate" 
                 (click)="setCurrentProvider(provider.id)"
                 class="p-button-success">
         </button>
 
-        <!-- Кнопка подключения для Together AI -->
         <button *ngIf="provider.isDefault && !provider.isConfigured"
                 pButton 
-                label="Подключить"
+                [label]="'AI_CONFIG.BUTTONS.CONNECT' | translate" 
                 (click)="connectTogetherAI()"
                 class="p-button-help">
           <i class="pi pi-plug"></i>
@@ -87,14 +89,13 @@
     </div>
   </div>
 
-  <!-- Блок с общей информацией -->
   <div class="connection-help">
-    <h4>Решение проблем с подключением:</h4>
+    <h4>{{ 'AI_CONFIG.HELP.TITLE' | translate }}</h4>
     <ul>
-      <li>✅ Проверьте правильность API ключа</li>
-      <li>✅ Убедитесь, что API ключ имеет необходимые права доступа</li>
-      <li>✅ Для Together AI - ключ автоматически загружается из конфигурации</li>
-      <li>❌ CORS ошибки требуют настройки серверной части</li>
+      <li>{{ 'AI_CONFIG.HELP.CHECK_API_KEY' | translate }}</li>
+      <li>{{ 'AI_CONFIG.HELP.CHECK_PERMISSIONS' | translate }}</li>
+      <li>{{ 'AI_CONFIG.HELP.TOGETHER_AI_AUTO' | translate }}</li>
+      <li>{{ 'AI_CONFIG.HELP.CORS_ERRORS' | translate }}</li>
     </ul>
   </div>
 </div>

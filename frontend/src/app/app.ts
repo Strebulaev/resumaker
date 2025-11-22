@@ -106,9 +106,11 @@ export class App implements OnInit {
 
   getAIStatusTooltip(): string {
     if (this.currentAIProvider === 'Не настроен') {
-      return 'AI не настроен - нажмите для настройки';
+      return this.translate.instant('AI_CONFIG.NOT_CONFIGURED_TOOLTIP');
     }
-    return `Текущий провайдер: ${this.currentAIProvider} - нажмите для изменения`;
+    return this.translate.instant('AI_CONFIG.CURRENT_PROVIDER_TOOLTIP', { 
+      provider: this.currentAIProvider 
+    });
   }
 
   getAIIconColor(): string {

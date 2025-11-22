@@ -7,13 +7,14 @@ import { MessageService } from 'primeng/api';
 import { AIService, AIProvider } from '../../../shared/ai/ai.service';
 import { ConfigService } from '../../../shared/config/config.service';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-ai-config-modal',
   templateUrl: './ai-config-modal.component.html',
   styleUrls: ['./ai-config-modal.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule]
+  imports: [CommonModule, FormsModule, ButtonModule, TranslateModule]
 })
 export class AiConfigModalComponent implements OnInit {
   @Output() closed = new EventEmitter<void>();

@@ -655,7 +655,36 @@
     "BUTTON_TOOLTIP": "Настроить AI провайдеры",
     "MODAL_TITLE": "Настройка AI провайдеров",
     "CONFIGURE_BUTTON": "Настроить AI", 
-    "CURRENT_PROVIDER": "Текущий провайдер"
+    "CURRENT_PROVIDER": "Текущий провайдер",
+    "NOT_CONFIGURED_TOOLTIP": "AI не настроен - нажмите для настройки",
+    "CURRENT_PROVIDER_TOOLTIP": "Текущий провайдер: {{provider}} - нажмите для изменения",
+    "STATUS": {
+      "DEFAULT": "⚡ По умолчанию",
+      "CONFIGURED": "✓ Настроен",
+      "ACTIVE": "● Активный"
+    },
+    "FIELDS": {
+      "API_KEY": "API Key",
+      "BASE_URL": "Base URL", 
+      "API_KEY_PLACEHOLDER_DEFAULT": "Автоматически из конфига",
+      "API_KEY_PLACEHOLDER": "Введите ваш API ключ"
+    },
+    "BUTTONS": {
+      "SAVE": "Сохранить",
+      "CANCEL": "Отмена",
+      "TEST_CONNECTION": "Проверить подключение",
+      "EDIT": "Изменить",
+      "CONFIGURE": "Настроить",
+      "USE": "Использовать", 
+      "CONNECT": "Подключить"
+    },
+    "HELP": {
+      "TITLE": "Решение проблем с подключением:",
+      "CHECK_API_KEY": "✅ Проверьте правильность API ключа",
+      "CHECK_PERMISSIONS": "✅ Убедитесь, что API ключ имеет необходимые права доступа",
+      "TOGETHER_AI_AUTO": "✅ Для Together AI - ключ автоматически загружается из конфигурации",
+      "CORS_ERRORS": "❌ CORS ошибки требуют настройки серверной части"
+    }
   },
   "RESUME_SELECTOR": {
     "TITLE": "Выбор резюме",
