@@ -21,17 +21,15 @@ export function initializeApp(configService: ConfigService, supabaseService: Sup
     try {
       const config = await configService.loadConfig();
       
-      // Проверяем, есть ли необходимые конфиги
       if (!config.supabaseUrl || !config.supabaseKey) {
         console.warn('Supabase config missing, using mock mode');
-        await supabaseService.initialize(config); // Все равно передаем конфиг
+        await supabaseService.initialize(config);
         return;
       }
       
       await supabaseService.initialize(config);
     } catch (error) {
       console.error('Failed to initialize app:', error);
-      // Создаем fallback конфиг для mock режима
       const fallbackConfig = {
         supabaseUrl: '',
         supabaseKey: '',
@@ -41,7 +39,17 @@ export function initializeApp(configService: ConfigService, supabaseService: Sup
         superJobClientId: '',
         superJobClientSecret: '',
         habrClientId: '',
-        habrClientSecret: ''
+        habrClientSecret: '',
+        yookassaShopId: '',
+        yookassaSecretKey: '',
+        demoMode: false,
+        analytics: {
+          googleAnalyticsId: '',
+          yandexMetrikaId: '',
+          microsoftClarityId: '',
+          hotjarId: '',
+        }
+
       };
       await supabaseService.initialize(fallbackConfig);
     }

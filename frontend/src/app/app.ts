@@ -1,6 +1,6 @@
 import { Component, inject, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationStart, Router, RouterModule, RouterOutlet } from '@angular/router';
+import { NavigationEnd, NavigationStart, Router, RouterModule, RouterOutlet } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { MarkdownModule } from 'ngx-markdown';
 import { MenuItem } from 'primeng/api';
@@ -21,6 +21,9 @@ import { ErrorHandlerService } from './shared/error-handler.service';
 import { DialogModule } from "primeng/dialog";
 import { AiConfigModalComponent } from "./components/Pages/ai-config-modal/ai-config-modal.component";
 import { AIGuardService } from './shared/ai/ai-guard.service';
+import { PersonalDataConsentComponent } from "./components/Pages/personal-data-consent/personal-data-consent.component";
+import { CookiesConsentComponent } from "./components/Pages/cookies-consent/cookies-consent.component";
+import { AnalyticsService } from './shared/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -40,7 +43,9 @@ import { AIGuardService } from './shared/ai/ai-guard.service';
     PopoverModule,
     AiConfigModalComponent,
     DialogModule,
-    ErrorToastComponent
+    ErrorToastComponent,
+    PersonalDataConsentComponent,
+    CookiesConsentComponent
 ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
@@ -60,6 +65,7 @@ export class App implements OnInit {
 
   constructor(
     public supabase: SupabaseService,
+    private analyticsService: AnalyticsService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
     private errorHandler: ErrorHandlerService,
@@ -102,8 +108,29 @@ export class App implements OnInit {
       this.items = this.buildMenu();
       this.restoreNavigation();
     });
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      this.analyticsService.trackPageView(
+        this.getPageTitle(event.url),
+        event.url
+      );
+    });
   }
 
+  private getPageTitle(url: string): string {
+    const routes: {[key: string]: string} = {
+      '/': 'Главная',
+      '/resume-generation': 'Генерация резюме',
+      '/cover-letter/generate': 'Сопроводительное письмо',
+      '/interview-prep': 'Подготовка к собеседованию',
+      '/vacancy-search': 'Поиск вакансий',
+      '/billing/pricing': 'Тарифы',
+      '/profile/view': 'Профиль'
+    };
+    return routes[url] || 'Rezulution';
+  }
+  
   getAIStatusTooltip(): string {
     if (this.currentAIProvider === 'Не настроен') {
       return this.translate.instant('AI_CONFIG.NOT_CONFIGURED_TOOLTIP');
@@ -215,6 +242,10 @@ export class App implements OnInit {
           { 
             label: this.translate.instant('MAIN_MENU.PROFILE.EDIT'), 
             routerLink: '/profile/edit'
+          },
+          {
+            label: this.translate.instant('BILLING.MANAGE_SUBSCRIPTION'),
+            routerLink: '/billing/subscription',
           }
         ]
       },
@@ -246,6 +277,10 @@ export class App implements OnInit {
       {
         label: this.translate.instant('MAIN_MENU.ABOUT.name'),
         routerLink: '/about'
+      },
+      {
+        label: this.translate.instant('BILLING.TARIFS'),
+        routerLink: '/billing/pricing',
       },
       // {
       //   label: 'Избранное',

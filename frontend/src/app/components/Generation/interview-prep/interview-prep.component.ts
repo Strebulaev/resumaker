@@ -24,6 +24,7 @@ import { AIGuardService } from '../../../shared/ai/ai-guard.service';
 import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 import { ResumeSelectorComponent, Resume } from '../../Helpers/resume-selector/resume-selector.component';
 import { VacancySelectorComponent } from "../../Helpers/vacancy-selector/vacancy-selector.component";
+import { UsageService } from '../../../shared/billing/usage.service';
 
 interface PromptConfig {
   system_prompt: string;
@@ -96,7 +97,8 @@ export class InterviewPrepComponent implements OnInit {
     private messageService: MessageService,
     private vacancyService: HHVacancyService,
     public aiGuard: AIGuardService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private usageService: UsageService
   ) {
     this.interviewForm = this.fb.group({
       customResume: [''],
@@ -168,6 +170,52 @@ export class InterviewPrepComponent implements OnInit {
     });
   }
   
+  async generateInterviewPlan(): Promise<void> {
+    const limitCheck = await this.usageService.checkLimit('interviewPlans');
+    if (!limitCheck.allowed) {
+      const errorMsg = `Достигнут дневной лимит генерации планов собеседований. Доступно: ${limitCheck.remaining} из ${limitCheck.limit}. Обновите тариф для увеличения лимитов.`;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Лимит исчерпан',
+        detail: errorMsg,
+        life: 5000
+      });
+      return;
+    }
+
+    const aiCheck = this.aiGuard.ensureAIConfigured();
+    if (!aiCheck.configured) {
+      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
+      this.showAIConfigModal = true;
+      return;
+    }
+
+    if (this.isLoading) return;
+
+    this.isLoading = true;
+    this.generatedPlan = '';
+
+    try {
+      const promptData = await this.preparePromptData();
+      const plan = await this.generateWithAI(promptData);
+      
+      await this.usageService.incrementUsage('interviewPlans');
+      
+      this.generatedPlan = plan;
+      this.showPlanDialog = true;
+      
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации плана собеседования', 'InterviewPrepComponent');
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка генерации плана',
+        detail: 'Попробуйте еще раз'
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   private async processStructuredResumeFile(content: string, fileType: string): Promise<any> {
     try {
       let parsedData: any;
@@ -243,38 +291,6 @@ export class InterviewPrepComponent implements OnInit {
         this.internalContextFile = null;
         this.internalContextContent = '';
         break;
-    }
-  }
-
-  async generateInterviewPlan(): Promise<void> {
-    const aiCheck = this.aiGuard.ensureAIConfigured();
-    if (!aiCheck.configured) {
-      this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
-      this.showAIConfigModal = true;
-      return;
-    }
-
-    if (this.isLoading) return;
-
-    this.isLoading = true;
-    this.generatedPlan = '';
-
-    try {
-      const promptData = await this.preparePromptData();
-      const plan = await this.generateWithAI(promptData);
-      
-      this.generatedPlan = plan;
-      this.showPlanDialog = true;
-      
-    } catch (error) {
-      this.errorHandler.showError('Ошибка генерации плана собеседования', 'InterviewPrepComponent');
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка генерации плана',
-        detail: 'Попробуйте еще раз'
-      });
-    } finally {
-      this.isLoading = false;
     }
   }
 
@@ -461,7 +477,7 @@ export class InterviewPrepComponent implements OnInit {
   clearSelectedResume(): void {
     this.selectedResumeForInterview = null;
   }
-  
+
   onVacancySelected(vacancy: any): void {
     this.selectedVacancyForInterview = vacancy;
     this.currentVacancy = vacancy;

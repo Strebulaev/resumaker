@@ -16,18 +16,40 @@ module.exports = function handler(req: VercelRequest, res: VercelResponse): void
   }
 
   try {
+    // Основные переменные
     const supabaseUrl = process.env['POSTGRES_SUPABASE_URL'];
     const supabaseKey = process.env['POSTGRES_SUPABASE_ANON_KEY'];
     const togetherApiKey = process.env['TOGETHER_API_KEY'];
     const hhClientId = process.env['HH_CLIENT_ID'];
     const hhClientSecret = process.env['HH_CLIENT_SECRET'];
+    const superJobClientId = process.env['SUPERJOB_CLIENT_ID'];
+    const superJobClientSecret = process.env['SUPERJOB_CLIENT_SECRET'];
+    const habrClientId = process.env['HABR_CLIENT_ID'];
+    const habrClientSecret = process.env['HABR_CLIENT_SECRET'];
+    const yookassaShopId = process.env['YOOKASSA_SHOP_ID'];
+    const yookassaSecretKey = process.env['YOOKASSA_SECRET_KEY'];
+
+    const googleAnalyticsId = process.env['GOOGLE_ANALYTICS_ID']; 
+    const yandexMetrikaId = process.env['YANDEX_METRIKA_ID'];
+    const microsoftClarityId = process.env['MICROSOFT_CLARITY_ID'];
+    const hotjarId = process.env['HOTJAR_ID'];
 
     console.log('Environment variables check:', {
       hasSupabaseUrl: !!supabaseUrl,
       hasSupabaseKey: !!supabaseKey,
       hasTogetherApiKey: !!togetherApiKey,
       hasHhClientId: !!hhClientId,
-      hasHhClientSecret: !!hhClientSecret
+      hasHhClientSecret: !!hhClientSecret,
+      hasSuperJobClientId: !!superJobClientId,
+      hasSuperJobClientSecret: !!superJobClientSecret,
+      hasHabrClientId: !!habrClientId,
+      hasHabrClientSecret: !!habrClientSecret,
+      hasYookassaShopId: !!yookassaShopId,
+      hasYookassaSecretKey: !!yookassaSecretKey,
+      hasGoogleAnalyticsId: !!googleAnalyticsId,
+      hasYandexMetrikaId: !!yandexMetrikaId,
+      hasMicrosoftClarityId: !!microsoftClarityId,
+      hasHotjarId: !!hotjarId,
     });
 
     if (!supabaseUrl || !supabaseKey) {
@@ -40,7 +62,13 @@ module.exports = function handler(req: VercelRequest, res: VercelResponse): void
           POSTGRES_SUPABASE_ANON_KEY: !!supabaseKey,
           TOGETHER_API_KEY: !!togetherApiKey,
           HH_CLIENT_ID: !!hhClientId,
-          HH_CLIENT_SECRET: !!hhClientSecret
+          HH_CLIENT_SECRET: !!hhClientSecret,
+          SUPERJOB_CLIENT_ID: !!superJobClientId,
+          SUPERJOB_CLIENT_SECRET: !!superJobClientSecret,
+          HABR_CLIENT_ID: !!habrClientId,
+          HABR_CLIENT_SECRET: !!habrClientSecret,
+          YOOKASSA_SHOP_ID: !!yookassaShopId,
+          YOOKASSA_SECRET_KEY: !!yookassaSecretKey
         }
       });
       return;
@@ -49,23 +77,31 @@ module.exports = function handler(req: VercelRequest, res: VercelResponse): void
     const config = {
       supabaseUrl,
       supabaseKey,
-      togetherApiKey: togetherApiKey,
-      hhClientId: hhClientId,
-      hhClientSecret: hhClientSecret,
-      superJobClientId: process.env['SUPERJOB_CLIENT_ID'] || '',
-      superJobClientSecret: process.env['SUPERJOB_CLIENT_SECRET'] || '',
-      habrClientId: process.env['HABR_CLIENT_ID'] || '',
-      habrClientSecret: process.env['HABR_CLIENT_SECRET'] || ''
+      togetherApiKey: togetherApiKey || '',
+      hhClientId: hhClientId || '',
+      hhClientSecret: hhClientSecret || '',
+      superJobClientId: superJobClientId || '',
+      superJobClientSecret: superJobClientSecret || '',
+      habrClientId: habrClientId || '',
+      habrClientSecret: habrClientSecret || '',
+      yookassaShopId: yookassaShopId || '',
+      yookassaSecretKey: yookassaSecretKey || '',
+      demoMode: !yookassaShopId || !yookassaSecretKey,
+      
+      // Аналитика
+      analytics: {
+        googleAnalyticsId: googleAnalyticsId || '',
+        yandexMetrikaId: yandexMetrikaId || '',
+        microsoftClarityId: microsoftClarityId || '',
+        hotjarId: hotjarId || '',
+      }
     };
 
-    console.log('Returning config:', {
-      supabaseUrl: supabaseUrl ? '***' + supabaseUrl.slice(-8) : 'MISSING',
-      supabaseKey: supabaseKey ? '***' + supabaseKey.slice(-8) : 'MISSING',
-      togetherApiKey: togetherApiKey ? '***' + togetherApiKey.slice(-8) : 'MISSING',
-      hhClientId: hhClientId ? '***' + hhClientId.slice(-8) : 'MISSING',
-      hhClientSecret: hhClientSecret ? '***' : 'MISSING',
-      hasSuperJobClientId: !!config.superJobClientId,
-      hasSuperJobClientSecret: !!config.superJobClientSecret
+    console.log('Returning config with analytics:', {
+      hasGoogleAnalytics: !!googleAnalyticsId,
+      hasYandexMetrika: !!yandexMetrikaId,
+      hasMicrosoftClarity: !!microsoftClarityId,
+      hasHotjar: !!hotjarId,
     });
 
     res.status(200).json(config);

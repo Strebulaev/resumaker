@@ -1,0 +1,120 @@
+<div class="pricing-container">
+    <div class="pricing-header">
+        <h2>{{ 'BILLING.CHOOSE_PLAN' | translate }}</h2>
+        <p>{{ 'BILLING.PLAN_DESCRIPTION' | translate }}</p>
+        
+        <div class="demo-badge">
+          <p-tag 
+            [value]="getDemoBadgeText()" 
+            [severity]="getDemoBadgeSeverity()"
+            class="demo-tag">
+          </p-tag>
+          <small class="payment-info">{{ getPaymentInfoText() }}</small>
+        </div>
+      </div>
+  
+    <div class="plans-grid">
+      <div *ngFor="let plan of plans" 
+           [class]="['plan-card', plan.popular ? 'popular' : '', plan.id === currentPlanId ? 'current' : '']">
+        
+        <div class="plan-badge" *ngIf="plan.popular">
+          <span class="popular-badge">{{ 'BILLING.POPULAR' | translate }}</span>
+        </div>
+  
+        <div class="plan-badge" *ngIf="plan.id === currentPlanId">
+          <span class="current-badge">{{ 'BILLING.CURRENT' | translate }}</span>
+        </div>
+  
+        <div class="plan-header">
+          <h3>{{ plan.name }}</h3>
+          <div class="price">
+            <span class="amount" *ngIf="plan.price > 0">{{ plan.price }} ₽</span>
+            <span class="amount" *ngIf="plan.price === 0">{{ 'BILLING.FREE' | translate }}</span>
+            <span class="period" *ngIf="plan.price > 0">{{ 'BILLING.PER_MONTH' | translate }}</span>
+          </div>
+          <p class="description">{{ plan.description }}</p>
+        </div>
+  
+        <div class="plan-limits">
+          <div class="limit-item">
+            <i class="pi pi-file"></i>
+            <span>{{ 'BILLING.RESUME_GENERATIONS' | translate }}: {{ plan.dailyLimits.resumeGenerations === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.resumeGenerations }}{{ 'BILLING.PER_DAY' | translate }}</span>
+          </div>
+          <div class="limit-item">
+            <i class="pi pi-envelope"></i>
+            <span>{{ 'BILLING.COVER_LETTERS' | translate }}: {{ plan.dailyLimits.coverLetters === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.coverLetters }}{{ 'BILLING.PER_DAY' | translate }}</span>
+          </div>
+          <div class="limit-item">
+            <i class="pi pi-chart-line"></i>
+            <span>{{ 'BILLING.INTERVIEW_PLANS' | translate }}: {{ plan.dailyLimits.interviewPlans === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.interviewPlans }}{{ 'BILLING.PER_DAY' | translate }}</span>
+          </div>
+        </div>
+  
+        <ul class="features-list">
+          <li *ngFor="let feature of plan.features" class="feature-item">
+            <i class="pi pi-check"></i>
+            <span>{{ feature }}</span>
+          </li>
+        </ul>
+  
+        <div class="plan-actions">
+          <button pButton 
+                  [label]="getButtonLabel(plan)"
+                  [class]="getButtonClass(plan)"
+                  (click)="selectPlan(plan)"
+                  [disabled]="isLoading || plan.id === currentPlanId"
+                  class="plan-button">
+            <p-progressSpinner *ngIf="isLoading" 
+                            [style]="{'width': '20px', 'height': '20px'}" 
+                            strokeWidth="4">
+            </p-progressSpinner>
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <p-dialog 
+      [header]="'BILLING.PAYMENT_DIALOG_TITLE' | translate" 
+      [(visible)]="showPaymentDialog" 
+      [modal]="true"
+      [style]="{ width: '500px' }"
+      (onHide)="closeDialog()">
+      
+      <div *ngIf="selectedPlan" class="payment-dialog">
+        <div class="payment-summary">
+          <h4>{{ 'BILLING.PAYMENT_SUMMARY' | translate: { planName: selectedPlan.name } }}</h4>
+          <p class="payment-description">{{ selectedPlan.description }}</p>
+          
+          <div class="payment-details">
+            <div class="detail-row">
+              <span>{{ 'BILLING.COST' | translate }}:</span>
+              <span class="price">{{ selectedPlan.price }} ₽{{ 'BILLING.PER_MONTH' | translate }}</span>
+            </div>
+            <div class="detail-row">
+              <span>{{ 'BILLING.PERIOD' | translate }}:</span>
+              <span>{{ 'BILLING.MONTH' | translate }}</span>
+            </div>
+          </div>
+        </div>
+  
+        <div class="payment-actions">
+          <button pButton 
+                  [label]="'BILLING.PROCEED_TO_PAYMENT' | translate"
+                  (click)="processPayment()"
+                  [disabled]="isLoading"
+                  class="p-button-primary payment-button">
+            <p-progressSpinner *ngIf="isLoading" 
+                            [style]="{'width': '20px', 'height': '20px'}" 
+                            strokeWidth="4">
+            </p-progressSpinner>
+          </button>
+          
+          <button pButton 
+                  [label]="'BUTTON.CANCEL' | translate"
+                  (click)="closeDialog()"
+                  class="p-button-text">
+          </button>
+        </div>
+      </div>
+    </p-dialog>
+  </div>

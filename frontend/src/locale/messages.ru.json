@@ -726,6 +726,102 @@
     "TEXT_PLACEHOLDER": "Вставьте текст описания вакансии",
     "TEXT_HINT": "Введите описание вакансии вручную"
   },
+  "BILLING": {
+    "TITLE": "Биллинг",
+    "SUBSCRIPTION": "Подписка", 
+    "TARIFS": "Тарифы",
+    "CURRENT_PLAN": "Текущий тариф",
+    "UPGRADE_PLAN": "Обновить тариф",
+    "MANAGE_SUBSCRIPTION": "Управление подпиской",
+    "PAYMENT": "Оплата",
+    "PAYMENT_SUCCESS": "Оплата успешна",
+    "PAYMENT_ERROR": "Ошибка оплаты",
+    "PROCESSING_PAYMENT": "Обработка платежа...",
+    "PAYMENT_SUCCESS_TITLE": "Оплата прошла успешно!",
+    "PAYMENT_SUCCESS_MESSAGE": "Тариф \"<strong>{{planName}}</strong>\" успешно активирован. Теперь у вас есть доступ ко всем функциям выбранного тарифа.",
+    "PAYMENT_ERROR_TITLE": "Ошибка обработки платежа",
+    "PAYMENT_ERROR_MESSAGE": "Произошла ошибка при обработке платежа. Пожалуйста, попробуйте еще раз или обратитесь в поддержку.",
+    "GO_TO_PROFILE": "Перейти в профиль",
+    "GO_TO_SUBSCRIPTION": "Управление подпиской",
+    "GO_TO_PLANS": "Вернуться к тарифам",
+    "CHOOSE_PLAN": "Выберите подходящий тариф",
+    "PLAN_DESCRIPTION": "Начните бесплатно и улучшайте свой опыт по мере роста потребностей",
+    "POPULAR": "Популярный",
+    "CURRENT": "Текущий",
+    "FREE": "Бесплатно",
+    "PER_MONTH": "/месяц",
+    "RESUME_GENERATIONS": "Резюме",
+    "COVER_LETTERS": "Сопроводительные письма", 
+    "INTERVIEW_PLANS": "Планы собеседований",
+    "PER_DAY": "/день",
+    "UNLIMITED": "∞",
+    "SELECT_PLAN": "Выбрать тариф",
+    "CURRENT_PLAN_BADGE": "Текущий",
+    "UPGRADE": "Обновить",
+    "PAYMENT_DIALOG_TITLE": "Оплата тарифа",
+    "PAYMENT_SUMMARY": "Выбранный тариф: {{planName}}",
+    "COST": "Стоимость:",
+    "PERIOD": "Период:",
+    "MONTH": "1 месяц",
+    "PROCEED_TO_PAYMENT": "Перейти к оплате",
+    "SUBSCRIPTION_MANAGEMENT": "Управление подпиской",
+    "SUBSCRIPTION_INFO": "Информация о вашем текущем тарифе и использовании",
+    "LOADING_SUBSCRIPTION": "Загрузка данных подписки...",
+    "PLAN_DETAILS": "Детали тарифа",
+    "VALID_UNTIL": "Действует до:",
+    "DAYS_REMAINING": "(осталось {{days}} дней)",
+    "TRIAL_INFO": "Обновите тариф для полного доступа",
+    "USAGE_TODAY": "Использование сегодня",
+    "FEATURE": "Функция",
+    "USED": "Использовано",
+    "LIMIT": "Лимит",
+    "REMAINING": "Осталось",
+    "UNLIMITED_ACCESS": "Безлимитно",
+    "PLAN_FEATURES": "Возможности вашего тарифа",
+    "DEMO_MODE": "Демо-режим",
+    "DEMO_BADGE": "Все платежи имитируются",
+    "PAYMENT_INFO": "В демо-режиме реальные платежи не обрабатываются",
+    "PLANS": {
+      "FREE": {
+        "NAME": "Бесплатный",
+        "DESCRIPTION": "Для начала карьерного пути",
+        "FEATURES": {
+          "BASIC_GENERATION": "Базовые функции генерации",
+          "RESUME_LIMIT": "1 резюме в день",
+          "COVER_LETTER_LIMIT": "1 сопроводительное письмо в день",
+          "INTERVIEW_PLAN_LIMIT": "1 план собеседования в день",
+          "EMAIL_SUPPORT": "Поддержка по email"
+        }
+      },
+      "BASIC": {
+        "NAME": "Базовый",
+        "DESCRIPTION": "Для активного поиска работы",
+        "FEATURES": {
+          "ALL_GENERATION": "Все функции генерации",
+          "RESUME_LIMIT": "5 резюме в день",
+          "COVER_LETTER_LIMIT": "5 сопроводительных писем в день",
+          "INTERVIEW_PLAN_LIMIT": "5 планов собеседования в день",
+          "PRIORITY_SUPPORT": "Приоритетная поддержка",
+          "EXTENDED_TEMPLATES": "Расширенные шаблоны"
+        }
+      },
+      "PRO": {
+        "NAME": "PRO",
+        "DESCRIPTION": "Для профессионалов и рекрутеров",
+        "FEATURES": {
+          "UNLIMITED_GENERATION": "Безлимитная генерация",
+          "ALL_FEATURES": "Все функции платформы",
+          "PREMIUM_TEMPLATES": "Премиум шаблоны",
+          "PERSONAL_SUPPORT": "Персональная поддержка",
+          "EARLY_ACCESS": "Ранний доступ к новым функциям",
+          "ANALYTICS": "Аналитика эффективности"
+        }
+      }
+    },
+    "ERRORS": {
+      "PLAN_NOT_FOUND": "Тариф {{planId}} не найден"
+    }
+  },
   "FILTER": "Фильтр",
   "ACTIONS": "Действия",
   "STATUS": "Статус",

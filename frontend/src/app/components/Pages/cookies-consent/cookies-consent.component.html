@@ -1,0 +1,65 @@
+<div class="cookies-banner" *ngIf="showCookiesBanner">
+    <div class="cookies-content">
+      <div class="cookies-text">
+        <h3>Мы используем cookies</h3>
+        <p>Этот сайт использует файлы cookie для улучшения работы сервиса. Продолжая использовать сайт, вы соглашаетесь с нашей <a routerLink="/privacy-policy" (click)="closeBanner()">Политикой конфиденциальности</a>.</p>
+      </div>
+      
+      <div class="cookies-actions">
+        <button class="btn-accept" (click)="acceptAll()">
+          Принять все
+        </button>
+        <button class="btn-settings" (click)="showSettings = !showSettings">
+          Настройки
+        </button>
+        <button class="btn-reject" (click)="rejectAll()">
+          Отклонить
+        </button>
+      </div>
+    </div>
+  
+    <div class="cookies-settings" *ngIf="showSettings">
+      <div class="settings-content">
+        <h4>Настройки cookies</h4>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <h5>Обязательные cookies</h5>
+            <p>Необходимы для работы сайта. Не могут быть отключены.</p>
+          </div>
+          <div class="setting-toggle">
+            <input type="checkbox" checked disabled>
+            <label>Всегда включены</label>
+          </div>
+        </div>
+  
+        <div class="setting-item">
+          <div class="setting-info">
+            <h5>Аналитические cookies</h5>
+            <p>Помогают нам улучшать сервис, собирая анонимную статистику.</p>
+          </div>
+          <div class="setting-toggle">
+            <input type="checkbox" id="analyticsCookies" [(ngModel)]="analyticsEnabled">
+            <label for="analyticsCookies">Разрешить</label>
+          </div>
+        </div>
+  
+        <div class="setting-item">
+          <div class="setting-info">
+            <h5>Функциональные cookies</h5>
+            <p>Запоминают ваши настройки и предпочтения.</p>
+          </div>
+          <div class="setting-toggle">
+            <input type="checkbox" id="functionalCookies" [(ngModel)]="functionalEnabled">
+            <label for="functionalCookies">Разрешить</label>
+          </div>
+        </div>
+  
+        <div class="settings-actions">
+          <button class="btn-save" (click)="saveSettings()">
+            Сохранить настройки
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

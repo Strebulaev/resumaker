@@ -18,6 +18,7 @@ import { TranslatedFileInputComponent } from '../../Helpers/translated-file-inpu
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { AIGuardService } from '../../../shared/ai/ai-guard.service';
 import { VacancySelectorComponent } from '../../Helpers/vacancy-selector/vacancy-selector.component';
+import { AnalyticsService } from '../../../shared/analytics.service';
 
 @Component({
   selector: 'app-resume-generation',
@@ -63,7 +64,8 @@ export class ResumeGenerationComponent {
     private hhAuthService: HHAuthService,
     private vacancyService: HHVacancyService,
     public aiGuard: AIGuardService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private analyticsService: AnalyticsService
   ) {
     this.generatedResume = this.resumeService.getResume();
     const savedCoverLetter = this.resumeService.getCoverLetter();
@@ -139,6 +141,7 @@ export class ResumeGenerationComponent {
   }
 
   generateResume() {
+    
     const aiCheck = this.aiGuard.ensureAIConfigured();
     if (!aiCheck.configured) {
       this.errorHandler.showAIError(aiCheck.message || 'AI не настроен', 'ResumeGenerationComponent');
@@ -148,7 +151,10 @@ export class ResumeGenerationComponent {
 
     this.isLoading = true;
     this.error = null;
-
+    this.analyticsService.trackEvent('generate_resume', {
+      has_vacancy: !!this.selectedVacancy,
+      vacancy_source: this.selectedVacancy?.platform
+    });
     this.generateResumeWithContext();
   }
 

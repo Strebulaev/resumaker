@@ -1,0 +1,318 @@
+// Общие стили для всех юридических страниц
+.legal-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #2c3e50;
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 50px 0;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      }
+      
+      h1 {
+        color: #2c3e50;
+        font-size: 2.8rem;
+        margin-bottom: 15px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .last-updated {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        font-style: italic;
+      }
+    }
+    
+    .content {
+      background: white;
+      border-radius: 15px;
+      padding: 50px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      margin-bottom: 40px;
+      
+      .section {
+        margin-bottom: 40px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid #ecf0f1;
+        
+        &:last-child {
+          margin-bottom: 0;
+          padding-bottom: 0;
+          border-bottom: none;
+        }
+        
+        h2 {
+          color: #2c3e50;
+          font-size: 1.8rem;
+          margin-bottom: 20px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #3498db;
+          font-weight: 600;
+        }
+        
+        h3 {
+          color: #34495e;
+          font-size: 1.4rem;
+          margin: 25px 0 15px 0;
+          font-weight: 600;
+        }
+        
+        h4 {
+          color: #34495e;
+          font-size: 1.2rem;
+          margin: 20px 0 10px 0;
+          font-weight: 600;
+        }
+        
+        h5 {
+          color: #34495e;
+          font-size: 1.1rem;
+          margin: 15px 0 8px 0;
+          font-weight: 600;
+        }
+        
+        p {
+          line-height: 1.8;
+          margin-bottom: 15px;
+          color: #34495e;
+          font-size: 1.05rem;
+        }
+        
+        ul, ol {
+          margin: 15px 0;
+          padding-left: 25px;
+          
+          li {
+            line-height: 1.8;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-size: 1.05rem;
+            
+            &::marker {
+              color: #667eea;
+            }
+          }
+        }
+        
+        ul {
+          li {
+            position: relative;
+            padding-left: 10px;
+            
+            &::before {
+              content: '•';
+              color: #667eea;
+              font-weight: bold;
+              position: absolute;
+              left: -15px;
+            }
+          }
+        }
+        
+        strong {
+          color: #2c3e50;
+          font-weight: 600;
+        }
+        
+        .requisites {
+          background: #f8f9fa;
+          padding: 20px;
+          border-radius: 8px;
+          border-left: 4px solid #667eea;
+          
+          p {
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+          }
+        }
+        
+        .highlight {
+          background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          margin: 20px 0;
+          
+          p {
+            margin: 0;
+            font-weight: 500;
+          }
+        }
+        
+        .note {
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          border-left: 4px solid #fdcb6e;
+          padding: 15px;
+          border-radius: 6px;
+          margin: 15px 0;
+          
+          p {
+            margin: 0;
+            color: #856404;
+          }
+        }
+      }
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding: 30px;
+      color: #7f8c8d;
+      font-size: 0.95rem;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+      
+      p {
+        margin: 0;
+      }
+    }
+    
+    // Навигация по странице
+    .page-navigation {
+      position: sticky;
+      top: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      
+      h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+      }
+      
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        
+        li {
+          margin-bottom: 8px;
+          
+          a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 5px 0;
+            display: block;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            padding-left: 10px;
+            
+            &:hover {
+              color: #5a67d8;
+              border-left-color: #667eea;
+              background: #f8f9fa;
+              padding-left: 15px;
+            }
+          }
+        }
+      }
+    }
+    
+    // Блок с контактами
+    .contact-block {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      margin: 30px 0;
+      
+      h3 {
+        color: white;
+        margin-bottom: 15px;
+        font-size: 1.4rem;
+      }
+      
+      p {
+        margin: 8px 0;
+        font-size: 1.1rem;
+        
+        strong {
+          color: white;
+        }
+      }
+    }
+  }
+  
+  // Адаптивность
+  @media (max-width: 768px) {
+    .legal-page {
+      .container {
+        padding: 10px;
+      }
+      
+      .header {
+        padding: 30px 0;
+        
+        h1 {
+          font-size: 2.2rem;
+        }
+      }
+      
+      .content {
+        padding: 30px 20px;
+      }
+      
+      .page-navigation {
+        position: static;
+        margin-bottom: 20px;
+      }
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .legal-page {
+      .header {
+        h1 {
+          font-size: 1.8rem;
+        }
+      }
+      
+      .content {
+        padding: 20px 15px;
+        
+        .section {
+          h2 {
+            font-size: 1.5rem;
+          }
+          
+          h3 {
+            font-size: 1.3rem;
+          }
+        }
+      }
+    }
+  }

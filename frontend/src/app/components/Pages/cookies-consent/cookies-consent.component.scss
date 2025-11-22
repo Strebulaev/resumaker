@@ -1,0 +1,212 @@
+.cookies-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #2c3e50;
+    color: white;
+    z-index: 9999;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+  
+    .cookies-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+  
+      .cookies-text {
+        flex: 1;
+        margin-right: 20px;
+  
+        h3 {
+          margin: 0 0 10px 0;
+          font-size: 1.2rem;
+        }
+  
+        p {
+          margin: 0;
+          line-height: 1.5;
+          font-size: 0.9rem;
+  
+          a {
+            color: #3498db;
+            text-decoration: underline;
+  
+            &:hover {
+              color: #2980b9;
+            }
+          }
+        }
+      }
+  
+      .cookies-actions {
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+  
+        button {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: all 0.3s ease;
+  
+          &.btn-accept {
+            background: #27ae60;
+            color: white;
+  
+            &:hover {
+              background: #219a52;
+            }
+          }
+  
+          &.btn-settings {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+  
+            &:hover {
+              background: rgba(255, 255, 255, 0.1);
+            }
+          }
+  
+          &.btn-reject {
+            background: #e74c3c;
+            color: white;
+  
+            &:hover {
+              background: #c0392b;
+            }
+          }
+        }
+      }
+    }
+  
+    .cookies-settings {
+      background: #34495e;
+      border-top: 1px solid #4a6278;
+  
+      .settings-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+  
+        h4 {
+          margin: 0 0 20px 0;
+          color: white;
+        }
+  
+        .setting-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 20px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #4a6278;
+  
+          &:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+          }
+  
+          .setting-info {
+            flex: 1;
+            margin-right: 20px;
+  
+            h5 {
+              margin: 0 0 5px 0;
+              color: white;
+              font-size: 1rem;
+            }
+  
+            p {
+              margin: 0;
+              color: #bdc3c7;
+              font-size: 0.85rem;
+              line-height: 1.4;
+            }
+          }
+  
+          .setting-toggle {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+  
+            input[type="checkbox"] {
+              margin-right: 8px;
+              transform: scale(1.2);
+            }
+  
+            label {
+              color: white;
+              font-size: 0.9rem;
+              cursor: pointer;
+            }
+          }
+        }
+  
+        .settings-actions {
+          text-align: right;
+          margin-top: 20px;
+  
+          .btn-save {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+  
+            &:hover {
+              background: #2980b9;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Адаптивность
+  @media (max-width: 768px) {
+    .cookies-banner {
+      .cookies-content {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+  
+        .cookies-text {
+          margin-right: 0;
+          margin-bottom: 15px;
+        }
+  
+        .cookies-actions {
+          width: 100%;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+      }
+  
+      .cookies-settings {
+        .settings-content {
+          .setting-item {
+            flex-direction: column;
+            align-items: flex-start;
+  
+            .setting-info {
+              margin-right: 0;
+              margin-bottom: 10px;
+            }
+  
+            .setting-toggle {
+              align-self: flex-end;
+            }
+          }
+        }
+      }
+    }
+  }

@@ -726,6 +726,102 @@
     "TEXT_PLACEHOLDER": "Paste vacancy description text",
     "TEXT_HINT": "Enter vacancy description manually"
   },
+  "BILLING": {
+    "TITLE": "Billing",
+    "SUBSCRIPTION": "Subscription",
+    "TARIFS": "Plans", 
+    "CURRENT_PLAN": "Current Plan",
+    "UPGRADE_PLAN": "Upgrade Plan",
+    "MANAGE_SUBSCRIPTION": "Manage Subscription",
+    "PAYMENT": "Payment",
+    "PAYMENT_SUCCESS": "Payment Successful",
+    "PAYMENT_ERROR": "Payment Error",
+    "PROCESSING_PAYMENT": "Processing payment...",
+    "PAYMENT_SUCCESS_TITLE": "Payment successful!",
+    "PAYMENT_SUCCESS_MESSAGE": "Plan \"<strong>{{planName}}</strong>\" successfully activated. Now you have access to all features of the selected plan.",
+    "PAYMENT_ERROR_TITLE": "Payment processing error",
+    "PAYMENT_ERROR_MESSAGE": "An error occurred while processing payment. Please try again or contact support.",
+    "GO_TO_PROFILE": "Go to Profile",
+    "GO_TO_SUBSCRIPTION": "Manage Subscription",
+    "GO_TO_PLANS": "Back to Plans",
+    "CHOOSE_PLAN": "Choose suitable plan",
+    "PLAN_DESCRIPTION": "Start for free and improve your experience as your needs grow",
+    "POPULAR": "Popular",
+    "CURRENT": "Current", 
+    "FREE": "Free",
+    "PER_MONTH": "/month",
+    "RESUME_GENERATIONS": "Resumes",
+    "COVER_LETTERS": "Cover letters",
+    "INTERVIEW_PLANS": "Interview plans",
+    "PER_DAY": "/day",
+    "UNLIMITED": "∞",
+    "SELECT_PLAN": "Select Plan",
+    "CURRENT_PLAN_BADGE": "Current",
+    "UPGRADE": "Upgrade",
+    "PAYMENT_DIALOG_TITLE": "Plan Payment",
+    "PAYMENT_SUMMARY": "Selected plan: {{planName}}",
+    "COST": "Cost:",
+    "PERIOD": "Period:",
+    "MONTH": "1 month",
+    "PROCEED_TO_PAYMENT": "Proceed to Payment",
+    "SUBSCRIPTION_MANAGEMENT": "Subscription Management",
+    "SUBSCRIPTION_INFO": "Information about your current plan and usage",
+    "LOADING_SUBSCRIPTION": "Loading subscription data...",
+    "PLAN_DETAILS": "Plan Details",
+    "VALID_UNTIL": "Valid until:",
+    "DAYS_REMAINING": "({{days}} days remaining)",
+    "TRIAL_INFO": "Upgrade plan for full access",
+    "USAGE_TODAY": "Usage Today",
+    "FEATURE": "Feature",
+    "USED": "Used",
+    "LIMIT": "Limit",
+    "REMAINING": "Remaining",
+    "UNLIMITED_ACCESS": "Unlimited",
+    "PLAN_FEATURES": "Your Plan Features",
+    "DEMO_MODE": "Demo Mode",
+    "DEMO_BADGE": "All payments are simulated",
+    "PAYMENT_INFO": "In demo mode, no real payments are processed",
+    "PLANS": {
+      "FREE": {
+        "NAME": "Free",
+        "DESCRIPTION": "For starting your career path",
+        "FEATURES": {
+          "BASIC_GENERATION": "Basic generation features",
+          "RESUME_LIMIT": "1 resume per day",
+          "COVER_LETTER_LIMIT": "1 cover letter per day",
+          "INTERVIEW_PLAN_LIMIT": "1 interview plan per day",
+          "EMAIL_SUPPORT": "Email support"
+        }
+      },
+      "BASIC": {
+        "NAME": "Basic",
+        "DESCRIPTION": "For active job search",
+        "FEATURES": {
+          "ALL_GENERATION": "All generation features",
+          "RESUME_LIMIT": "5 resumes per day",
+          "COVER_LETTER_LIMIT": "5 cover letters per day",
+          "INTERVIEW_PLAN_LIMIT": "5 interview plans per day",
+          "PRIORITY_SUPPORT": "Priority support",
+          "EXTENDED_TEMPLATES": "Extended templates"
+        }
+      },
+      "PRO": {
+        "NAME": "PRO",
+        "DESCRIPTION": "For professionals and recruiters",
+        "FEATURES": {
+          "UNLIMITED_GENERATION": "Unlimited generation",
+          "ALL_FEATURES": "All platform features",
+          "PREMIUM_TEMPLATES": "Premium templates",
+          "PERSONAL_SUPPORT": "Personal support",
+          "EARLY_ACCESS": "Early access to new features",
+          "ANALYTICS": "Effectiveness analytics"
+        }
+      }
+    },
+    "ERRORS": {
+      "PLAN_NOT_FOUND": "Plan {{planId}} not found"
+    }
+  },
   "FILTER": "Filter",
   "ACTIONS": "Actions",
   "STATUS": "Status",

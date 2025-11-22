@@ -9,6 +9,13 @@ import { LoginComponent } from './components/Pages/auth/login/login.component';
 import { HomeComponent } from './components/Pages/home/home.component';
 import { NotFoundComponent } from './components/Pages/not-found/not-found.component';
 import { JobPlatformsComponent } from './components/Platforms/job-platforms/job-platforms.component';
+import { PricingPlansComponent } from './components/Billing/pricing-plans/pricing-plans.component';
+import { SubscriptionManagementComponent } from './components/Billing/subscription-management/subscription-management.component';
+import { PaymentSuccessComponent } from './components/Billing/payment-success/payment-success.component';
+import { RequisitesPageComponent } from './components/Pages/requisites-page/requisites-page.component';
+import { TermsOfServiceComponent } from './components/Pages/terms-of-service/terms-of-service.component';
+import { PrivacyPolicyComponent } from './components/Pages/privacy-policy/privacy-policy.component';
+import { PublicOfferComponent } from './components/Pages/public-offer/public-offer.component';
 
 export const routes: Routes = [
   {
@@ -63,6 +70,38 @@ export const routes: Routes = [
     path: 'auth/habr-callback', 
     component: JobPlatformsComponent,
     canActivate: [AuthGuard]
+  },
+  // Билллинг маршруты
+  {
+    path: 'billing/pricing',
+    component: PricingPlansComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'billing/subscription',
+    component: SubscriptionManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'payment/success',
+    component: PaymentSuccessComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'requisites-page',
+    component: RequisitesPageComponent,
+  },
+  {
+    path: 'terms-of-service',
+    component: TermsOfServiceComponent
+  },
+  {
+    path: 'privacy-policy', 
+    component: PrivacyPolicyComponent
+  },
+  {
+    path: 'public-offer',
+    component: PublicOfferComponent
   },
   { 
     path: '**', 

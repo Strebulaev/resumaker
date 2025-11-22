@@ -1,0 +1,204 @@
+.subscription-management {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+  
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--text-color);
+    }
+  
+    p {
+      color: var(--text-color-secondary);
+      font-size: 1.1rem;
+    }
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 3rem;
+  
+    p {
+      margin-top: 1rem;
+      color: var(--text-color-secondary);
+    }
+  }
+  
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .plan-card {
+    .plan-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 2rem;
+  
+      .plan-details {
+        flex: 1;
+  
+        h3 {
+          font-size: 1.5rem;
+          margin-bottom: 0.5rem;
+          color: var(--text-color);
+        }
+  
+        .plan-description {
+          color: var(--text-color-secondary);
+          margin-bottom: 1rem;
+        }
+  
+        .plan-period {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+  
+          span {
+            color: var(--text-color);
+          }
+  
+          .days-remaining {
+            color: var(--green-500);
+            font-weight: 600;
+          }
+  
+          .trial-info {
+            color: var(--orange-500);
+            font-weight: 600;
+          }
+        }
+      }
+  
+      .plan-actions {
+        flex-shrink: 0;
+      }
+    }
+  }
+  
+  .usage-card {
+    .usage-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+  
+      .usage-item {
+        .usage-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+  
+          .usage-feature {
+            font-weight: 600;
+            color: var(--text-color);
+          }
+  
+          .usage-count {
+            color: var(--text-color-secondary);
+            font-size: 0.9rem;
+          }
+        }
+  
+        .usage-progress {
+          margin-bottom: 0.5rem;
+  
+          &.success {
+            ::ng-deep .p-progressbar-value {
+              background: var(--green-500);
+            }
+          }
+  
+          &.warn {
+            ::ng-deep .p-progressbar-value {
+              background: var(--orange-500);
+            }
+          }
+  
+          &.danger {
+            ::ng-deep .p-progressbar-value {
+              background: var(--red-500);
+            }
+          }
+        }
+  
+        .usage-limit {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--green-500);
+          font-weight: 600;
+  
+          i {
+            font-size: 1.2rem;
+          }
+        }
+  
+        .usage-remaining {
+          color: var(--text-color-secondary);
+          font-size: 0.9rem;
+          text-align: right;
+        }
+      }
+    }
+  }
+  
+  .features-card {
+    .features-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+  
+      .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+  
+        i {
+          color: var(--green-500);
+          margin-top: 0.2rem;
+          flex-shrink: 0;
+        }
+  
+        span {
+          color: var(--text-color);
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+  
+  // Адаптивность
+  @media (max-width: 768px) {
+    .subscription-management {
+      padding: 1rem;
+    }
+  
+    .plan-card .plan-info {
+      flex-direction: column;
+      gap: 1rem;
+  
+      .plan-actions {
+        width: 100%;
+        
+        button {
+          width: 100%;
+        }
+      }
+    }
+  
+    .features-card .features-list {
+      grid-template-columns: 1fr;
+    }
+  }

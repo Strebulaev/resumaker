@@ -4,6 +4,13 @@ import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ErrorHandlerService } from '../error-handler.service';
 
+export interface AnalyticsConfig {
+  googleAnalyticsId: string;
+  yandexMetrikaId: string;
+  microsoftClarityId: string;
+  hotjarId: string;
+}
+
 export interface AppConfig {
   supabaseUrl: string;
   supabaseKey: string;
@@ -14,6 +21,10 @@ export interface AppConfig {
   superJobClientSecret: string;
   habrClientId: string;
   habrClientSecret: string;
+  yookassaShopId: string;
+  yookassaSecretKey: string;
+  demoMode: boolean;
+  analytics: AnalyticsConfig;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -22,8 +33,10 @@ export class ConfigService {
   private config!: AppConfig;
   private configCache: AppConfig | null = null;
 
-  constructor(private http: HttpClient,
-      private errorHandler: ErrorHandlerService) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   async loadConfig(): Promise<AppConfig> {
     if (this.configCache) {
@@ -42,7 +55,16 @@ export class ConfigService {
         superJobClientId: environment.superJob?.superJobClientId || '',
         superJobClientSecret: environment.superJob?.superJobClientSecret || '',
         habrClientId: environment.habr?.habrClientId || '',
-        habrClientSecret: environment.habr?.habrClientSecret || ''
+        habrClientSecret: environment.habr?.habrClientSecret || '',
+        yookassaShopId: environment.yookassaShopId || '',
+        yookassaSecretKey: environment.yookassaSecretKey || '',
+        demoMode: environment.demoMode || true,
+        analytics: {
+          googleAnalyticsId: environment.analytics?.googleAnalyticsId || '',
+          yandexMetrikaId: environment.analytics?.yandexMetrikaId || '',
+          microsoftClarityId: environment.analytics?.microsoftClarityId || '',
+          hotjarId: environment.analytics?.hotjarId || '',
+        }
       };
       
       this.config = devConfig;
@@ -79,7 +101,16 @@ export class ConfigService {
         superJobClientId: '',
         superJobClientSecret: '',
         habrClientId: '',
-        habrClientSecret: ''
+        habrClientSecret: '',
+        yookassaShopId: '',
+        yookassaSecretKey: '',
+        demoMode: true,
+        analytics: {
+          googleAnalyticsId: '',
+          yandexMetrikaId: '',
+          microsoftClarityId: '',
+          hotjarId: '',
+        }
       };
       
       this.config = emptyConfig;
@@ -98,5 +129,11 @@ export class ConfigService {
 
   isConfigLoaded() {
     return this.configLoaded.asObservable();
+  }
+
+  hasAnalytics(): boolean {
+    const analytics = this.config?.analytics;
+    return !!(analytics?.googleAnalyticsId || analytics?.yandexMetrikaId || 
+              analytics?.microsoftClarityId || analytics?.hotjarId);
   }
 }

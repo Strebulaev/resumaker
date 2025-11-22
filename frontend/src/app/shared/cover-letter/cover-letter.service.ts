@@ -9,6 +9,8 @@ import { AIService } from '../ai/ai.service';
 import { VacancyService } from '../vacancy/vacancy.service';
 import { SuperJobAuthService } from '../job-platforms/super-job/superjob-auth.service';
 import { ErrorHandlerService } from '../error-handler.service';
+import { UsageService } from '../billing/usage.service';
+import { MessageService } from 'primeng/api';
 
 export interface CoverLetterRequest {
   resume_id: string;
@@ -40,7 +42,6 @@ export interface CoverLetterTemplate {
   providedIn: 'root'
 })
 export class CoverLetterService {
-  // private readonly API_URL = 'https://api.together.xyz/v1/completions';
   currentVacancy: any = null;
 
   constructor(
@@ -48,64 +49,88 @@ export class CoverLetterService {
     private profileService: ProfileService,
     private aiService: AIService,
     private vacancyService: VacancyService,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
+    private usageService: UsageService,
+    private messageService: MessageService
   ) {}
 
   generateCoverLetter(request: any): Observable<any> {
-    console.log('🚀 STARTING COVER LETTER GENERATION');
-    
-    return forkJoin({
-      vacancy: this.getVacancyDetails(request.vacancy_id).pipe(
-        catchError(error => {
-          this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
-          throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
-        })
-      ),
-      profile: this.profileService.loadProfile().pipe(
-        catchError(error => {
-          this.errorHandler.showError('Ошибка загрузки профиля', 'CoverLetterService');
-          throw new Error(`Не удалось загрузить профиль: ${error.message}`);
-        })
-      )
-    }).pipe(
-      switchMap(({ vacancy, profile }) => {
-        const promptText = this.buildPrompt(vacancy, profile, request.style || 'formal', request.tone || 'professional');
-        
-        const aiRequest = {
-          model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
-          prompt: promptText,
-          max_tokens: 1200,
-          temperature: 0.5,
-          top_p: 0.8,
-          top_k: 40,
-          repetition_penalty: 1.2,
-          stop: [],
-          stream: false
-        };
-  
-        return this.aiService.generateText(aiRequest).pipe(
-          map(content => {
-            const cleaned = this.cleanLetterContent(content);
-            
-            let finalContent = cleaned;
+    return from(this.usageService.checkLimit('coverLetters')).pipe(
+      switchMap(limitCheck => {
+        if (!limitCheck.allowed) {
+          const errorMsg = `Достигнут дневной лимит генерации сопроводительных писем. Доступно: ${limitCheck.remaining} из ${limitCheck.limit}. Обновите тариф для увеличения лимитов.`;
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Лимит исчерпан',
+            detail: errorMsg,
+            life: 5000
+          });
+          throw new Error(errorMsg);
+        }
 
-            return {
-              content: finalContent,
-              generated_at: new Date().toISOString(),
-              resume_id: request.resume_id || 'uploaded',
-              vacancy_id: request.vacancy_id,
-              style: request.style || 'formal',
-              tone: request.tone || 'professional'
+        return forkJoin({
+          vacancy: this.getVacancyDetails(request.vacancy_id).pipe(
+            catchError(error => {
+              this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
+              throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
+            })
+          ),
+          profile: this.profileService.loadProfile().pipe(
+            catchError(error => {
+              this.errorHandler.showError('Ошибка загрузки профиля', 'CoverLetterService');
+              throw new Error(`Не удалось загрузить профиль: ${error.message}`);
+            })
+          )
+        }).pipe(
+          switchMap(({ vacancy, profile }) => {
+            const promptText = this.buildPrompt(vacancy, profile, request.style || 'formal', request.tone || 'professional');
+            
+            const aiRequest = {
+              model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+              prompt: promptText,
+              max_tokens: 1200,
+              temperature: 0.5,
+              top_p: 0.8,
+              top_k: 40,
+              repetition_penalty: 1.2,
+              stop: [],
+              stream: false
             };
+      
+            return this.aiService.generateText(aiRequest).pipe(
+              map(content => {
+                const cleaned = this.cleanLetterContent(content);
+                
+                let finalContent = cleaned;
+      
+                return {
+                  content: finalContent,
+                  generated_at: new Date().toISOString(),
+                  resume_id: request.resume_id || 'uploaded',
+                  vacancy_id: request.vacancy_id,
+                  style: request.style || 'formal',
+                  tone: request.tone || 'professional'
+                };
+              }),
+              switchMap(response => {
+                return from(this.usageService.incrementUsage('coverLetters')).pipe(
+                  map(() => response)
+                );
+              })
+            );
+          }),
+          catchError(error => {
+            if (error.status === 429 || error.status === 400) {
+              this.errorHandler.showAIError('Ошибка генерации письма', 'CoverLetterService');
+            } else {
+              this.errorHandler.showError('Ошибка генерации письма', 'CoverLetterService');
+            }
+            return throwError(() => error);
           })
         );
       }),
       catchError(error => {
-        if (error.status === 429 || error.status === 400) {
-          this.errorHandler.showAIError('Ошибка генерации письма', 'CoverLetterService');
-        } else {
-          this.errorHandler.showError('Ошибка генерации письма', 'CoverLetterService');
-        }
+        // Ошибка проверки лимита
         return throwError(() => error);
       })
     );

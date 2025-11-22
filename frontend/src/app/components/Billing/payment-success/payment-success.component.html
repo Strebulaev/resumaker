@@ -1,0 +1,56 @@
+<div class="payment-success-container">
+    <div class="payment-content">
+      <div *ngIf="isLoading" class="loading">
+        <p-progressSpinner></p-progressSpinner>
+        <p>{{ 'BILLING.PROCESSING_PAYMENT' | translate }}</p>
+      </div>
+  
+      <div *ngIf="!isLoading && isSuccess" class="success-content">
+        <div class="success-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        
+        <h1>{{ 'BILLING.PAYMENT_SUCCESS_TITLE' | translate }}</h1>
+        
+        <p class="success-message" [innerHTML]="'BILLING.PAYMENT_SUCCESS_MESSAGE' | translate: { planName: planName }">
+        </p>
+  
+        <div class="success-actions">
+          <button pButton 
+                  [label]="'BILLING.GO_TO_PROFILE' | translate"
+                  icon="pi pi-user"
+                  (click)="goToDashboard()"
+                  class="p-button-primary">
+          </button>
+          
+          <button pButton 
+                  [label]="'BILLING.GO_TO_SUBSCRIPTION' | translate"
+                  icon="pi pi-cog"
+                  (click)="goToSubscription()"
+                  class="p-button-outlined">
+          </button>
+        </div>
+      </div>
+  
+      <div *ngIf="!isLoading && !isSuccess" class="error-content">
+        <div class="error-icon">
+          <i class="pi pi-times-circle"></i>
+        </div>
+        
+        <h1>{{ 'BILLING.PAYMENT_ERROR_TITLE' | translate }}</h1>
+        
+        <p class="error-message">
+          {{ 'BILLING.PAYMENT_ERROR_MESSAGE' | translate }}
+        </p>
+  
+        <div class="error-actions">
+          <button pButton 
+                  [label]="'BILLING.GO_TO_PLANS' | translate"
+                  icon="pi pi-arrow-left"
+                  (click)="goToSubscription()"
+                  class="p-button-primary">
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

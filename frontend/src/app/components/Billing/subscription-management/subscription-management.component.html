@@ -1,0 +1,81 @@
+<div class="subscription-management">
+    <div class="header">
+      <h2>{{ 'BILLING.SUBSCRIPTION_MANAGEMENT' | translate }}</h2>
+      <p>{{ 'BILLING.SUBSCRIPTION_INFO' | translate }}</p>
+    </div>
+  
+    <div *ngIf="isLoading" class="loading">
+      <p-progressSpinner></p-progressSpinner>
+      <p>{{ 'BILLING.LOADING_SUBSCRIPTION' | translate }}</p>
+    </div>
+  
+    <div *ngIf="!isLoading && currentSubscription && currentPlan" class="content">
+      <!-- Текущий план -->
+      <p-card [header]="'BILLING.CURRENT_PLAN' | translate" class="plan-card">
+        <div class="plan-info">
+          <div class="plan-details">
+            <h3>{{ currentPlan.name }}</h3>
+            <p class="plan-description">{{ currentPlan.description }}</p>
+            
+            <div class="plan-period" *ngIf="!isTrial()">
+              <span>{{ 'BILLING.VALID_UNTIL' | translate }} {{ currentSubscription.currentPeriodEnd | date:'dd.MM.yyyy' }}</span>
+              <span class="days-remaining">{{ 'BILLING.DAYS_REMAINING' | translate: { days: getDaysRemaining() } }}</span>
+            </div>
+  
+            <div class="plan-period" *ngIf="isTrial()">
+              <span>{{ 'BILLING.FREE' | translate }}</span>
+              <span class="trial-info">{{ 'BILLING.TRIAL_INFO' | translate }}</span>
+            </div>
+          </div>
+  
+          <div class="plan-actions">
+            <button pButton 
+                    [label]="'BILLING.UPGRADE_PLAN' | translate"
+                    icon="pi pi-arrow-right"
+                    (click)="upgradePlan()"
+                    class="p-button-outlined">
+            </button>
+          </div>
+        </div>
+      </p-card>
+  
+      <!-- Использование -->
+      <p-card [header]="'BILLING.USAGE_TODAY' | translate" class="usage-card">
+        <div class="usage-stats">
+          <div *ngFor="let stat of usageStats" class="usage-item">
+            <div class="usage-header">
+              <span class="usage-feature">{{ stat.feature }}</span>
+              <span class="usage-count">
+                {{ stat.used }}{{ stat.limit === -1 ? '' : '/' + stat.limit }}
+              </span>
+            </div>
+            
+            <p-progressBar 
+              *ngIf="stat.limit !== -1"
+              [value]="getProgressPercentage(stat.used, stat.limit)"
+              [showValue]="false"
+              [styleClass]="'usage-progress ' + getProgressSeverity(stat.used, stat.limit)">
+            </p-progressBar>
+  
+            <div class="usage-limit" *ngIf="stat.limit === -1">
+              <i class="pi pi-infinity"></i>
+              <span>{{ 'BILLING.UNLIMITED_ACCESS' | translate }}</span>
+            </div>
+  
+            <div class="usage-remaining" *ngIf="stat.limit !== -1">
+              {{ 'BILLING.REMAINING' | translate }}: {{ stat.remaining }} {{ 'OF' | translate }} {{ stat.limit }}
+            </div>
+          </div>
+        </div>
+      </p-card>
+  
+      <p-card [header]="'BILLING.PLAN_FEATURES' | translate" class="features-card">
+        <ul class="features-list">
+          <li *ngFor="let feature of currentPlan.features" class="feature-item">
+            <i class="pi pi-check"></i>
+            <span>{{ feature }}</span>
+          </li>
+        </ul>
+      </p-card>
+    </div>
+  </div>

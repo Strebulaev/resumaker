@@ -14,7 +14,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { Tooltip } from 'primeng/tooltip';
 import { CoverLetterService } from '../../../shared/cover-letter/cover-letter.service';
 import { HHAuthService } from '../../../shared/job-platforms/hh/hh-auth.service';
-// import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/superjob-auth.service';
 import { Vacancy } from '../../../vacancy-schema';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { VacancyService } from '../../../shared/vacancy/vacancy.service';

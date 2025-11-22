@@ -55,7 +55,7 @@ export class AIService {
           baseUrl: 'https://api.together.xyz/v1',
           apiKey: config.togetherApiKey || '',
           isConfigured: !!config.togetherApiKey,
-          models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', 'meta-llama/Llama-3.1-70B-Instruct-Turbo'],
+          models: ['meta-llama/Llama-3.3-70B-Instruct-Turbo-Free', 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'],
           isDefault: true
         },
         {
