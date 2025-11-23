@@ -151,6 +151,132 @@ export class SupabaseService {
     }
   }
 
+  async signUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
+    // Если Supabase недоступен, используем мок
+    if (!this.supabase) {
+      return this.mockSignUpWithPassword(email, password);
+    }
+  
+    try {
+      const { data, error } = await this.supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: this.getRedirectUri()
+        }
+      });
+  
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Password sign-up error, using mock:', error);
+      return this.mockSignUpWithPassword(email, password);
+    }
+  }
+  
+  async signInWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
+    // Если Supabase недоступен, используем мок
+    if (!this.supabase) {
+      return this.mockSignInWithPassword(email, password);
+    }
+  
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+  
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error) {
+      console.error('Password sign-in error, using mock:', error);
+      return this.mockSignInWithPassword(email, password);
+    }
+  }
+  
+  private async mockSignUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
+    console.log('Mock password sign-up triggered for:', email);
+    
+    // Проверяем, не существует ли уже пользователь
+    const existingUsers = JSON.parse(localStorage.getItem('sb-mock-users') || '{}');
+    if (existingUsers[email]) {
+      return { 
+        data: null, 
+        error: { message: 'User already exists' } 
+      };
+    }
+  
+    // Создаем нового пользователя
+    const mockUser = {
+      id: this.generateValidUUID(),
+      email: email,
+      user_metadata: { 
+        full_name: email.split('@')[0], 
+        avatar_url: 'default_avatar.jpg',
+        provider: 'email'
+      },
+      app_metadata: { provider: 'email' },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+      confirmed_at: new Date().toISOString(),
+      last_sign_in_at: new Date().toISOString(),
+      role: 'authenticated',
+      updated_at: new Date().toISOString()
+    };
+  
+    // Сохраняем пользователя
+    existingUsers[email] = {
+      user: mockUser,
+      password: password // В реальном приложении никогда не храните пароли в plain text!
+    };
+    
+    localStorage.setItem('sb-mock-users', JSON.stringify(existingUsers));
+    
+    return { 
+      data: { user: mockUser }, 
+      error: null 
+    };
+  }
+  
+  private async mockSignInWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
+    console.log('Mock password sign-in triggered for:', email);
+    
+    const existingUsers = JSON.parse(localStorage.getItem('sb-mock-users') || '{}');
+    const userData = existingUsers[email];
+    
+    if (!userData) {
+      return { 
+        data: null, 
+        error: { message: 'Invalid login credentials' } 
+      };
+    }
+  
+    if (userData.password !== password) {
+      return { 
+        data: null, 
+        error: { message: 'Invalid login credentials' } 
+      };
+    }
+  
+    // Создаем сессию
+    const mockSession: any = {
+      user: userData.user,
+      access_token: 'mock-access-token-' + Math.random().toString(36).substring(2),
+      refresh_token: 'mock-refresh-token-' + Math.random().toString(36).substring(2),
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer' as const
+    };
+  
+    localStorage.setItem('sb-mock-session', JSON.stringify(mockSession));
+    this.session = mockSession;
+    this.userSubject.next(userData.user);
+    
+    this.router.navigate(['/profile/view']);
+    
+    return { data: { user: userData.user, session: mockSession }, error: null };
+  }
+
   // Создаем безопасную реализацию storage для обхода проблем с LockManager
   private createSafeStorage() {
     return {

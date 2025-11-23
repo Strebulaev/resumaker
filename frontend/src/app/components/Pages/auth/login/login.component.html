@@ -1,9 +1,55 @@
 <div class="login-container">
   <div class="card">
     <h2>{{ 'AUTH.LOGIN.HEADER' | translate }}</h2>
+    
     @if (errorMessage) {
       <div class="error-message">{{ errorMessage }}</div>
     }
+
+    <!-- Форма простой регистрации/входа -->
+    <div class="simple-auth-section">
+      <h3>Быстрый вход / Регистрация</h3>
+      <form [formGroup]="simpleAuthForm" (ngSubmit)="signInWithPassword()" class="simple-auth-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            placeholder="your@email.com"
+            class="form-input"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="123"
+            class="form-input"
+          >
+          <small class="password-hint">Используйте простой пароль "123" для тестирования</small>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="loading || simpleAuthForm.invalid"
+          class="password-btn"
+        >
+          <i class="pi pi-user"></i>
+          Войти / Зарегистрироваться
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </form>
+    </div>
+
+    <div class="divider">
+      <span>или</span>
+    </div>
+
+    <!-- Google OAuth -->
     <button
       (click)="signInWithGoogle()"
       [disabled]="loading"

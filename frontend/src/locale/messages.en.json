@@ -24,12 +24,13 @@
       "name": "Vacancy Search"
     }
   },
-  "AUTH": {
-    "LOGIN": {
-      "HEADER": "Please log in",
-      "VIA_GOOGLE": "Sign in with Google"
-    },
-    "GO_TO_LOGIN": "Go to login page"
+  "LOGIN": {
+    "HEADER": "Вход в систему",
+    "VIA_GOOGLE": "Войти через Google",
+    "SIMPLE_AUTH": "Быстрый вход",
+    "EMAIL": "Email",
+    "PASSWORD": "Пароль",
+    "SIGN_IN": "Войти / Зарегистрироваться"
   },
   "ABOUT": {
     "TITLE": "About Rezulution Service",
