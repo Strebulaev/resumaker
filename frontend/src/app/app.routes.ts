@@ -26,12 +26,12 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-    canActivate: [LoggedInGuard]
+    // canActivate: [LoggedInGuard]
   },
   {
     path: 'profile',
     loadChildren: () => import('./components/Pages/profile/profile-module').then(m => m.ProfileModule),
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: '',
@@ -40,53 +40,53 @@ export const routes: Routes = [
   {
     path: 'interview-prep',
     component: InterviewPrepComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'vacancy-search',
     component: VacancySearchComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'resume-generation',
     component: ResumeGenerationComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'cover-letter/generate',
     component: CoverLetterGenerateComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   { 
     path: 'auth/callback', 
     component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   { 
     path: 'auth/superjob-callback', 
     component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   { 
     path: 'auth/habr-callback', 
     component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   // Билллинг маршруты
   {
     path: 'billing/pricing',
     component: PricingPlansComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'billing/subscription',
     component: SubscriptionManagementComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'payment/success',
     component: PaymentSuccessComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   {
     path: 'requisites-page',
@@ -107,7 +107,7 @@ export const routes: Routes = [
   {
     path: 'notifications/settings',
     component: NotificationSettingsComponent,
-    canActivate: [AuthGuard]
+    // canActivate: [AuthGuard]
   },
   { 
     path: '**', 
