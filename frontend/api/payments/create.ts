@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+// Уберите export default и используйте module.exports
+module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -24,7 +25,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const yookassaShopId = process.env['YOOKASSA_SHOP_ID'];
     const yookassaSecretKey = process.env['YOOKASSA_SECRET_KEY'];
 
-    // УДАЛИТЬ демо-режим - теперь только реальные платежи
     if (!yookassaShopId || !yookassaSecretKey) {
       console.error('YooKassa credentials not configured');
       return res.status(500).json({ 
@@ -107,4 +107,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: error.message 
     });
   }
-}
+};
