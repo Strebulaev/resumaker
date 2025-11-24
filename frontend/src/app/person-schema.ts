@@ -10,8 +10,10 @@ const contactSchema = z.object({
   phone: phoneSchema,
   email: emailSchema,
   linkedin: z.string().url().optional().or(z.literal('')),
-  github: z.string().url().optional().or(z.literal(''))
+  github: z.string().url().optional().or(z.literal('')),
+  telegram: z.string().optional().or(z.literal(''))
 });
+
 
 const locationSchema = z.object({
   country: z.string().optional().or(z.literal('')),
