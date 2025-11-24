@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -20,6 +20,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   errorMessage: string | null = null;
   isRegisterMode = false;
+  returnUrl: string = '/';
   
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -27,6 +28,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private supabase: SupabaseService,
     private router: Router,
+    private route: ActivatedRoute,
     private fb: FormBuilder
   ) {
     this.loginForm = this.fb.group({
@@ -42,8 +44,29 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Получаем returnUrl из query параметров
+    this.route.queryParams.subscribe(params => {
+      this.returnUrl = params['returnUrl'] || '/profile/view';
+    });
+
+    // Проверяем, не авторизован ли уже пользователь
     if (this.supabase.currentUser) {
-      this.router.navigate(['/']);
+      this.router.navigate([this.returnUrl]);
+      return;
+    }
+
+    // Проверяем, есть ли OAuth callback в URL
+    this.checkOAuthCallback();
+  }
+
+  private checkOAuthCallback() {
+    const hash = window.location.hash;
+    const search = window.location.search;
+    
+    // Если есть OAuth токены в URL, показываем загрузку
+    if (hash.includes('access_token') || search.includes('access_token')) {
+      this.loading = true;
+      this.errorMessage = 'Завершаем аутентификацию...';
     }
   }
 
@@ -88,12 +111,13 @@ export class LoginComponent implements OnInit {
       if (error) {
         console.error(`${provider} sign-in error:`, error);
         this.errorMessage = this.getErrorMessage(error);
+        this.loading = false;
         return;
       }
+      // OAuth редирект произойдет автоматически
     } catch (error: unknown) {
       console.error('Unexpected error:', error);
       this.errorMessage = this.getErrorMessage(error);
-    } finally {
       this.loading = false;
     }
   }
@@ -114,6 +138,7 @@ export class LoginComponent implements OnInit {
       }
       
       // Успешный вход - редирект выполнится через auth state change
+      console.log('Password sign-in successful');
     } catch (error: unknown) {
       console.error('Password sign-in error:', error);
       this.errorMessage = this.getErrorMessage(error);
@@ -168,6 +193,9 @@ export class LoginComponent implements OnInit {
       }
       if (errorMessage.includes('invalid email')) {
         return 'Неверный формат email';
+      }
+      if (errorMessage.includes('email link is invalid or has expired')) {
+        return 'Ссылка для подтверждения устарела или недействительна';
       }
       
       return error.message;

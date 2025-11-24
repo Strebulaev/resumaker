@@ -62,11 +62,14 @@ export class SupabaseService {
   }
 
   private setupAuthStateHandling(): void {
-    this.supabase?.auth.onAuthStateChange((event, session) => {
+    if (!this.supabase) return;
+    
+    this.supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
       this.session = session;
       this.userSubject.next(session?.user || null);
       
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         this.appStateService.saveState({
           ...this.appStateService.getState(),
           user: {
@@ -74,12 +77,18 @@ export class SupabaseService {
             email: session?.user?.email
           }
         });
-        this.router.navigate(['/profile/view']);
+        
+        // После OAuth входа мы попадаем на /login?returnUrl=...
+        // Нужно перенаправить на главную или профиль
+        const currentUrl = this.router.url;
+        if (currentUrl.includes('/login') || currentUrl.includes('/auth/callback')) {
+          console.log('Redirecting after sign in to /profile/view');
+          this.router.navigate(['/profile/view']);
+        }
       } else if (event === 'SIGNED_OUT') {
         this.appStateService.clearState();
         this.router.navigate(['/login']);
       } else if (event === 'USER_UPDATED') {
-        // Обновляем данные пользователя
         this.userSubject.next(session?.user || null);
       }
     });
@@ -134,7 +143,7 @@ export class SupabaseService {
         return;
       }
 
-      // Инициализируем реальный клиент с исправленными настройками auth
+      // Инициализируем реальный клиент
       this.supabase = createClient(config.supabaseUrl, config.supabaseKey, {
         auth: {
           persistSession: true,
@@ -154,7 +163,6 @@ export class SupabaseService {
   }
 
   async signUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
-    // Если Supabase недоступен, используем мок
     if (!this.supabase) {
       return this.mockSignUpWithPassword(email, password);
     }
@@ -167,7 +175,7 @@ export class SupabaseService {
           emailRedirectTo: this.getRedirectUri(),
           data: {
             email: email,
-            full_name: email.split('@')[0] // Используем часть email как имя по умолчанию
+            full_name: email.split('@')[0]
           }
         }
       });
@@ -187,7 +195,6 @@ export class SupabaseService {
   }
   
   async signInWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
-    // Если Supabase недоступен, используем мок
     if (!this.supabase) {
       return this.mockSignInWithPassword(email, password);
     }
@@ -207,13 +214,12 @@ export class SupabaseService {
   }
   
   async signInWithOAuth(provider: 'google' | 'github'): Promise<{ data: any; error: any }> {
-    // Если Supabase недоступен, используем мок
     if (!this.supabase) {
       return this.mockOAuthSignIn(provider);
     }
   
     try {
-      const { error } = await this.supabase.auth.signInWithOAuth({
+      const { data, error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
           redirectTo: this.getRedirectUri(),
@@ -225,7 +231,7 @@ export class SupabaseService {
       });
   
       if (error) throw error;
-      return { data: { user: null }, error: null };
+      return { data, error: null };
     } catch (error) {
       console.error(`${provider} OAuth error, using mock:`, error);
       return this.mockOAuthSignIn(provider);
@@ -235,7 +241,6 @@ export class SupabaseService {
   private async mockSignUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
     console.log('Mock password sign-up triggered for:', email);
     
-    // Проверяем, не существует ли уже пользователь
     const existingUsers = JSON.parse(localStorage.getItem('sb-mock-users') || '{}');
     if (existingUsers[email]) {
       return { 
@@ -244,7 +249,6 @@ export class SupabaseService {
       };
     }
   
-    // Создаем нового пользователя
     const mockUser = {
       id: this.generateValidUUID(),
       email: email,
@@ -262,15 +266,13 @@ export class SupabaseService {
       updated_at: new Date().toISOString()
     };
   
-    // Сохраняем пользователя
     existingUsers[email] = {
       user: mockUser,
-      password: password // В реальном приложении никогда не храните пароли в plain text!
+      password: password
     };
     
     localStorage.setItem('sb-mock-users', JSON.stringify(existingUsers));
     
-    // Создаем профиль
     await this.createUserProfile(mockUser);
     
     return { 
@@ -299,7 +301,6 @@ export class SupabaseService {
       };
     }
   
-    // Создаем сессию
     const mockSession: any = {
       user: userData.user,
       access_token: 'mock-access-token-' + Math.random().toString(36).substring(2),
@@ -351,7 +352,6 @@ export class SupabaseService {
     this.session = mockSession;
     this.userSubject.next(mockUser);
     
-    // Создаем профиль для OAuth пользователя
     await this.createUserProfile(mockUser);
     
     this.router.navigate(['/profile/view']);
@@ -360,54 +360,26 @@ export class SupabaseService {
   }
 
   private createSafeStorage() {
-    const isLockManagerError = (error: any): boolean => {
-      return error && error.message && 
-             error.message.includes('Navigator LockManager') ||
-             error.message.includes('lock:sb-');
-    };
-  
     return {
       getItem: (key: string): Promise<string | null> => {
         return new Promise((resolve) => {
           try {
-            // Пропускаем проблемные ключи
-            if (key.includes('auth-token') && key.includes('sb-')) {
-              console.log('Skipping potentially problematic auth token access');
-              resolve(null);
-            } else {
-              const value = localStorage.getItem(key);
-              resolve(value);
-            }
+            const value = localStorage.getItem(key);
+            resolve(value);
           } catch (error) {
-            if (isLockManagerError(error)) {
-              console.warn('LockManager error in getItem, skipping:', key);
-              resolve(null);
-            } else {
-              console.warn('Storage getItem failed:', error);
-              resolve(null);
-            }
+            console.warn('Storage getItem failed:', error);
+            resolve(null);
           }
         });
       },
       setItem: (key: string, value: string): Promise<void> => {
         return new Promise((resolve) => {
           try {
-            // Пропускаем запись проблемных ключей
-            if (key.includes('auth-token') && key.includes('sb-')) {
-              console.log('Skipping potentially problematic auth token storage');
-              resolve();
-            } else {
-              localStorage.setItem(key, value);
-              resolve();
-            }
+            localStorage.setItem(key, value);
+            resolve();
           } catch (error) {
-            if (isLockManagerError(error)) {
-              console.warn('LockManager error in setItem, skipping:', key);
-              resolve();
-            } else {
-              console.warn('Storage setItem failed:', error);
-              resolve();
-            }
+            console.warn('Storage setItem failed:', error);
+            resolve();
           }
         });
       },
@@ -417,13 +389,8 @@ export class SupabaseService {
             localStorage.removeItem(key);
             resolve();
           } catch (error) {
-            if (isLockManagerError(error)) {
-              console.warn('LockManager error in removeItem, skipping:', key);
-              resolve();
-            } else {
-              console.warn('Storage removeItem failed:', error);
-              resolve();
-            }
+            console.warn('Storage removeItem failed:', error);
+            resolve();
           }
         });
       }
@@ -434,44 +401,23 @@ export class SupabaseService {
     if (!this.supabase) return;
   
     try {
-      // Используем безопасный метод получения сессии
+      // Получаем текущую сессию
       const { data: { session }, error } = await this.supabase.auth.getSession();
       
       if (error) {
         console.warn('Session error:', error);
-        // Пробуем восстановить сессию из localStorage
         await this.tryRecoverSession();
       } else if (session) {
         this.session = session;
         this.userSubject.next(session.user);
+        console.log('Session found for user:', session.user.email);
       }
+
+      // Обрабатываем OAuth callback если мы на странице логина с токенами
+      await this.handleOAuthCallback();
   
       // Настраиваем обработчик изменений состояния аутентификации
-      this.supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth state changed:', event);
-        this.session = session;
-        this.userSubject.next(session?.user || null);
-  
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          this.appStateService.saveState({
-            ...this.appStateService.getState(),
-            user: {
-              id: session?.user?.id,
-              email: session?.user?.email
-            }
-          });
-          
-          if (this.router.url.includes('/login') || this.router.url.includes('/auth/callback')) {
-            this.router.navigate(['/profile/view']);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          this.appStateService.clearState();
-          this.router.navigate(['/login']);
-        } else if (event === 'USER_UPDATED') {
-          // Обновляем данные пользователя
-          this.userSubject.next(session?.user || null);
-        }
-      });
+      this.setupAuthStateHandling();
   
       this.initializedSubject.next(true);
   
@@ -481,17 +427,43 @@ export class SupabaseService {
     }
   }
 
+  private async handleOAuthCallback(): Promise<void> {
+    // Проверяем, есть ли OAuth токены в URL
+    const hash = window.location.hash;
+    const search = window.location.search;
+    
+    if (hash.includes('access_token') || search.includes('access_token')) {
+      console.log('OAuth callback detected, processing...');
+      
+      try {
+        const { data, error } = await this.supabase!.auth.getSession();
+        if (error) {
+          console.error('OAuth callback error:', error);
+        } else if (data.session) {
+          console.log('OAuth callback successful for user:', data.session.user.email);
+          // Сессия автоматически установится через auth state change
+        }
+      } catch (error) {
+        console.error('Error processing OAuth callback:', error);
+      }
+    }
+  }
+
   private async tryRecoverSession(): Promise<void> {
     try {
-      const storageKey = `sb-${environment.supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
-      const storedSession = localStorage.getItem(storageKey);
+      // Пробуем найти сессию в localStorage
+      const allKeys = Object.keys(localStorage);
+      const sessionKey = allKeys.find(key => key.includes('supabase.auth.token'));
       
-      if (storedSession) {
-        const session = JSON.parse(storedSession);
-        if (session?.access_token && session?.expires_at > Date.now() / 1000) {
-          this.session = session;
-          this.userSubject.next(session.user);
-          console.log('Session recovered from localStorage');
+      if (sessionKey) {
+        const storedSession = localStorage.getItem(sessionKey);
+        if (storedSession) {
+          const session = JSON.parse(storedSession);
+          if (session?.access_token && session?.expires_at > Date.now() / 1000) {
+            this.session = session;
+            this.userSubject.next(session.user);
+            console.log('Session recovered from localStorage');
+          }
         }
       }
     } catch (error) {
@@ -578,20 +550,21 @@ export class SupabaseService {
         return { data: profile, error: null };
       }
   
-      const { data, error } = await this.supabase!
+      // Используем upsert без .select() чтобы избежать ошибок
+      const { error } = await this.supabase!
         .from('user_profiles')
         .upsert(profile, { 
           onConflict: 'id'
-        })
-        .select();
+        });
 
       if (error) {
-        this.errorHandler.showError('Ошибка Supabase', 'SupabaseService');
+        console.error('Supabase error saving profile:', error);
+        // Сохраняем локально как fallback
         localStorage.setItem('sb-local-profile', JSON.stringify(profile));
         return { data: profile, error: null };
       }
   
-      return { data: data ? data[0] : profile, error: null };
+      return { data: profile, error: null };
     } catch (error) {
       console.error('Error saving profile:', error);
       return { data: null, error: error as Error };
@@ -679,11 +652,8 @@ export class SupabaseService {
     }
 
     try {
-      // Очищаем localStorage перед выходом
       this.clearProblematicStorage();
-      
       await this.supabase.auth.signOut();
-      window.location.href = '/';
     } catch (error) {
       this.errorHandler.showError('Ошибка выхода из системы', 'SupabaseService');
       this.mockSignOut();
@@ -705,19 +675,19 @@ export class SupabaseService {
         return { data: [profile], error: null };
       }
   
-      const { data, error } = await this.supabase!
+      const { error } = await this.supabase!
         .from('user_profiles')
         .upsert(profile, { onConflict: 'id' });
   
       if (error) {
-        this.errorHandler.showError('Ошибка Supabase', 'SupabaseService');
+        console.error('Supabase error creating profile:', error);
         localStorage.setItem('sb-local-profile', JSON.stringify(profile));
         return { data: [profile], error: null };
       }
   
-      return { data, error: null };
+      return { data: [profile], error: null };
     } catch (error) {
-      this.errorHandler.showError('Ошибка создания профиля', 'SupabaseService'); 
+      console.error('Error creating profile:', error);
       return { data: null, error: error as Error };
     }
   }
@@ -759,25 +729,18 @@ export class SupabaseService {
 
   clearProblematicStorage(): void {
     const keysToRemove = [
-      'sb-lxlzpilbbnzriywuvcnf-auth-token',
       'sb-mock-session', 
       'sb-local-profile'
     ];
     
-    // Добавляем поиск всех ключей, связанных с auth
+    // Добавляем поиск всех ключей Supabase
     const allKeys = Object.keys(localStorage);
-    const authKeys = allKeys.filter(key => 
-      key.includes('auth') || 
-      key.includes('token') || 
-      key.startsWith('sb-')
-    );
-    
-    keysToRemove.push(...authKeys);
+    const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
+    keysToRemove.push(...supabaseKeys);
     
     keysToRemove.forEach(key => {
       try {
         localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
         console.log('Removed storage key:', key);
       } catch (e) {
         console.warn(`Failed to remove ${key}:`, e);
