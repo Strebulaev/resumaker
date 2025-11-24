@@ -18,13 +18,13 @@ export class PaymentService {
     private injector: Injector
   ) {}
 
-  async createPayment(planId: string): Promise<PaymentResult> {
+  async createPayment(planId: string, userEmail?: string): Promise<PaymentResult> {
     try {
       const userId = this.supabase.currentUser?.id;
       if (!userId) {
         throw new Error('User not authenticated');
       }
-
+  
       // Для бесплатного тарифа сразу активируем
       if (planId === 'free') {
         await this.activateFreePlan(userId);
@@ -34,16 +34,20 @@ export class PaymentService {
           paymentId: `free_activation_${Date.now()}`
         };
       }
-
+  
       const response = await this.http.post<{paymentUrl: string; paymentId: string}>(
         `${this.API_BASE}/create`,
-        { planId, userId }
+        { 
+          planId, 
+          userId,
+          userEmail // Передаем email для чека
+        }
       ).toPromise();
-
+  
       if (!response) {
         throw new Error('No response from payment API');
       }
-
+  
       return {
         success: true,
         paymentUrl: response.paymentUrl,
@@ -57,7 +61,7 @@ export class PaymentService {
       };
     }
   }
-
+  
   private async activateFreePlan(userId: string): Promise<void> {
     // Ленивая загрузка BillingService чтобы избежать циклической зависимости
     const billingService = this.injector.get(BillingService);

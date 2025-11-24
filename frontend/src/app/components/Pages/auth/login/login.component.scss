@@ -9,33 +9,44 @@
 
 .card {
   background: white;
-  padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333;
-}
-
-.simple-auth-section {
-  margin-bottom: 1.5rem;
+  max-width: 450px;
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-weight: 600;
+  }
   
   h3 {
+    margin-bottom: 1.5rem;
+    color: #444;
+    font-weight: 500;
     text-align: center;
-    margin-bottom: 1rem;
-    color: #555;
-    font-size: 1.1rem;
   }
 }
 
-.simple-auth-form {
+.error-message {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.auth-section {
+  margin-bottom: 1.5rem;
+}
+
+.auth-form {
   .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
     
     label {
       display: block;
@@ -46,111 +57,151 @@ h2 {
     
     .form-input {
       width: 100%;
-      padding: 0.75rem;
+      padding: 12px;
       border: 2px solid #e1e5e9;
       border-radius: 6px;
-      font-size: 1rem;
+      font-size: 14px;
       transition: border-color 0.3s;
       
       &:focus {
         outline: none;
         border-color: #667eea;
       }
+      
+      &.invalid {
+        border-color: #e74c3c;
+      }
     }
     
-    .password-hint {
-      color: #888;
-      font-size: 0.8rem;
-      margin-top: 0.25rem;
-      display: block;
+    .error {
+      color: #e74c3c;
+      font-size: 12px;
+      margin-top: 4px;
     }
   }
 }
 
 .password-btn {
   width: 100%;
-  padding: 0.75rem;
+  padding: 12px;
   background: #667eea;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 8px;
   
   &:hover:not(:disabled) {
     background: #5a6fd8;
   }
   
   &:disabled {
-    background: #ccc;
+    background: #bdc3c7;
     cursor: not-allowed;
+  }
+  
+  &.register-btn {
+    background: #27ae60;
+    
+    &:hover:not(:disabled) {
+      background: #219a52;
+    }
+  }
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 1rem;
+  color: #666;
+  
+  .link-btn {
+    background: none;
+    border: none;
+    color: #667eea;
+    cursor: pointer;
+    text-decoration: underline;
+    
+    &:hover {
+      color: #5a6fd8;
+    }
   }
 }
 
 .divider {
-  text-align: center;
+  display: flex;
+  align-items: center;
   margin: 1.5rem 0;
-  position: relative;
+  color: #999;
   
-  &::before {
+  &::before,
+  &::after {
     content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: #e1e5e9;
+    flex: 1;
+    border-bottom: 1px solid #e1e5e9;
   }
   
   span {
-    background: white;
     padding: 0 1rem;
-    color: #888;
+    font-size: 14px;
   }
 }
 
-.google-btn {
+.oauth-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.oauth-btn {
   width: 100%;
-  padding: 0.75rem;
-  background: white;
-  color: #333;
+  padding: 12px;
   border: 2px solid #e1e5e9;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 8px;
+  background: white;
   
   &:hover:not(:disabled) {
-    background: #f8f9fa;
     border-color: #667eea;
+    background: #f8f9fa;
   }
   
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-}
-
-.error-message {
-  background: #fee;
-  color: #c33;
-  padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  border: 1px solid #fcc;
-  text-align: center;
+  
+  &.google-btn {
+    color: #333;
+    
+    &:hover:not(:disabled) {
+      border-color: #db4437;
+    }
+  }
+  
+  &.github-btn {
+    color: #333;
+    
+    &:hover:not(:disabled) {
+      border-color: #333;
+    }
+  }
 }
 
 .spinner {
+  display: inline-block;
   width: 16px;
   height: 16px;
   border: 2px solid transparent;
@@ -162,4 +213,16 @@ h2 {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+// Адаптивность
+@media (max-width: 480px) {
+  .card {
+    padding: 1.5rem;
+    margin: 10px;
+  }
+  
+  .oauth-section {
+    gap: 10px;
+  }
 }

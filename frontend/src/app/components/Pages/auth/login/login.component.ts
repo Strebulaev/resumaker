@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SupabaseService } from '../../../../shared/db/supabase.service';
 
@@ -19,17 +19,26 @@ import { SupabaseService } from '../../../../shared/db/supabase.service';
 export class LoginComponent implements OnInit {
   loading = false;
   errorMessage: string | null = null;
-  simpleAuthForm: FormGroup;
+  isRegisterMode = false;
+  
+  loginForm: FormGroup;
+  registerForm: FormGroup;
 
   constructor(
     private supabase: SupabaseService,
     private router: Router,
     private fb: FormBuilder
   ) {
-    this.simpleAuthForm = this.fb.group({
+    this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(1)]]
     });
+
+    this.registerForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
   }
 
   ngOnInit() {
@@ -38,15 +47,46 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  private passwordMatchValidator(control: AbstractControl) {
+    const password = control.get('password');
+    const confirmPassword = control.get('confirmPassword');
+    
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      confirmPassword.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+    return null;
+  }
+
+  switchToRegister() {
+    this.isRegisterMode = true;
+    this.errorMessage = null;
+    this.loginForm.reset();
+  }
+
+  switchToLogin() {
+    this.isRegisterMode = false;
+    this.errorMessage = null;
+    this.registerForm.reset();
+  }
+
   async signInWithGoogle() {
+    await this.signInWithOAuth('google');
+  }
+
+  async signInWithGitHub() {
+    await this.signInWithOAuth('github');
+  }
+
+  private async signInWithOAuth(provider: 'google' | 'github') {
     this.loading = true;
     this.errorMessage = null;
     
     try {
-      const { error } = await this.supabase.signInWithGoogle();
+      const { error } = await this.supabase.signInWithOAuth(provider);
       
       if (error) {
-        console.error('Google sign-in error:', error);
+        console.error(`${provider} sign-in error:`, error);
         this.errorMessage = this.getErrorMessage(error);
         return;
       }
@@ -59,34 +99,37 @@ export class LoginComponent implements OnInit {
   }
 
   async signInWithPassword() {
-    if (this.simpleAuthForm.invalid) return;
+    if (this.loginForm.invalid) return;
 
     this.loading = true;
     this.errorMessage = null;
     
-    const { email, password } = this.simpleAuthForm.value;
+    const { email, password } = this.loginForm.value;
 
     try {
-      // Пытаемся войти
       const { error } = await this.supabase.signInWithPassword(email, password);
       
       if (error) {
-        // Если пользователь не найден, регистрируем
-        if (error.message?.includes('Invalid login credentials')) {
-          await this.signUpWithPassword(email, password);
-        } else {
-          throw error;
-        }
+        throw error;
       }
+      
+      // Успешный вход - редирект выполнится через auth state change
     } catch (error: unknown) {
-      console.error('Password auth error:', error);
+      console.error('Password sign-in error:', error);
       this.errorMessage = this.getErrorMessage(error);
     } finally {
       this.loading = false;
     }
   }
 
-  private async signUpWithPassword(email: string, password: string) {
+  async signUpWithPassword() {
+    if (this.registerForm.invalid) return;
+
+    this.loading = true;
+    this.errorMessage = null;
+    
+    const { email, password } = this.registerForm.value;
+
     try {
       const { error } = await this.supabase.signUpWithPassword(email, password);
       
@@ -94,19 +137,39 @@ export class LoginComponent implements OnInit {
         throw error;
       }
       
-      // После успешной регистрации автоматически входим
-      const { error: signInError } = await this.supabase.signInWithPassword(email, password);
+      // После успешной регистрации показываем сообщение
+      this.errorMessage = 'Регистрация успешна! Проверьте вашу почту для подтверждения аккаунта.';
+      this.isRegisterMode = false;
+      this.registerForm.reset();
       
-      if (signInError) {
-        throw signInError;
-      }
     } catch (error: unknown) {
-      throw error;
+      console.error('Password sign-up error:', error);
+      this.errorMessage = this.getErrorMessage(error);
+    } finally {
+      this.loading = false;
     }
   }
 
   private getErrorMessage(error: unknown): string {
     if (error instanceof Error) {
+      const errorMessage = error.message.toLowerCase();
+      
+      if (errorMessage.includes('invalid login credentials')) {
+        return 'Неверный email или пароль';
+      }
+      if (errorMessage.includes('email not confirmed')) {
+        return 'Email не подтвержден. Проверьте вашу почту';
+      }
+      if (errorMessage.includes('user already registered')) {
+        return 'Пользователь с таким email уже зарегистрирован';
+      }
+      if (errorMessage.includes('password should be at least')) {
+        return 'Пароль должен содержать минимум 6 символов';
+      }
+      if (errorMessage.includes('invalid email')) {
+        return 'Неверный формат email';
+      }
+      
       return error.message;
     }
     if (typeof error === 'string') {

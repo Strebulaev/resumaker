@@ -1,7 +1,6 @@
 import { get } from '@vercel/edge-config';
 
 export class EdgeConfigService {
-  // Кэширование настроек платформ
   async getPlatformConfigs() {
     return await get('platformConfigs') || {
       hh: { enabled: true, rateLimit: 100 },

@@ -1,6 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Уберите export default и используйте module.exports
 module.exports = async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -14,7 +13,7 @@ module.exports = async function handler(req: VercelRequest, res: VercelResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { planId, userId } = req.body;
+  const { planId, userId, userEmail } = req.body;
 
   if (!planId || !userId) {
     return res.status(400).json({ error: 'Missing planId or userId' });
@@ -52,6 +51,26 @@ module.exports = async function handler(req: VercelRequest, res: VercelResponse)
       });
     }
 
+    // Данные для чека
+    const receipt = {
+      customer: {
+        email: userEmail || 'customer@example.com' // Email пользователя
+      },
+      items: [
+        {
+          description: `Тариф "${plan.name}" - Rezulution`,
+          quantity: 1,
+          amount: {
+            value: plan.price.toFixed(2),
+            currency: 'RUB'
+          },
+          vat_code: 1, // НДС 20%
+          payment_mode: 'full_payment',
+          payment_subject: 'service'
+        }
+      ]
+    };
+
     const paymentPayload = {
       amount: {
         value: plan.price.toFixed(2),
@@ -66,7 +85,8 @@ module.exports = async function handler(req: VercelRequest, res: VercelResponse)
       metadata: {
         userId: userId,
         planId: planId
-      }
+      },
+      receipt: receipt // Добавляем данные для чека
     };
 
     console.log('Creating YooKassa payment with shop ID:', yookassaShopId ? '***' + yookassaShopId.slice(-8) : 'MISSING');
@@ -83,6 +103,7 @@ module.exports = async function handler(req: VercelRequest, res: VercelResponse)
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('YooKassa API error details:', errorText);
       throw new Error(`YooKassa API error: ${response.status} ${errorText}`);
     }
 

@@ -194,7 +194,7 @@ export class PricingPlansComponent implements OnInit {
 
   async processPayment() {
     if (!this.selectedPlan) return;
-
+  
     this.analyticsService.trackEcommerceEvent('purchase', {
       transaction_id: `order_${Date.now()}`,
       value: this.selectedPlan.price,
@@ -205,10 +205,15 @@ export class PricingPlansComponent implements OnInit {
         price: this.selectedPlan.price
       }]
     });
-
+  
     this.isLoading = true;
     try {
-      const result = await this.paymentService.createPayment(this.selectedPlan.id);
+      const userEmail = this.supabase.currentUser?.email;
+      
+      const result = await this.paymentService.createPayment(
+        this.selectedPlan.id, 
+        userEmail
+      );
       
       if (result.success && result.paymentUrl) {
         window.location.href = result.paymentUrl;

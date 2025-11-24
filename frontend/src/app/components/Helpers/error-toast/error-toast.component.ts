@@ -47,8 +47,20 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   private readonly IGNORED_ERRORS = [
     'Acquiring an exclusive Navigator LockManager lock',
     'Navigator LockManager',
-    'lock:sb-'
+    'lock:sb-',
+    /wt: Acquiring an exclusive Navigator LockManager lock.*immediately failed/ // Регулярное выражение для точного совпадения
   ];
+  
+  private isIgnoredError(message: string): boolean {
+    return this.IGNORED_ERRORS.some(ignored => {
+      if (typeof ignored === 'string') {
+        return message.includes(ignored);
+      } else if (ignored instanceof RegExp) {
+        return ignored.test(message);
+      }
+      return false;
+    });
+  }
 
   private normalizeErrorMessage(message: string, type: 'error' | 'warning' | 'ai-error'): string {
     let normalized = message.trim().toLowerCase();
@@ -64,14 +76,6 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
     return normalized;
   }
 
-  private isIgnoredError(message: string): boolean {
-    return this.IGNORED_ERRORS.some(ignored => 
-      message.includes(ignored)
-    );
-  }
-
-
-  
   private setupErrorHandling() {
     this.originalConsoleError = console.error;
     this.originalConsoleWarn = console.warn;

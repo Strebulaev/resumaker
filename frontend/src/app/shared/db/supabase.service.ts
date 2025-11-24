@@ -78,6 +78,9 @@ export class SupabaseService {
       } else if (event === 'SIGNED_OUT') {
         this.appStateService.clearState();
         this.router.navigate(['/login']);
+      } else if (event === 'USER_UPDATED') {
+        // Обновляем данные пользователя
+        this.userSubject.next(session?.user || null);
       }
     });
   }
@@ -138,7 +141,6 @@ export class SupabaseService {
           autoRefreshToken: true,
           detectSessionInUrl: true,
           flowType: 'pkce',
-          // Отключаем встроенный lock для избежания ошибок
           storage: this.createSafeStorage()
         }
       });
@@ -162,11 +164,21 @@ export class SupabaseService {
         email,
         password,
         options: {
-          emailRedirectTo: this.getRedirectUri()
+          emailRedirectTo: this.getRedirectUri(),
+          data: {
+            email: email,
+            full_name: email.split('@')[0] // Используем часть email как имя по умолчанию
+          }
         }
       });
   
       if (error) throw error;
+      
+      // Создаем профиль пользователя после успешной регистрации
+      if (data.user) {
+        await this.createUserProfile(data.user);
+      }
+      
       return { data, error: null };
     } catch (error) {
       console.error('Password sign-up error, using mock:', error);
@@ -191,6 +203,32 @@ export class SupabaseService {
     } catch (error) {
       console.error('Password sign-in error, using mock:', error);
       return this.mockSignInWithPassword(email, password);
+    }
+  }
+  
+  async signInWithOAuth(provider: 'google' | 'github'): Promise<{ data: any; error: any }> {
+    // Если Supabase недоступен, используем мок
+    if (!this.supabase) {
+      return this.mockOAuthSignIn(provider);
+    }
+  
+    try {
+      const { error } = await this.supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: this.getRedirectUri(),
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
+        }
+      });
+  
+      if (error) throw error;
+      return { data: { user: null }, error: null };
+    } catch (error) {
+      console.error(`${provider} OAuth error, using mock:`, error);
+      return this.mockOAuthSignIn(provider);
     }
   }
   
@@ -231,6 +269,9 @@ export class SupabaseService {
     };
     
     localStorage.setItem('sb-mock-users', JSON.stringify(existingUsers));
+    
+    // Создаем профиль
+    await this.createUserProfile(mockUser);
     
     return { 
       data: { user: mockUser }, 
@@ -276,29 +317,97 @@ export class SupabaseService {
     
     return { data: { user: userData.user, session: mockSession }, error: null };
   }
+  
+  private async mockOAuthSignIn(provider: 'google' | 'github'): Promise<{ data: any; error: any }> {
+    console.log(`Mock ${provider} sign-in triggered`);
+    
+    const mockUser = {
+      id: this.generateValidUUID(),
+      email: `test.${provider}@example.com`,
+      user_metadata: { 
+        full_name: `${provider} User`, 
+        avatar_url: 'default_avatar.jpg',
+        provider: provider
+      },
+      app_metadata: { provider: provider },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+      confirmed_at: new Date().toISOString(),
+      last_sign_in_at: new Date().toISOString(),
+      role: 'authenticated',
+      updated_at: new Date().toISOString()
+    };
+  
+    const mockSession: any = {
+      user: mockUser,
+      access_token: 'mock-access-token-' + Math.random().toString(36).substring(2),
+      refresh_token: 'mock-refresh-token-' + Math.random().toString(36).substring(2),
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: 'bearer' as const
+    };
+  
+    localStorage.setItem('sb-mock-session', JSON.stringify(mockSession));
+    this.session = mockSession;
+    this.userSubject.next(mockUser);
+    
+    // Создаем профиль для OAuth пользователя
+    await this.createUserProfile(mockUser);
+    
+    this.router.navigate(['/profile/view']);
+    
+    return { data: { user: mockUser }, error: null };
+  }
 
-  // Создаем безопасную реализацию storage для обхода проблем с LockManager
   private createSafeStorage() {
+    const isLockManagerError = (error: any): boolean => {
+      return error && error.message && 
+             error.message.includes('Navigator LockManager') ||
+             error.message.includes('lock:sb-');
+    };
+  
     return {
       getItem: (key: string): Promise<string | null> => {
         return new Promise((resolve) => {
           try {
-            const value = localStorage.getItem(key);
-            resolve(value);
+            // Пропускаем проблемные ключи
+            if (key.includes('auth-token') && key.includes('sb-')) {
+              console.log('Skipping potentially problematic auth token access');
+              resolve(null);
+            } else {
+              const value = localStorage.getItem(key);
+              resolve(value);
+            }
           } catch (error) {
-            console.warn('Storage getItem failed:', error);
-            resolve(null);
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in getItem, skipping:', key);
+              resolve(null);
+            } else {
+              console.warn('Storage getItem failed:', error);
+              resolve(null);
+            }
           }
         });
       },
       setItem: (key: string, value: string): Promise<void> => {
         return new Promise((resolve) => {
           try {
-            localStorage.setItem(key, value);
-            resolve();
+            // Пропускаем запись проблемных ключей
+            if (key.includes('auth-token') && key.includes('sb-')) {
+              console.log('Skipping potentially problematic auth token storage');
+              resolve();
+            } else {
+              localStorage.setItem(key, value);
+              resolve();
+            }
           } catch (error) {
-            console.warn('Storage setItem failed:', error);
-            resolve();
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in setItem, skipping:', key);
+              resolve();
+            } else {
+              console.warn('Storage setItem failed:', error);
+              resolve();
+            }
           }
         });
       },
@@ -308,8 +417,13 @@ export class SupabaseService {
             localStorage.removeItem(key);
             resolve();
           } catch (error) {
-            console.warn('Storage removeItem failed:', error);
-            resolve();
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in removeItem, skipping:', key);
+              resolve();
+            } else {
+              console.warn('Storage removeItem failed:', error);
+              resolve();
+            }
           }
         });
       }
@@ -353,6 +467,9 @@ export class SupabaseService {
         } else if (event === 'SIGNED_OUT') {
           this.appStateService.clearState();
           this.router.navigate(['/login']);
+        } else if (event === 'USER_UPDATED') {
+          // Обновляем данные пользователя
+          this.userSubject.next(session?.user || null);
         }
       });
   
@@ -417,70 +534,6 @@ export class SupabaseService {
 
   get isInitialized(): boolean {
     return this._initialized;
-  }
-
-  private async mockGoogleSignIn() {
-    console.log('Mock Google sign-in triggered');
-    
-    const mockUser = {
-      id: this.generateValidUUID(),
-      email: 'test.user@example.com',
-      user_metadata: { 
-        full_name: 'Test User', 
-        avatar_url: 'default_avatar.jpg',
-        provider: 'google'
-      },
-      app_metadata: { provider: 'google' },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-      confirmed_at: new Date().toISOString(),
-      last_sign_in_at: new Date().toISOString(),
-      role: 'authenticated',
-      updated_at: new Date().toISOString()
-    };
-  
-    const mockSession: any = {
-      user: mockUser,
-      access_token: 'mock-access-token-' + Math.random().toString(36).substring(2),
-      refresh_token: 'mock-refresh-token-' + Math.random().toString(36).substring(2),
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      token_type: 'bearer' as const
-    };
-  
-    localStorage.setItem('sb-mock-session', JSON.stringify(mockSession));
-    this.session = mockSession;
-    this.userSubject.next(mockUser);
-    
-    this.router.navigate(['/profile/view']);
-    
-    return { data: { user: mockUser }, error: null };
-  }
-  
-  async signInWithGoogle() {
-    // Если Supabase недоступен, используем мок
-    if (!this.supabase) {
-      return this.mockGoogleSignIn();
-    }
-  
-    try {
-      const { error } = await this.supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: this.getRedirectUri(),
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
-          }
-        }
-      });
-  
-      if (error) throw error;
-      return { data: { user: null }, error: null };
-    } catch (error) {
-      console.error('Google OAuth error, using mock:', error);
-      return this.mockGoogleSignIn();
-    }
   }
 
   private getRedirectUri(): string {
@@ -704,32 +757,31 @@ export class SupabaseService {
     return data;
   }
 
-  // Метод для очистки проблемных локальных данных
   clearProblematicStorage(): void {
     const keysToRemove = [
       'sb-lxlzpilbbnzriywuvcnf-auth-token',
-      'sb-mock-session',
+      'sb-mock-session', 
       'sb-local-profile'
     ];
+    
+    // Добавляем поиск всех ключей, связанных с auth
+    const allKeys = Object.keys(localStorage);
+    const authKeys = allKeys.filter(key => 
+      key.includes('auth') || 
+      key.includes('token') || 
+      key.startsWith('sb-')
+    );
+    
+    keysToRemove.push(...authKeys);
     
     keysToRemove.forEach(key => {
       try {
         localStorage.removeItem(key);
         sessionStorage.removeItem(key);
+        console.log('Removed storage key:', key);
       } catch (e) {
         console.warn(`Failed to remove ${key}:`, e);
       }
     });
-    
-    // Очищаем все ключи, связанные с Supabase
-    Object.keys(localStorage)
-      .filter(key => key.startsWith('sb-') || key.includes('supabase'))
-      .forEach(key => {
-        try {
-          localStorage.removeItem(key);
-        } catch (e) {
-          console.warn(`Failed to remove ${key}:`, e);
-        }
-      });
   }
 }
