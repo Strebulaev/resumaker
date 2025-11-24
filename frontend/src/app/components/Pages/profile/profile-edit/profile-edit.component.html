@@ -23,6 +23,43 @@
               </span>
             </div>
           </div>
+
+        <!-- Avatar Section -->
+        <p-panel [header]="'PROFILE.AVATAR.TITLE' | translate" [toggleable]="true">
+            <div class="avatar-section">
+                <div class="avatar-preview">
+                    <p-avatar [image]="avatarPreview" size="xlarge" shape="circle"></p-avatar>
+                    <div class="avatar-actions">
+                        <button type="button" pButton 
+                                [label]="'PROFILE.AVATAR.CHANGE' | translate" 
+                                icon="pi pi-image"
+                                (click)="fileInput.click()"
+                                class="p-button-outlined">
+                        </button>
+                        <button type="button" pButton 
+                                [label]="'PROFILE.AVATAR.REMOVE' | translate" 
+                                icon="pi pi-trash"
+                                (click)="removeAvatar()"
+                                class="p-button-danger p-button-outlined"
+                                [disabled]="!avatarPreview">
+                        </button>
+                    </div>
+                </div>
+                
+                <input #fileInput type="file" hidden accept="image/*" (change)="onAvatarSelected($event)">
+                
+                <div class="avatar-upload-info">
+                    <small>{{ 'PROFILE.AVATAR.FORMAT_INFO' | translate }}</small>
+                    @if (avatarUploadProgress > 0) {
+                    <div class="upload-progress">
+                        <p-progressBar [value]="avatarUploadProgress" [showValue]="false"></p-progressBar>
+                        <small>{{ avatarUploadProgress }}%</small>
+                    </div>
+                    }
+                </div>
+            </div>
+        </p-panel>
+
         <!-- Personal Information Section -->
         <p-panel [header]="'PROFILE.PERSONAL_INFO.TITLE' | translate" [toggleable]="true">
             <div class="form-grid">

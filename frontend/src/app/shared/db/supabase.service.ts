@@ -13,6 +13,7 @@ export interface UserProfile {
   full_name: string;
   phone?: string;
   gender: 'male' | 'female' | 'unknown';
+  avatar_url?: string; // Добавляем поле для аватарки
   profile_data: {
     desiredPositions: string[];
     contact: {
@@ -63,13 +64,13 @@ export class SupabaseService {
 
   private setupAuthStateHandling(): void {
     if (!this.supabase) return;
-    
+
     this.supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
       this.session = session;
       this.userSubject.next(session?.user || null);
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      if (event === 'SIGNED_IN') {
         this.appStateService.saveState({
           ...this.appStateService.getState(),
           user: {
@@ -78,11 +79,15 @@ export class SupabaseService {
           }
         });
         
-        // После OAuth входа мы попадаем на /login?returnUrl=...
-        // Нужно перенаправить на главную или профиль
-        const currentUrl = this.router.url;
-        if (currentUrl.includes('/login') || currentUrl.includes('/auth/callback')) {
-          console.log('Redirecting after sign in to /profile/view');
+        // После OAuth аутентификации проверяем и обновляем профиль
+        if (session?.user) {
+          this.handleUserSignIn(session.user);
+        }
+        
+        const returnUrl = this.getReturnUrl();
+        if (returnUrl) {
+          this.router.navigateByUrl(returnUrl);
+        } else {
           this.router.navigate(['/profile/view']);
         }
       } else if (event === 'SIGNED_OUT') {
@@ -92,6 +97,42 @@ export class SupabaseService {
         this.userSubject.next(session?.user || null);
       }
     });
+  }
+
+  private async handleUserSignIn(user: User): Promise<void> {
+    try {
+      // Проверяем существующий профиль
+      const existingProfile = await this.getFullProfile();
+      
+      if (existingProfile) {
+        // Если профиль уже существует, сохраняем аватарку из первого провайдера
+        await this.updateProfileAvatarIfNeeded(user, existingProfile);
+      } else {
+        // Создаем новый профиль с аватаркой из первого провайдера
+        await this.createUserProfile(user);
+      }
+    } catch (error) {
+      console.error('Error handling user sign-in:', error);
+    }
+  }
+
+  private async updateProfileAvatarIfNeeded(user: User, existingProfile: UserProfile): Promise<void> {
+    // Сохраняем аватарку только если ее еще нет в профиле
+    if (!existingProfile.avatar_url && user.user_metadata?.['avatar_url']) {
+      const updatedProfile = {
+        ...existingProfile,
+        avatar_url: user.user_metadata['avatar_url'],
+        updated_at: new Date().toISOString()
+      };
+      
+      await this.saveProfileToDatabase(updatedProfile);
+      console.log('Avatar updated from OAuth provider');
+    }
+  }
+
+  private getReturnUrl(): string | null {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('returnUrl');
   }
 
   private async mockSignOut() {
@@ -219,10 +260,13 @@ export class SupabaseService {
     }
   
     try {
-      const { data, error } = await this.supabase.auth.signInWithOAuth({
+      // Для OAuth используем текущий URL как redirect, чтобы вернуться на ту же страницу
+      const currentUrl = window.location.origin + window.location.pathname;
+      
+      const { error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: this.getRedirectUri(),
+          redirectTo: currentUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
@@ -231,7 +275,7 @@ export class SupabaseService {
       });
   
       if (error) throw error;
-      return { data, error: null };
+      return { data: { user: null }, error: null };
     } catch (error) {
       console.error(`${provider} OAuth error, using mock:`, error);
       return this.mockOAuthSignIn(provider);
@@ -327,7 +371,7 @@ export class SupabaseService {
       email: `test.${provider}@example.com`,
       user_metadata: { 
         full_name: `${provider} User`, 
-        avatar_url: 'default_avatar.jpg',
+        avatar_url: `https://example.com/avatars/${provider}_user.jpg`,
         provider: provider
       },
       app_metadata: { provider: provider },
@@ -360,26 +404,52 @@ export class SupabaseService {
   }
 
   private createSafeStorage() {
+    const isLockManagerError = (error: any): boolean => {
+      return error && error.message && 
+             error.message.includes('Navigator LockManager') ||
+             error.message.includes('lock:sb-');
+    };
+  
     return {
       getItem: (key: string): Promise<string | null> => {
         return new Promise((resolve) => {
           try {
-            const value = localStorage.getItem(key);
-            resolve(value);
+            if (key.includes('auth-token') && key.includes('sb-')) {
+              console.log('Skipping potentially problematic auth token access');
+              resolve(null);
+            } else {
+              const value = localStorage.getItem(key);
+              resolve(value);
+            }
           } catch (error) {
-            console.warn('Storage getItem failed:', error);
-            resolve(null);
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in getItem, skipping:', key);
+              resolve(null);
+            } else {
+              console.warn('Storage getItem failed:', error);
+              resolve(null);
+            }
           }
         });
       },
       setItem: (key: string, value: string): Promise<void> => {
         return new Promise((resolve) => {
           try {
-            localStorage.setItem(key, value);
-            resolve();
+            if (key.includes('auth-token') && key.includes('sb-')) {
+              console.log('Skipping potentially problematic auth token storage');
+              resolve();
+            } else {
+              localStorage.setItem(key, value);
+              resolve();
+            }
           } catch (error) {
-            console.warn('Storage setItem failed:', error);
-            resolve();
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in setItem, skipping:', key);
+              resolve();
+            } else {
+              console.warn('Storage setItem failed:', error);
+              resolve();
+            }
           }
         });
       },
@@ -389,8 +459,13 @@ export class SupabaseService {
             localStorage.removeItem(key);
             resolve();
           } catch (error) {
-            console.warn('Storage removeItem failed:', error);
-            resolve();
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in removeItem, skipping:', key);
+              resolve();
+            } else {
+              console.warn('Storage removeItem failed:', error);
+              resolve();
+            }
           }
         });
       }
@@ -401,7 +476,9 @@ export class SupabaseService {
     if (!this.supabase) return;
   
     try {
-      // Получаем текущую сессию
+      // Проверяем, есть ли OAuth callback в URL
+      await this.handleOAuthCallback();
+      
       const { data: { session }, error } = await this.supabase.auth.getSession();
       
       if (error) {
@@ -410,11 +487,7 @@ export class SupabaseService {
       } else if (session) {
         this.session = session;
         this.userSubject.next(session.user);
-        console.log('Session found for user:', session.user.email);
       }
-
-      // Обрабатываем OAuth callback если мы на странице логина с токенами
-      await this.handleOAuthCallback();
   
       // Настраиваем обработчик изменений состояния аутентификации
       this.setupAuthStateHandling();
@@ -428,42 +501,37 @@ export class SupabaseService {
   }
 
   private async handleOAuthCallback(): Promise<void> {
-    // Проверяем, есть ли OAuth токены в URL
-    const hash = window.location.hash;
-    const search = window.location.search;
+    // Проверяем, есть ли параметры OAuth callback в URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAuthParams = urlParams.has('code') || urlParams.has('error');
     
-    if (hash.includes('access_token') || search.includes('access_token')) {
-      console.log('OAuth callback detected, processing...');
+    if (hasAuthParams) {
+      console.log('Handling OAuth callback...');
       
-      try {
-        const { data, error } = await this.supabase!.auth.getSession();
-        if (error) {
-          console.error('OAuth callback error:', error);
-        } else if (data.session) {
-          console.log('OAuth callback successful for user:', data.session.user.email);
-          // Сессия автоматически установится через auth state change
-        }
-      } catch (error) {
-        console.error('Error processing OAuth callback:', error);
+      const { data, error } = await this.supabase!.auth.getSession();
+      
+      if (error) {
+        console.error('OAuth callback error:', error);
+      } else if (data.session) {
+        console.log('OAuth callback successful, user:', data.session.user.email);
+        
+        // Очищаем URL параметры после успешной аутентификации
+        window.history.replaceState({}, '', window.location.pathname);
       }
     }
   }
 
   private async tryRecoverSession(): Promise<void> {
     try {
-      // Пробуем найти сессию в localStorage
-      const allKeys = Object.keys(localStorage);
-      const sessionKey = allKeys.find(key => key.includes('supabase.auth.token'));
+      const storageKey = `sb-${environment.supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
+      const storedSession = localStorage.getItem(storageKey);
       
-      if (sessionKey) {
-        const storedSession = localStorage.getItem(sessionKey);
-        if (storedSession) {
-          const session = JSON.parse(storedSession);
-          if (session?.access_token && session?.expires_at > Date.now() / 1000) {
-            this.session = session;
-            this.userSubject.next(session.user);
-            console.log('Session recovered from localStorage');
-          }
+      if (storedSession) {
+        const session = JSON.parse(storedSession);
+        if (session?.access_token && session?.expires_at > Date.now() / 1000) {
+          this.session = session;
+          this.userSubject.next(session.user);
+          console.log('Session recovered from localStorage');
         }
       }
     } catch (error) {
@@ -510,9 +578,9 @@ export class SupabaseService {
 
   private getRedirectUri(): string {
     if (environment.production) {
-      return 'https://rezulution.vercel.app/auth/callback';
+      return 'https://rezulution.vercel.app';
     }
-    return window.location.origin + '/auth/callback';
+    return window.location.origin;
   }
 
   async saveFullProfile(profileData: any): Promise<{ data: any; error: any }> {
@@ -528,6 +596,7 @@ export class SupabaseService {
         full_name: profileData.name,
         phone: profileData.contact?.phone,
         gender: profileData.gender,
+        avatar_url: profileData.avatar_url, // Сохраняем аватарку
         profile_data: {
           desiredPositions: profileData.desiredPositions || [],
           contact: {
@@ -550,21 +619,22 @@ export class SupabaseService {
         return { data: profile, error: null };
       }
   
-      // Используем upsert без .select() чтобы избежать ошибок
-      const { error } = await this.supabase!
+      const { data, error } = await this.supabase!
         .from('user_profiles')
         .upsert(profile, { 
           onConflict: 'id'
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Supabase error saving profile:', error);
-        // Сохраняем локально как fallback
+        this.errorHandler.showError('Ошибка сохранения профиля', 'SupabaseService');
+        // Пробуем сохранить локально
         localStorage.setItem('sb-local-profile', JSON.stringify(profile));
         return { data: profile, error: null };
       }
   
-      return { data: profile, error: null };
+      return { data: data ? data[0] : profile, error: null };
     } catch (error) {
       console.error('Error saving profile:', error);
       return { data: null, error: error as Error };
@@ -601,18 +671,23 @@ export class SupabaseService {
   
       return data || this.createDefaultProfile();
     } catch (error) {
+      console.error('Error loading profile:', error);
       this.errorHandler.showError('Ошибка загрузки профиля', 'SupabaseService');
       return this.createDefaultProfile();
     }
   }
 
   private createDefaultProfile(): UserProfile {
+    // Используем аватарку из первого провайдера, если есть
+    const avatarUrl = this.currentUser?.user_metadata?.['avatar_url'] || '';
+    
     return {
       id: this.currentUser?.id || 'local-user',
       email: this.currentUser?.email || '',
       full_name: this.currentUser?.user_metadata?.['full_name'] || 'User',
       phone: '',
       gender: 'unknown',
+      avatar_url: avatarUrl, // Сохраняем аватарку по умолчанию
       profile_data: {
         desiredPositions: [],
         contact: {
@@ -653,7 +728,9 @@ export class SupabaseService {
 
     try {
       this.clearProblematicStorage();
+      
       await this.supabase.auth.signOut();
+      window.location.href = '/';
     } catch (error) {
       this.errorHandler.showError('Ошибка выхода из системы', 'SupabaseService');
       this.mockSignOut();
@@ -662,11 +739,14 @@ export class SupabaseService {
 
   async createUserProfile(userData: any) {
     try {
+      // Сохраняем аватарку из первого провайдера
+      const avatarUrl = userData.user_metadata?.['avatar_url'] || '';
+      
       const profile = {
         id: userData.id,
         email: userData.email || '',
         full_name: userData.user_metadata?.['full_name'] || 'User',
-        avatar_url: userData.user_metadata?.['avatar_url'] || '',
+        avatar_url: avatarUrl, // Сохраняем аватарку
         created_at: new Date().toISOString()
       };
   
@@ -675,19 +755,21 @@ export class SupabaseService {
         return { data: [profile], error: null };
       }
   
-      const { error } = await this.supabase!
+      const { data, error } = await this.supabase!
         .from('user_profiles')
         .upsert(profile, { onConflict: 'id' });
   
       if (error) {
-        console.error('Supabase error creating profile:', error);
+        console.error('Error creating user profile:', error);
+        this.errorHandler.showError('Ошибка создания профиля', 'SupabaseService');
         localStorage.setItem('sb-local-profile', JSON.stringify(profile));
         return { data: [profile], error: null };
       }
   
-      return { data: [profile], error: null };
+      return { data, error: null };
     } catch (error) {
-      console.error('Error creating profile:', error);
+      console.error('Error creating user profile:', error);
+      this.errorHandler.showError('Ошибка создания профиля', 'SupabaseService'); 
       return { data: null, error: error as Error };
     }
   }
@@ -705,6 +787,7 @@ export class SupabaseService {
         full_name: this.currentUser?.user_metadata?.['full_name'] || 'Local User',
         phone: '',
         gender: 'unknown',
+        avatar_url: this.currentUser?.user_metadata?.['avatar_url'] || '',
         profile_data: {}
       };
       
@@ -727,20 +810,71 @@ export class SupabaseService {
     return data;
   }
 
+  // Метод для обновления аватарки
+  async updateAvatar(avatarUrl: string): Promise<{ data: any; error: any }> {
+    try {
+      const userId = this.currentUser?.id;
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+  
+      const { data, error } = await this.supabase!
+        .from('user_profiles')
+        .update({ 
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select();
+  
+      if (error) {
+        console.error('Error updating avatar:', error);
+        return { data: null, error };
+      }
+  
+      return { data: data ? data[0] : null, error: null };
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      return { data: null, error: error as Error };
+    }
+  }
+
+  private async saveProfileToDatabase(profile: UserProfile): Promise<void> {
+    if (!environment.production) {
+      localStorage.setItem('sb-local-profile', JSON.stringify(profile));
+      return;
+    }
+
+    const { error } = await this.supabase!
+      .from('user_profiles')
+      .upsert(profile, { onConflict: 'id' });
+
+    if (error) {
+      console.error('Error saving profile to database:', error);
+      throw error;
+    }
+  }
+
   clearProblematicStorage(): void {
     const keysToRemove = [
+      'sb-lxlzpilbbnzriywuvcnf-auth-token',
       'sb-mock-session', 
       'sb-local-profile'
     ];
     
-    // Добавляем поиск всех ключей Supabase
     const allKeys = Object.keys(localStorage);
-    const supabaseKeys = allKeys.filter(key => key.startsWith('sb-'));
-    keysToRemove.push(...supabaseKeys);
+    const authKeys = allKeys.filter(key => 
+      key.includes('auth') || 
+      key.includes('token') || 
+      key.startsWith('sb-')
+    );
+    
+    keysToRemove.push(...authKeys);
     
     keysToRemove.forEach(key => {
       try {
         localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
         console.log('Removed storage key:', key);
       } catch (e) {
         console.warn(`Failed to remove ${key}:`, e);

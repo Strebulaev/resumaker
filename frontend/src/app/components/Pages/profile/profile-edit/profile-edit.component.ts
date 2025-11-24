@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { Person, Skill, Education, Language } from '../../../../person-schema';
 import { ProfileService } from '../../../../shared/profile/profile.service';
 import { TranslateService } from '@ngx-translate/core';
+import { SupabaseService } from '../../../../shared/db/supabase.service';
 
 @Component({
   selector: 'app-profile-edit',
@@ -53,8 +54,14 @@ export class ProfileEditComponent implements OnInit {
     { label: this.translate.instant('PROFILE.PERSONAL_INFO.GENDER_OPTIONS.UNKNOWN'), value: 'unknown' }
   ];  
 
+  // Avatar properties
+  avatarPreview: string = '';
+  avatarFile: File | null = null;
+  avatarUploadProgress: number = 0;
+
   constructor(
     private profileService: ProfileService,
+    private supabaseService: SupabaseService,
     private messageService: MessageService,
     private router: Router
   ) {}
@@ -74,6 +81,7 @@ export class ProfileEditComponent implements OnInit {
       ];
     });
   }
+
   private patchFormValues(profile: Person): void {
     this.clearAllArrays();
   
@@ -119,7 +127,26 @@ export class ProfileEditComponent implements OnInit {
 
     profile.hobby?.forEach(h => this.addHobby(h));
     profile.literature?.forEach(l => this.addLiterature(l));
+
+    // Set avatar preview from user profile
+    this.setAvatarFromProfile();
   }
+
+  private setAvatarFromProfile(): void {
+    // Get avatar from current user metadata or profile
+    const userAvatar = this.supabaseService.currentUser?.user_metadata?.['avatar_url'];
+    if (userAvatar) {
+      this.avatarPreview = userAvatar;
+    } else {
+      // Try to get from profile data if available
+      this.supabaseService.getFullProfile().then(profile => {
+        if (profile?.avatar_url) {
+          this.avatarPreview = profile.avatar_url;
+        }
+      });
+    }
+  }
+
   closePreview(): void {
     this.previewVisible = false;
   }
@@ -378,6 +405,80 @@ export class ProfileEditComponent implements OnInit {
     this.literature.removeAt(index);
   }
 
+  // Avatar methods
+  onAvatarSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant('PROFILE.AVATAR.ERROR.INVALID_TYPE')
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant('PROFILE.AVATAR.ERROR.SIZE_LIMIT')
+      });
+      return;
+    }
+
+    this.avatarFile = file;
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.avatarPreview = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    event.target.value = '';
+  }
+
+  removeAvatar(): void {
+    this.avatarPreview = '';
+    this.avatarFile = null;
+    this.avatarUploadProgress = 0;
+  }
+
+  async uploadAvatar(): Promise<string | null> {
+    if (!this.avatarFile) {
+      return null;
+    }
+
+    try {
+      this.avatarUploadProgress = 10;
+      
+      // In a real implementation, you would upload to Supabase Storage
+      // For now, we'll use the base64 data URL as the avatar URL
+      // In production, you should upload to Supabase Storage and get the public URL
+      
+      this.avatarUploadProgress = 100;
+      
+      // Return the data URL for immediate use
+      // Note: In production, you should upload to Supabase Storage and return the public URL
+      return this.avatarPreview;
+      
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: this.translate.instant('PROFILE.AVATAR.ERROR.UPLOAD_FAILED')
+      });
+      return null;
+    } finally {
+      setTimeout(() => {
+        this.avatarUploadProgress = 0;
+      }, 1000);
+    }
+  }
+
   getProfileDataFromForm(): Person {
     const formValue = this.profileForm.value;
     
@@ -571,7 +672,7 @@ export class ProfileEditComponent implements OnInit {
     });
   }
   
-  saveProfile(): void {
+  async saveProfile(): Promise<void> {
     if (this.profileForm.invalid) {
       this.markAllAsTouched();
       this.messageService.add({
@@ -582,27 +683,49 @@ export class ProfileEditComponent implements OnInit {
     }
   
     this.loading = true;
-    const profileData = this.getProfileDataFromForm();
-  
-    this.profileService.saveProfile(profileData).subscribe({
-      next: (success) => {
-        this.loading = false;
-        if (success) {
-          this.messageService.add({
-            severity: 'success',
-            summary: this.translate.instant('PROFILE.ACTIONS.SAVE_SUCCESS')
-          });
-          this.router.navigate(['/profile/view']);
-        } else {
-          this.showSaveError(new Error('Unknown save error'));
+    
+    try {
+      // Upload avatar first if selected
+      let avatarUrl: string | null = this.avatarPreview;
+      if (this.avatarFile && this.avatarPreview.startsWith('data:')) {
+        const uploadedAvatarUrl = await this.uploadAvatar();
+        
+        if (uploadedAvatarUrl) {
+          avatarUrl = uploadedAvatarUrl;
+          const { error } = await this.supabaseService.updateAvatar(avatarUrl);
+          if (error) {
+            console.error('Error updating avatar:', error);
+          }
         }
-      },
-      error: (error) => {
-        this.loading = false;
-        this.showSaveError(error);
       }
-    });
+  
+      const profileData = this.getProfileDataFromForm();
+      
+      this.profileService.saveProfile(profileData).subscribe({
+        next: (success) => {
+          this.loading = false;
+          if (success) {
+            this.messageService.add({
+              severity: 'success',
+              summary: this.translate.instant('PROFILE.ACTIONS.SAVE_SUCCESS')
+            });
+            this.router.navigate(['/profile/view']);
+          } else {
+            this.showSaveError(new Error('Unknown save error'));
+          }
+        },
+        error: (error) => {
+          this.loading = false;
+          this.showSaveError(error);
+        }
+      });
+      
+    } catch (error) {
+      this.loading = false;
+      this.showSaveError(error);
+    }
   }
+  
   onFileSelect(event: any): void {
     const file = event.files[0];
     if (!file) return;

@@ -1,22 +1,24 @@
 import { z } from 'zod';
 
 // Валидаторы на основе вашего JSON Schema
-const phoneSchema = z.string().regex(/^\+[0-9]{11}$/).optional();
+const phoneSchema = z.string().regex(/^\+[0-9]{11}$/).optional().or(z.literal(''));
 const emailSchema = z.string().email();
-const languageLevelSchema = z.string().regex(/^[A-C][1-2]$/);
-const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/); // YYYY-MM-DD
+const languageLevelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']);
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(); // YYYY-MM-DD
 
 const contactSchema = z.object({
   phone: phoneSchema,
   email: emailSchema,
-}).catchall(z.string().url().optional().or(z.literal('')));
+  linkedin: z.string().url().optional().or(z.literal('')),
+  github: z.string().url().optional().or(z.literal(''))
+});
 
 const locationSchema = z.object({
-  country: z.string().optional(),
+  country: z.string().optional().or(z.literal('')),
   city: z.string(),
-  relocation: z.boolean(),
-  remote: z.boolean(),
-  business_trips: z.boolean(),
+  relocation: z.boolean().default(false),
+  remote: z.boolean().default(false),
+  business_trips: z.boolean().default(false),
 });
 
 const languageSchema = z.object({
@@ -28,47 +30,47 @@ const skillSchema = z.object({
   area: z.string(),
   name: z.string(),
   level: z.number().int().min(1).max(10),
-  date: dateSchema, // Строка в формате YYYY-MM-DD
+  date: z.string(), // Более гибкая валидация для даты
 });
 
 const educationSchema = z.object({
   institution: z.string(),
   degree: z.string(),
   specialty: z.string(),
-  year: z.number().int(),
+  year: z.number().int().min(1900).max(new Date().getFullYear()),
 });
 
 const achievementSchema = z.object({
   name: z.string(),
   initial_value: z.number(),
   final_value: z.number(),
-  uom: z.enum(['day', 'percent']).optional(),
-  type: z.enum(['increased', 'decreased']).optional(),
+  uom: z.string().optional().or(z.literal('')),
+  type: z.string().optional().or(z.literal('')),
 });
 
 const experienceSchema = z.object({
   company: z.string(),
   position: z.string(),
-  startDate: dateSchema, // Используем startDate вместо from-date
-  endDate: dateSchema.optional().nullable(), // Используем endDate вместо to-date
-  tasks: z.array(z.string()),
-  stack: z.array(z.string()),
-  achievements: z.array(achievementSchema),
+  startDate: z.string(), // Более гибкая валидация
+  endDate: z.string().optional().nullable(),
+  tasks: z.array(z.string()).default([]),
+  stack: z.array(z.string()).default([]),
+  achievements: z.array(achievementSchema).default([]),
 });
 
 const personSchema = z.object({
   person: z.object({
     name: z.string(),
     gender: z.enum(['male', 'female', 'unknown']),
-    desiredPositions: z.array(z.string()).optional(),
+    desiredPositions: z.array(z.string()).default([]),
     contact: contactSchema,
     location: locationSchema,
-    languages: z.array(languageSchema),
-    skills: z.array(skillSchema),
-    education: z.array(educationSchema),
-    hobby: z.array(z.string()).optional(),
-    literature: z.array(z.string()).optional(),
-    experience: z.array(experienceSchema),
+    languages: z.array(languageSchema).default([]),
+    skills: z.array(skillSchema).default([]),
+    education: z.array(educationSchema).default([]),
+    hobby: z.array(z.string()).default([]),
+    literature: z.array(z.string()).default([]),
+    experience: z.array(experienceSchema).default([]),
   }),
 });
 

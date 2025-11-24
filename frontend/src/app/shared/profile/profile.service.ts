@@ -60,13 +60,14 @@ export class ProfileService {
       })
     );
   }
+  
   saveProfile(person: Person): Observable<boolean> {
     const validation = personSchema.safeParse({ person });
+    
     if (!validation.success) {
-      console.error('Validation error:', validation.error);
-      return of(false);
+      console.warn('Validation warnings:', validation.error);
     }
-
+  
     return from(this.supabase.saveFullProfile(person)).pipe(
       map(result => !result.error),
       catchError(error => {

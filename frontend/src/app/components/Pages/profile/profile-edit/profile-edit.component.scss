@@ -91,6 +91,67 @@ p-panel {
   }
 }
 
+// Avatar Section Styles
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+
+  .avatar-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    ::ng-deep .p-avatar {
+      border: 3px solid #e9ecef;
+      transition: border-color 0.3s ease;
+      
+      &:hover {
+        border-color: #3498db;
+      }
+    }
+
+    .avatar-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      
+      button {
+        min-width: 120px;
+      }
+    }
+  }
+
+  .avatar-upload-info {
+    text-align: center;
+    color: #6c757d;
+    
+    small {
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    
+    .upload-progress {
+      width: 200px;
+      margin-top: 0.5rem;
+      
+      ::ng-deep .p-progressbar {
+        height: 8px;
+        margin-bottom: 0.25rem;
+      }
+      
+      small {
+        font-size: 0.8rem;
+        color: #3498db;
+      }
+    }
+  }
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -372,6 +433,19 @@ p-panel {
     
     label {
       font-size: 1rem;
+    }
+  }
+
+  .avatar-section {
+    .avatar-preview {
+      .avatar-actions {
+        flex-direction: column;
+        width: 100%;
+        
+        button {
+          width: 100%;
+        }
+      }
     }
   }
 }
