@@ -47,16 +47,37 @@ export class LoginComponent implements OnInit {
     // Получаем returnUrl из query параметров
     this.route.queryParams.subscribe(params => {
       this.returnUrl = params['returnUrl'] || '/profile/view';
+      
+      // Проверяем OAuth callback
+      if (params['code'] || window.location.hash.includes('access_token')) {
+        this.handleOAuthCallback();
+      }
     });
-
-    // Проверяем, не авторизован ли уже пользователь
+  
     if (this.supabase.currentUser) {
       this.router.navigate([this.returnUrl]);
       return;
     }
-
-    // Проверяем, есть ли OAuth callback в URL
-    this.checkOAuthCallback();
+  }
+  
+  private async handleOAuthCallback(): Promise<void> {
+    this.loading = true;
+    this.errorMessage = 'Завершаем аутентификацию...';
+    
+    try {
+      // Даем время Supabase обработать callback
+      setTimeout(async () => {
+        if (this.supabase.currentUser) {
+          this.router.navigate([this.returnUrl]);
+        } else {
+          this.loading = false;
+          this.errorMessage = 'Ошибка аутентификации. Попробуйте снова.';
+        }
+      }, 2000);
+    } catch (error) {
+      this.loading = false;
+      this.errorMessage = 'Ошибка при обработке аутентификации';
+    }
   }
 
   private checkOAuthCallback() {

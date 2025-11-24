@@ -258,22 +258,24 @@ export class SupabaseService {
     if (!this.supabase) {
       return this.mockOAuthSignIn(provider);
     }
-  
+
     try {
-      // Для OAuth используем текущий URL как redirect, чтобы вернуться на ту же страницу
-      const currentUrl = window.location.origin + window.location.pathname;
-      
+      // Используйте абсолютный URL для production
+      const redirectTo = environment.production 
+        ? 'https://rezulution.vercel.app'
+        : window.location.origin;
+
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: currentUrl,
+          redirectTo: redirectTo,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent'
           }
         }
       });
-  
+
       if (error) throw error;
       return { data: { user: null }, error: null };
     } catch (error) {

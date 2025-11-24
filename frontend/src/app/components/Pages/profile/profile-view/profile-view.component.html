@@ -36,7 +36,7 @@
         <div class="profile-section">
           <h3>{{ 'PROFILE.PERSONAL_INFO.TITLE' | translate }}</h3>
           <p><strong>{{ 'PROFILE.PERSONAL_INFO.GENDER' | translate }}:</strong> {{ getGenderLabel(userProfile.gender) }}</p>
-          <p><strong>{{ 'PROFILE.PERSONAL_INFO.DESIRED_POSITIONS' | translate }}:</strong> {{ userProfile.desiredPositions?.join(', ') || ('PROFILE.PERSONAL_INFO.NOT_SPECIFIED' | translate) }}</p>
+          <p><strong>{{ 'PROFILE.PERSONAL_INFO.DESIRED_POSITIONS' | translate }}:</strong> {{ userProfile.desiredPositions.join(', ') || ('PROFILE.PERSONAL_INFO.NOT_SPECIFIED' | translate) }}</p>
         </div>
   
         <!-- Местоположение -->
