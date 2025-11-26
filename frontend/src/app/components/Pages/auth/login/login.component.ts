@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SupabaseService } from '../../../../shared/db/supabase.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -16,14 +17,16 @@ import { SupabaseService } from '../../../../shared/db/supabase.service';
     TranslatePipe
   ]
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   loading = false;
   errorMessage: string | null = null;
   isRegisterMode = false;
-  returnUrl: string = '/';
+  returnUrl: string = '/profile/view';
   
   loginForm: FormGroup;
   registerForm: FormGroup;
+
+  private authSubscription?: Subscription;
 
   constructor(
     private supabase: SupabaseService,
@@ -47,48 +50,72 @@ export class LoginComponent implements OnInit {
     // Получаем returnUrl из query параметров
     this.route.queryParams.subscribe(params => {
       this.returnUrl = params['returnUrl'] || '/profile/view';
-      
-      // Проверяем OAuth callback
-      if (params['code'] || window.location.hash.includes('access_token')) {
-        this.handleOAuthCallback();
-      }
     });
-  
+
+    // Проверяем, есть ли уже авторизованный пользователь
     if (this.supabase.currentUser) {
       this.router.navigate([this.returnUrl]);
       return;
     }
-  }
-  
-  private async handleOAuthCallback(): Promise<void> {
-    this.loading = true;
-    this.errorMessage = 'Завершаем аутентификацию...';
+
+    // Подписываемся на изменения состояния аутентификации
+    this.setupAuthListener();
     
-    try {
-      // Даем время Supabase обработать callback
-      setTimeout(async () => {
-        if (this.supabase.currentUser) {
-          this.router.navigate([this.returnUrl]);
-        } else {
-          this.loading = false;
-          this.errorMessage = 'Ошибка аутентификации. Попробуйте снова.';
-        }
-      }, 2000);
-    } catch (error) {
-      this.loading = false;
-      this.errorMessage = 'Ошибка при обработке аутентификации';
+    // Проверяем OAuth callback
+    this.checkOAuthCallback();
+  }
+
+  ngOnDestroy() {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
     }
   }
 
-  private checkOAuthCallback() {
-    const hash = window.location.hash;
-    const search = window.location.search;
+  private setupAuthListener(): void {
+    this.authSubscription = this.supabase.initialized$.subscribe(initialized => {
+      if (initialized && this.supabase.currentUser) {
+        this.handleSuccessfulAuth();
+      }
+    });
+  }
+
+  private checkOAuthCallback(): void {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
     
-    // Если есть OAuth токены в URL, показываем загрузку
-    if (hash.includes('access_token') || search.includes('access_token')) {
+    // Проверяем наличие OAuth параметров в URL
+    const hasOAuthParams = 
+      urlParams.has('code') || 
+      urlParams.has('error') ||
+      hashParams.has('access_token') ||
+      hashParams.has('error');
+    
+    if (hasOAuthParams) {
       this.loading = true;
       this.errorMessage = 'Завершаем аутентификацию...';
+      
+      // Очищаем URL параметры после короткой задержки
+      setTimeout(() => {
+        this.cleanUrlParams();
+      }, 1000);
     }
+  }
+
+  private cleanUrlParams(): void {
+    // Очищаем URL от OAuth параметров
+    if (window.location.search || window.location.hash) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }
+
+  private handleSuccessfulAuth(): void {
+    this.loading = false;
+    this.errorMessage = null;
+    
+    // Даем небольшой таймаут для завершения инициализации
+    setTimeout(() => {
+      this.router.navigate([this.returnUrl]);
+    }, 500);
   }
 
   private passwordMatchValidator(control: AbstractControl) {
@@ -135,7 +162,10 @@ export class LoginComponent implements OnInit {
         this.loading = false;
         return;
       }
+      
       // OAuth редирект произойдет автоматически
+      console.log(`OAuth ${provider} flow initiated`);
+      
     } catch (error: unknown) {
       console.error('Unexpected error:', error);
       this.errorMessage = this.getErrorMessage(error);
@@ -160,10 +190,10 @@ export class LoginComponent implements OnInit {
       
       // Успешный вход - редирект выполнится через auth state change
       console.log('Password sign-in successful');
+      
     } catch (error: unknown) {
       console.error('Password sign-in error:', error);
       this.errorMessage = this.getErrorMessage(error);
-    } finally {
       this.loading = false;
     }
   }

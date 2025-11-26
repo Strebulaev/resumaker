@@ -56,49 +56,70 @@ export class SupabaseService {
 
   constructor(
     private router: Router, 
-    private appStateService: AppStateService,
     private errorHandler: ErrorHandlerService
   ) {
     this.setupAuthStateHandling();
   }
-
   private setupAuthStateHandling(): void {
     if (!this.supabase) return;
-
+  
     this.supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
       this.session = session;
       this.userSubject.next(session?.user || null);
       
       if (event === 'SIGNED_IN') {
-        this.appStateService.saveState({
-          ...this.appStateService.getState(),
-          user: {
-            id: session?.user?.id,
-            email: session?.user?.email
-          }
-        });
+        // Убрали использование appStateService здесь
         
         // После OAuth аутентификации проверяем и обновляем профиль
         if (session?.user) {
           this.handleUserSignIn(session.user);
         }
         
-        const returnUrl = this.getReturnUrl();
-        if (returnUrl) {
+        // Используем сохраненный returnUrl или дефолтный
+        const returnUrl = this.getReturnUrl() || '/profile/view';
+        console.log('Redirecting to:', returnUrl);
+        
+        // Небольшая задержка для гарантии завершения инициализации
+        setTimeout(() => {
           this.router.navigateByUrl(returnUrl);
-        } else {
-          this.router.navigate(['/profile/view']);
-        }
+        }, 100);
+        
       } else if (event === 'SIGNED_OUT') {
-        this.appStateService.clearState();
+        // Убрали использование appStateService здесь
         this.router.navigate(['/login']);
       } else if (event === 'USER_UPDATED') {
         this.userSubject.next(session?.user || null);
       }
     });
   }
-
+  
+  // Обновите метод getReturnUrl:
+  private getReturnUrl(): string | null {
+    try {
+      // Пробуем получить из URL параметров
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('returnUrl');
+      
+      if (returnUrl) {
+        return returnUrl;
+      }
+      
+      // Для production можно также проверить localStorage
+      if (environment.production) {
+        const storedReturnUrl = localStorage.getItem('auth_return_url');
+        if (storedReturnUrl) {
+          localStorage.removeItem('auth_return_url'); // очищаем после использования
+          return storedReturnUrl;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting returnUrl:', error);
+      return null;
+    }
+  }
   private async handleUserSignIn(user: User): Promise<void> {
     try {
       // Проверяем существующий профиль
@@ -128,11 +149,6 @@ export class SupabaseService {
       await this.saveProfileToDatabase(updatedProfile);
       console.log('Avatar updated from OAuth provider');
     }
-  }
-
-  private getReturnUrl(): string | null {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('returnUrl');
   }
 
   private async mockSignOut() {
@@ -253,17 +269,16 @@ export class SupabaseService {
       return this.mockSignInWithPassword(email, password);
     }
   }
-  
+
   async signInWithOAuth(provider: 'google' | 'github'): Promise<{ data: any; error: any }> {
     if (!this.supabase) {
       return this.mockOAuthSignIn(provider);
     }
 
     try {
-      // Используйте абсолютный URL для production
       const redirectTo = environment.production 
-        ? 'https://rezulution.vercel.app'
-        : window.location.origin;
+        ? 'https://rezulution.vercel.app/profile/view'
+        : `${window.location.origin}/profile/view`;
 
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
@@ -283,7 +298,7 @@ export class SupabaseService {
       return this.mockOAuthSignIn(provider);
     }
   }
-  
+
   private async mockSignUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
     console.log('Mock password sign-up triggered for:', email);
     

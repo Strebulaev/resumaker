@@ -5,10 +5,17 @@ import { ProfileEditComponent } from './profile-edit/profile-edit.component';
 
 const routes: Routes = [
   {
-    path: "view", component: ProfileViewComponent
+    path: "view", 
+    component: ProfileViewComponent
   },
   {
-    path: "edit", component: ProfileEditComponent
+    path: "edit", 
+    component: ProfileEditComponent
+  },
+  {
+    path: "",
+    redirectTo: "view",
+    pathMatch: "full"
   }
 ];
 

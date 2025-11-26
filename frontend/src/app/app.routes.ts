@@ -28,10 +28,15 @@ export const routes: Routes = [
     component: LoginComponent,
     canActivate: [LoggedInGuard]
   },
-  {
-    path: 'profile',
+  { 
+    path: 'profile', 
     loadChildren: () => import('./components/Pages/profile/profile-module').then(m => m.ProfileModule),
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard] 
+  },
+  { 
+    path: 'profile/view', 
+    redirectTo: 'profile/view',
+    pathMatch: 'full'
   },
   {
     path: '',
@@ -109,8 +114,6 @@ export const routes: Routes = [
     component: NotificationSettingsComponent,
     canActivate: [AuthGuard]
   },
-  { 
-    path: '**', 
-    component: NotFoundComponent 
-  }
+  { path: '', redirectTo: '/profile/view', pathMatch: 'full' },
+  { path: '**', redirectTo: '/profile/view' }
 ];
