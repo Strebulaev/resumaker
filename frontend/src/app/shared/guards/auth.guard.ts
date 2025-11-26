@@ -1,4 +1,4 @@
-import { catchError, filter, map, Observable, of, switchMap, take } from "rxjs";
+import { catchError, filter, map, Observable, of, switchMap, take, timer } from "rxjs";
 import { SupabaseService } from "../db/supabase.service";
 import { CanActivate, Router } from "@angular/router";
 import { Injectable } from "@angular/core";
@@ -17,21 +17,24 @@ export class AuthGuard implements CanActivate {
       filter(initialized => initialized),
       take(1),
       switchMap(() => {
-        if (this.supabase.currentUser) {
-          return of(true);
-        } else {
-          // Сохраняем текущий URL для редиректа после логина
-          const currentUrl = this.router.url;
-          this.appStateService.saveState({
-            ...this.appStateService.getState(),
-            returnUrl: currentUrl
-          });
-          
-          this.router.navigate(['/login'], {
-            queryParams: { returnUrl: currentUrl }
-          });
-          return of(false);
-        }
+        return timer(500).pipe(
+          switchMap(() => {
+            if (this.supabase.currentUser) {
+              return of(true);
+            } else {
+              const currentUrl = this.router.url;
+              this.appStateService.saveState({
+                ...this.appStateService.getState(),
+                returnUrl: currentUrl
+              });
+              
+              this.router.navigate(['/login'], {
+                queryParams: { returnUrl: currentUrl }
+              });
+              return of(false);
+            }
+          })
+        );
       }),
       catchError(() => {
         this.router.navigate(['/login']);

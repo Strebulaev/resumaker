@@ -46,23 +46,25 @@ export class LoginComponent implements OnInit, OnDestroy {
     }, { validators: this.passwordMatchValidator });
   }
   ngOnInit() {
-    // Получаем returnUrl из query параметров
+    console.log('LoginComponent initialized');
+    
     this.route.queryParams.subscribe(params => {
       this.returnUrl = params['returnUrl'] || '/about';
+      console.log('Return URL:', this.returnUrl);
     });
-
-    // Ждем инициализации Supabase
+  
     this.supabase.initialized$.pipe(
       filter(initialized => initialized),
       take(1)
     ).subscribe(() => {
-      // После инициализации проверяем авторизацию
+      console.log('Supabase initialized, current user:', this.supabase.currentUser?.email);
+      
       if (this.supabase.currentUser) {
+        console.log('User already logged in, redirecting to:', this.returnUrl);
         this.router.navigate([this.returnUrl]);
         return;
       }
       
-      // Проверяем OAuth callback
       this.checkOAuthCallback();
     });
   }
@@ -81,19 +83,15 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.errorMessage = 'Завершаем аутентификацию...';
       
-      // Ждем завершения аутентификации
-      const subscription = this.supabase.initialized$.pipe(
-        filter(initialized => initialized),
-        take(1)
-      ).subscribe(() => {
+      // Даем время для обработки OAuth callback
+      setTimeout(() => {
         if (this.supabase.currentUser) {
           this.handleSuccessfulAuth();
         } else {
           this.loading = false;
           this.errorMessage = 'Ошибка аутентификации. Попробуйте снова.';
         }
-        subscription.unsubscribe();
-      });
+      }, 2000);
     }
   }
 

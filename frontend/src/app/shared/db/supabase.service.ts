@@ -492,22 +492,22 @@ export class SupabaseService {
     if (!this.supabase) return;
   
     try {
-      // Проверяем, есть ли OAuth callback в URL
+      // Сначала проверяем OAuth callback
       await this.handleOAuthCallback();
       
+      // Затем получаем сессию
       const { data: { session }, error } = await this.supabase.auth.getSession();
       
       if (error) {
         console.warn('Session error:', error);
         await this.tryRecoverSession();
       } else if (session) {
+        console.log('Session found:', session.user?.email);
         this.session = session;
         this.userSubject.next(session.user);
       }
   
-      // Настраиваем обработчик изменений состояния аутентификации
       this.setupAuthStateHandling();
-  
       this.initializedSubject.next(true);
   
     } catch (error) {
@@ -517,26 +517,63 @@ export class SupabaseService {
   }
 
   private async handleOAuthCallback(): Promise<void> {
-    // Проверяем, есть ли параметры OAuth callback в URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasAuthParams = urlParams.has('code') || urlParams.has('error');
-    
-    if (hasAuthParams) {
-      console.log('Handling OAuth callback...');
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
       
-      const { data, error } = await this.supabase!.auth.getSession();
+      const hasOAuthParams = 
+        urlParams.has('code') || 
+        urlParams.has('error') ||
+        hashParams.has('access_token') ||
+        hashParams.has('error');
       
-      if (error) {
-        console.error('OAuth callback error:', error);
-      } else if (data.session) {
-        console.log('OAuth callback successful, user:', data.session.user.email);
+      if (hasOAuthParams) {
+        console.log('Processing OAuth callback...');
         
-        // Очищаем URL параметры после успешной аутентификации
-        window.history.replaceState({}, '', window.location.pathname);
+        // Для OAuth с code (Google/GitHub)
+        if (urlParams.has('code')) {
+          const { data, error } = await this.supabase!.auth.getSession();
+          
+          if (error) {
+            console.error('OAuth callback error:', error);
+          } else if (data.session) {
+            console.log('OAuth successful, user:', data.session.user.email);
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        }
+        
+        // Для implicit flow (access_token в hash)
+        if (hashParams.has('access_token')) {
+          const access_token = hashParams.get('access_token');
+          const refresh_token = hashParams.get('refresh_token');
+          
+          if (access_token) {
+            // Создаем объект сессии только с необходимыми полями
+            const sessionData: any = {
+              access_token: access_token
+            };
+            
+            // Добавляем refresh_token только если он есть
+            if (refresh_token) {
+              sessionData.refresh_token = refresh_token;
+            }
+            
+            const { data, error } = await this.supabase!.auth.setSession(sessionData);
+            
+            if (error) {
+              console.error('Session set error:', error);
+            } else if (data.session) {
+              console.log('Session set successfully');
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          }
+        }
       }
+    } catch (error) {
+      console.error('OAuth callback handling error:', error);
     }
   }
-
+  
   private async tryRecoverSession(): Promise<void> {
     try {
       const storageKey = `sb-${environment.supabaseUrl?.split('//')[1]?.split('.')[0]}-auth-token`;
