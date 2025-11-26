@@ -85,12 +85,9 @@ export class App implements OnInit {
   }
 
   private setupErrorHandling(): void {
-    this.router.events.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(event => {
+    this.router.events.subscribe(event => {
       if (event instanceof NavigationError) {
         console.error('Navigation Error:', event.error);
-        this.errorHandler.showError(`Ошибка навигации: ${event.error.message}`, 'Router');
       }
     });
   }
@@ -114,7 +111,7 @@ export class App implements OnInit {
   ngOnInit(): void {
     this.initializeApp();
   }
-
+  
   private async initializeApp(): Promise<void> {
     try {
       this.isLoading = true;
@@ -238,9 +235,7 @@ export class App implements OnInit {
   }
 
   private setupNavigationHandling(): void {
-    this.router.events.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(event => {
+    this.router.events.subscribe(event => {
       if (event instanceof NavigationStart) {
         this.saveAppState();
       }
