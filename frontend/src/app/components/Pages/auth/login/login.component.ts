@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SupabaseService } from '../../../../shared/db/supabase.service';
-import { Subscription } from 'rxjs';
+import { filter, Subscription, take } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -45,37 +45,25 @@ export class LoginComponent implements OnInit, OnDestroy {
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
-
   ngOnInit() {
     // Получаем returnUrl из query параметров
     this.route.queryParams.subscribe(params => {
       this.returnUrl = params['returnUrl'] || '/profile/view';
     });
 
-    // Проверяем, есть ли уже авторизованный пользователь
-    if (this.supabase.currentUser) {
-      this.router.navigate([this.returnUrl]);
-      return;
-    }
-
-    // Подписываемся на изменения состояния аутентификации
-    this.setupAuthListener();
-    
-    // Проверяем OAuth callback
-    this.checkOAuthCallback();
-  }
-
-  ngOnDestroy() {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
-  }
-
-  private setupAuthListener(): void {
-    this.authSubscription = this.supabase.initialized$.subscribe(initialized => {
-      if (initialized && this.supabase.currentUser) {
-        this.handleSuccessfulAuth();
+    // Ждем инициализации Supabase
+    this.supabase.initialized$.pipe(
+      filter(initialized => initialized),
+      take(1)
+    ).subscribe(() => {
+      // После инициализации проверяем авторизацию
+      if (this.supabase.currentUser) {
+        this.router.navigate([this.returnUrl]);
+        return;
       }
+      
+      // Проверяем OAuth callback
+      this.checkOAuthCallback();
     });
   }
 
@@ -83,7 +71,6 @@ export class LoginComponent implements OnInit, OnDestroy {
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     
-    // Проверяем наличие OAuth параметров в URL
     const hasOAuthParams = 
       urlParams.has('code') || 
       urlParams.has('error') ||
@@ -94,17 +81,25 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.errorMessage = 'Завершаем аутентификацию...';
       
-      // Очищаем URL параметры после короткой задержки
-      setTimeout(() => {
-        this.cleanUrlParams();
-      }, 1000);
+      // Ждем завершения аутентификации
+      const subscription = this.supabase.initialized$.pipe(
+        filter(initialized => initialized),
+        take(1)
+      ).subscribe(() => {
+        if (this.supabase.currentUser) {
+          this.handleSuccessfulAuth();
+        } else {
+          this.loading = false;
+          this.errorMessage = 'Ошибка аутентификации. Попробуйте снова.';
+        }
+        subscription.unsubscribe();
+      });
     }
   }
 
-  private cleanUrlParams(): void {
-    // Очищаем URL от OAuth параметров
-    if (window.location.search || window.location.hash) {
-      window.history.replaceState({}, '', window.location.pathname);
+  ngOnDestroy() {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
     }
   }
 

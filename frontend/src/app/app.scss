@@ -295,3 +295,22 @@ body {
     margin: 0.5rem !important;
   }
 }
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: var(--surface-ground);
+  
+  p {
+    margin-top: 1rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

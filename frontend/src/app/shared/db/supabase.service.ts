@@ -49,17 +49,18 @@ export class SupabaseService {
   private _initialized = false;
   private initializedSubject = new BehaviorSubject<boolean>(false);
   public initialized$: Observable<boolean> = this.initializedSubject.asObservable();
-  
+  private initializationPromise: Promise<void> | null = null; 
+
   get initialized(): boolean {
     return this.initializedSubject.value;
   }
 
   constructor(
     private router: Router, 
+    private appStateService: AppStateService,
     private errorHandler: ErrorHandlerService
-  ) {
-    this.setupAuthStateHandling();
-  }
+  ) {}
+
   private setupAuthStateHandling(): void {
     if (!this.supabase) return;
   
@@ -168,8 +169,17 @@ export class SupabaseService {
     }
     return this.supabase;
   }
-
   async initialize(config: AppConfig): Promise<void> {
+    // Если уже инициализируемся, возвращаем существующий промис
+    if (this.initializationPromise) {
+      return this.initializationPromise;
+    }
+
+    this.initializationPromise = this.initializeSupabase(config);
+    return this.initializationPromise;
+  }
+
+  private async initializeSupabase(config: AppConfig): Promise<void> {
     try {
       console.log('Initializing Supabase with config from:', 
         environment.production ? 'API endpoint' : 'environment.ts');
@@ -211,11 +221,84 @@ export class SupabaseService {
         }
       });
 
+      // Настраиваем обработчик аутентификации ДО инициализации
+      this.setupAuthStateHandling();
+
       await this.initAuth();
 
     } catch (error) {
       console.error('Supabase initialization failed, using mock mode:', error);
       this.setupMockAuth();
+    }
+  }
+
+  private async initAuth(): Promise<void> {
+    if (!this.supabase) return;
+  
+    try {
+      // Сначала проверяем OAuth callback
+      await this.handleOAuthCallback();
+      
+      const { data: { session }, error } = await this.supabase.auth.getSession();
+      
+      if (error) {
+        console.warn('Session error:', error);
+        await this.tryRecoverSession();
+      } else if (session) {
+        this.session = session;
+        this.userSubject.next(session.user);
+      }
+  
+      this.initializedSubject.next(true);
+      console.log('Supabase auth initialized successfully');
+
+    } catch (error) {
+      console.error('Auth initialization failed:', error);
+      this.initializedSubject.next(true);
+    }
+  }
+
+  private async handleOAuthCallback(): Promise<void> {
+    if (!this.supabase) return;
+
+    // Проверяем, есть ли параметры OAuth callback в URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    const hasAuthParams = 
+      urlParams.has('code') || 
+      urlParams.has('error') ||
+      hashParams.has('access_token') ||
+      hashParams.has('error');
+    
+    if (hasAuthParams) {
+      console.log('Handling OAuth callback...');
+      
+      try {
+        // Даем время Supabase обработать callback
+        const { data, error } = await this.supabase.auth.getSession();
+        
+        if (error) {
+          console.error('OAuth callback error:', error);
+        } else if (data.session) {
+          console.log('OAuth callback successful, user:', data.session.user.email);
+        }
+        
+        // Очищаем URL параметры после обработки
+        this.cleanUrlParams();
+        
+      } catch (error) {
+        console.error('Error handling OAuth callback:', error);
+        this.cleanUrlParams();
+      }
+    }
+  }
+
+  private cleanUrlParams(): void {
+    if (window.location.search || window.location.hash) {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+      console.log('Cleaned URL parameters');
     }
   }
 
@@ -419,54 +502,29 @@ export class SupabaseService {
     
     return { data: { user: mockUser }, error: null };
   }
-
-  private createSafeStorage() {
-    const isLockManagerError = (error: any): boolean => {
-      return error && error.message && 
-             error.message.includes('Navigator LockManager') ||
-             error.message.includes('lock:sb-');
-    };
   
+  private createSafeStorage() {
     return {
       getItem: (key: string): Promise<string | null> => {
         return new Promise((resolve) => {
           try {
-            if (key.includes('auth-token') && key.includes('sb-')) {
-              console.log('Skipping potentially problematic auth token access');
-              resolve(null);
-            } else {
-              const value = localStorage.getItem(key);
-              resolve(value);
-            }
+            // Разрешаем доступ к auth токенам
+            const value = localStorage.getItem(key);
+            resolve(value);
           } catch (error) {
-            if (isLockManagerError(error)) {
-              console.warn('LockManager error in getItem, skipping:', key);
-              resolve(null);
-            } else {
-              console.warn('Storage getItem failed:', error);
-              resolve(null);
-            }
+            console.warn('Storage getItem failed:', error);
+            resolve(null);
           }
         });
       },
       setItem: (key: string, value: string): Promise<void> => {
         return new Promise((resolve) => {
           try {
-            if (key.includes('auth-token') && key.includes('sb-')) {
-              console.log('Skipping potentially problematic auth token storage');
-              resolve();
-            } else {
-              localStorage.setItem(key, value);
-              resolve();
-            }
+            localStorage.setItem(key, value);
+            resolve();
           } catch (error) {
-            if (isLockManagerError(error)) {
-              console.warn('LockManager error in setItem, skipping:', key);
-              resolve();
-            } else {
-              console.warn('Storage setItem failed:', error);
-              resolve();
-            }
+            console.warn('Storage setItem failed:', error);
+            resolve();
           }
         });
       },
@@ -476,66 +534,12 @@ export class SupabaseService {
             localStorage.removeItem(key);
             resolve();
           } catch (error) {
-            if (isLockManagerError(error)) {
-              console.warn('LockManager error in removeItem, skipping:', key);
-              resolve();
-            } else {
-              console.warn('Storage removeItem failed:', error);
-              resolve();
-            }
+            console.warn('Storage removeItem failed:', error);
+            resolve();
           }
         });
       }
     };
-  }
-
-  private async initAuth(): Promise<void> {
-    if (!this.supabase) return;
-  
-    try {
-      // Проверяем, есть ли OAuth callback в URL
-      await this.handleOAuthCallback();
-      
-      const { data: { session }, error } = await this.supabase.auth.getSession();
-      
-      if (error) {
-        console.warn('Session error:', error);
-        await this.tryRecoverSession();
-      } else if (session) {
-        this.session = session;
-        this.userSubject.next(session.user);
-      }
-  
-      // Настраиваем обработчик изменений состояния аутентификации
-      this.setupAuthStateHandling();
-  
-      this.initializedSubject.next(true);
-  
-    } catch (error) {
-      console.error('Auth initialization failed:', error);
-      this.initializedSubject.next(true);
-    }
-  }
-
-  private async handleOAuthCallback(): Promise<void> {
-    // Проверяем, есть ли параметры OAuth callback в URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasAuthParams = urlParams.has('code') || urlParams.has('error');
-    
-    if (hasAuthParams) {
-      console.log('Handling OAuth callback...');
-      
-      const { data, error } = await this.supabase!.auth.getSession();
-      
-      if (error) {
-        console.error('OAuth callback error:', error);
-      } else if (data.session) {
-        console.log('OAuth callback successful, user:', data.session.user.email);
-        
-        // Очищаем URL параметры после успешной аутентификации
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    }
   }
 
   private async tryRecoverSession(): Promise<void> {

@@ -1,80 +1,87 @@
-<app-personal-data-consent></app-personal-data-consent>
-<app-cookies-consent></app-cookies-consent>
+@if (isLoading) {
+  <div class="app-loading">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Загрузка приложения...</p>
+  </div>
+} @else {
+  <app-personal-data-consent></app-personal-data-consent>
+  <app-cookies-consent></app-cookies-consent>
 
-<p-menubar [model]="items">
-  @if(supabase.currentUser) {
-  <ng-template pTemplate="end">
-    <div class="user-info">
-      <app-notification-bell></app-notification-bell>
+  <p-menubar [model]="items">
+    @if(supabase.currentUser) {
+    <ng-template pTemplate="end">
+      <div class="user-info">
+        <app-notification-bell></app-notification-bell>
 
-      <div class="ai-config-button">
-        <button 
-          pButton 
-          [icon]="aiGuard.checkAIConfigured() ? 'pi pi-android' : 'pi pi-android'" 
-          class="p-button-text ai-trigger"
-          (click)="showAIConfigModal = true"
-          [pTooltip]="getAIStatusTooltip()" 
-          tooltipPosition="left">
-          <div class="ai-status-indicator" 
-               [class.connected]="aiGuard.checkAIConfigured()"></div>
-        </button>
-      </div>
+        <div class="ai-config-button">
+          <button 
+            pButton 
+            [icon]="aiGuard.checkAIConfigured() ? 'pi pi-android' : 'pi pi-android'" 
+            class="p-button-text ai-trigger"
+            (click)="showAIConfigModal = true"
+            [pTooltip]="getAIStatusTooltip()" 
+            tooltipPosition="left">
+            <div class="ai-status-indicator" 
+                [class.connected]="aiGuard.checkAIConfigured()"></div>
+          </button>
+        </div>
 
-      <div class="language-selector">
-        <button 
-          pButton 
-          icon="pi pi-globe" 
-          class="p-button-text language-trigger"
-          (click)="toggleLanguageDropdown()"
-          [pTooltip]="'LANGUAGE.SELECT' | translate"
-          tooltipPosition="left">
-        </button>
+        <div class="language-selector">
+          <button 
+            pButton 
+            icon="pi pi-globe" 
+            class="p-button-text language-trigger"
+            (click)="toggleLanguageDropdown()"
+            [pTooltip]="'LANGUAGE.SELECT' | translate"
+            tooltipPosition="left">
+          </button>
 
-        <div class="language-dropdown" [class.show]="showLanguageDropdown">
-          <div class="dropdown-header">
-            <span>{{ 'LANGUAGE.CHOOSE' | translate }}</span>
-          </div>
-          <div class="language-list">
-            @for(lang of availableLanguages; track lang.code) {
-              <div 
-                class="language-item" 
-                [class.active]="currentLang === lang.code"
-                (click)="changeLanguage(lang.code)"
-                [pTooltip]="lang.countryCode"
-                tooltipPosition="left">
-                <i [class]="lang.flag" class="flag-icon"></i>
-                <span class="language-name">{{ lang.name }}</span>
-              </div>
-            }
+          <div class="language-dropdown" [class.show]="showLanguageDropdown">
+            <div class="dropdown-header">
+              <span>{{ 'LANGUAGE.CHOOSE' | translate }}</span>
+            </div>
+            <div class="language-list">
+              @for(lang of availableLanguages; track lang.code) {
+                <div 
+                  class="language-item" 
+                  [class.active]="currentLang === lang.code"
+                  (click)="changeLanguage(lang.code)"
+                  [pTooltip]="lang.countryCode"
+                  tooltipPosition="left">
+                  <i [class]="lang.flag" class="flag-icon"></i>
+                  <span class="language-name">{{ lang.name }}</span>
+                </div>
+              }
+            </div>
           </div>
         </div>
+
+        <p-avatar [image]="userAvatar" size="normal" shape="circle" styleClass="mr-2"></p-avatar>
+        <span class="mr-3">{{ userName }}</span>
+        <button 
+          pButton 
+          icon="pi pi-sign-out" 
+          class="p-button-rounded p-button-text" 
+          (click)="signOut()"
+          [pTooltip]="'TOOLTIP.SIGNOUT_BUTTON' | translate" 
+          tooltipPosition="left">
+        </button>
       </div>
+    </ng-template>
+    }
+  </p-menubar>
 
-      <p-avatar [image]="userAvatar" size="normal" shape="circle" styleClass="mr-2"></p-avatar>
-      <span class="mr-3">{{ userName }}</span>
-      <button 
-        pButton 
-        icon="pi pi-sign-out" 
-        class="p-button-rounded p-button-text" 
-        (click)="signOut()"
-        [pTooltip]="'TOOLTIP.SIGNOUT_BUTTON' | translate" 
-        tooltipPosition="left">
-      </button>
-    </div>
-  </ng-template>
-  }
-</p-menubar>
+  <router-outlet />
+  <app-error-toast></app-error-toast>
 
-<router-outlet />
-<app-error-toast></app-error-toast>
-
-<p-dialog 
-  header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
-  [(visible)]="showAIConfigModal" 
-  [modal]="true"
-  [style]="{ width: '70vw', maxWidth: '900px' }">
-  
-  <app-ai-config-modal 
-    (closed)="showAIConfigModal = false">
-  </app-ai-config-modal>
-</p-dialog>
+  <p-dialog 
+    header="{{ 'AI_CONFIG.MODAL_TITLE' | translate }}" 
+    [(visible)]="showAIConfigModal" 
+    [modal]="true"
+    [style]="{ width: '70vw', maxWidth: '900px' }">
+    
+    <app-ai-config-modal 
+      (closed)="showAIConfigModal = false">
+    </app-ai-config-modal>
+  </p-dialog>
+}

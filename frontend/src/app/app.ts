@@ -9,7 +9,7 @@ import { SupabaseService } from './shared/db/supabase.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TranslateService, TranslatePipe } from "@ngx-translate/core";
 import { TooltipModule } from 'primeng/tooltip';
-import { filter, take } from 'rxjs';
+import { filter, Subject, take, takeUntil } from 'rxjs';
 import { AppStateService } from './shared/state/app-state.service';
 import { LanguageService } from './shared/utils/language.service';
 import { SelectModule } from "primeng/select";
@@ -25,6 +25,8 @@ import { PersonalDataConsentComponent } from "./components/Pages/personal-data-c
 import { CookiesConsentComponent } from "./components/Pages/cookies-consent/cookies-consent.component";
 import { AnalyticsService } from './shared/analytics.service';
 import { NotificationBellComponent } from './components/Notifications/notification-bell/notification-bell.component';
+import { ConfigService } from './shared/config/config.service';
+import { ProgressSpinnerModule } from "primeng/progressspinner";
 
 @Component({
   selector: 'app-root',
@@ -47,7 +49,8 @@ import { NotificationBellComponent } from './components/Notifications/notificati
     ErrorToastComponent,
     PersonalDataConsentComponent,
     CookiesConsentComponent,
-    NotificationBellComponent
+    NotificationBellComponent,
+    ProgressSpinnerModule
 ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
@@ -64,9 +67,12 @@ export class App implements OnInit {
   showLanguageDropdown: boolean = false;
   showAIConfigModal = false;
   currentAIProvider: string = 'Не настроен';
+  private destroy$ = new Subject<void>();
+  isLoading = true;
 
   constructor(
     public supabase: SupabaseService,
+    private configService: ConfigService,
     private analyticsService: AnalyticsService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -79,9 +85,12 @@ export class App implements OnInit {
   }
 
   private setupErrorHandling(): void {
-    this.router.events.subscribe(event => {
+    this.router.events.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(event => {
       if (event instanceof NavigationError) {
         console.error('Navigation Error:', event.error);
+        this.errorHandler.showError(`Ошибка навигации: ${event.error.message}`, 'Router');
       }
     });
   }
@@ -96,31 +105,68 @@ export class App implements OnInit {
     }
   }
   
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+
   ngOnInit(): void {
-    this.initializeLanguages();
-    this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
-    
-    // Подписываемся на изменения текущего AI провайдера
-    this.aiGuard.getCurrentProviderNameObservable().subscribe(provider => {
+    this.initializeApp();
+  }
+
+  private async initializeApp(): Promise<void> {
+    try {
+      this.isLoading = true;
+      
+      // Инициализируем языки
+      this.initializeLanguages();
+      this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
+      
+      // Загружаем конфиг и инициализируем Supabase
+      const config = await this.configService.loadConfig();
+      await this.supabase.initialize(config);
+
+      // Подписываемся на события после инициализации
+      this.setupSubscriptions();
+      
+      this.restoreAppState();
+      
+    } catch (error) {
+      console.error('App initialization failed:', error);
+      this.errorHandler.showError('Ошибка инициализации приложения', 'AppComponent');
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  private setupSubscriptions(): void {
+    // Перенесите сюда все подписки из ngOnInit
+    this.aiGuard.getCurrentProviderNameObservable().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(provider => {
       this.currentAIProvider = provider;
     });
     
-    this.restoreAppState();
-    
-    this.translate.onLangChange.subscribe(() => {
+    this.translate.onLangChange.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
       this.items = this.buildMenu();
       this.currentLang = this.translate.currentLang;
     });
     
     this.supabase.initialized$.pipe(
       filter(initialized => initialized),
-      take(1)
+      take(1),
+      takeUntil(this.destroy$)
     ).subscribe(() => {
       this.items = this.buildMenu();
       this.restoreNavigation();
     });
+
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
     ).subscribe((event: NavigationEnd) => {
       this.analyticsService.trackPageView(
         this.getPageTitle(event.url),
@@ -128,7 +174,6 @@ export class App implements OnInit {
       );
     });
   }
-
   private getPageTitle(url: string): string {
     const routes: {[key: string]: string} = {
       '/': 'Главная',
@@ -193,7 +238,9 @@ export class App implements OnInit {
   }
 
   private setupNavigationHandling(): void {
-    this.router.events.subscribe(event => {
+    this.router.events.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(event => {
       if (event instanceof NavigationStart) {
         this.saveAppState();
       }
@@ -223,19 +270,23 @@ export class App implements OnInit {
     const savedState = this.appStateService.getState();
     const lastUrl = this.appStateService.getLastUrl();
     
-    if (savedState.user && lastUrl && this.router.url === '/') {
+    if (this.supabase.currentUser && lastUrl && this.router.url === '/') {
       const allowedRoutes = [
         '/resume-generation',
         '/cover-letter',
         '/interview-prep', 
         '/vacancy-search',
         '/job-platforms',
-        '/about'
+        '/about',
+        '/profile'
       ];
       
       if (lastUrl && allowedRoutes.some(route => lastUrl.startsWith(route))) {
         setTimeout(() => {
-          this.router.navigateByUrl(lastUrl, { replaceUrl: true });
+          this.router.navigateByUrl(lastUrl, { replaceUrl: true }).catch(error => {
+            console.error('Failed to restore navigation:', error);
+            this.router.navigate(['/profile/view']);
+          });
         }, 100);
       }
     }
