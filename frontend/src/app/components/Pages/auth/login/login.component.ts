@@ -71,27 +71,32 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   private checkOAuthCallback(): void {
     const urlParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
     
-    const hasOAuthParams = 
-      urlParams.has('code') || 
-      urlParams.has('error') ||
-      hashParams.has('access_token') ||
-      hashParams.has('error');
-    
-    if (hasOAuthParams) {
+    if (urlParams.has('code')) {
+      console.log('🔄 OAuth callback detected in LoginComponent');
       this.loading = true;
       this.errorMessage = 'Завершаем аутентификацию...';
       
-      // Даем время для обработки OAuth callback
-      setTimeout(() => {
-        if (this.supabase.currentUser) {
-          this.handleSuccessfulAuth();
-        } else {
-          this.loading = false;
-          this.errorMessage = 'Ошибка аутентификации. Попробуйте снова.';
-        }
-      }, 2000);
+      // Ждем завершения аутентификации
+      const subscription = this.supabase.initialized$.pipe(
+        filter(initialized => initialized),
+        take(1)
+      ).subscribe(() => {
+        setTimeout(() => {
+          if (this.supabase.currentUser) {
+            console.log('✅ OAuth successful in LoginComponent');
+            this.handleSuccessfulAuth();
+          } else {
+            console.log('❌ OAuth failed in LoginComponent');
+            this.loading = false;
+            this.errorMessage = 'Ошибка аутентификации. Попробуйте снова.';
+            
+            // Очищаем URL даже при ошибке
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+          subscription.unsubscribe();
+        }, 2000);
+      });
     }
   }
 
