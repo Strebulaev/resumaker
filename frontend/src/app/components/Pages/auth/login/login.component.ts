@@ -21,7 +21,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   loading = false;
   errorMessage: string | null = null;
   isRegisterMode = false;
-  returnUrl: string = '/profile/view';
+  returnUrl: string = '/';
   
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -48,7 +48,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Получаем returnUrl из query параметров
     this.route.queryParams.subscribe(params => {
-      this.returnUrl = params['returnUrl'] || '/profile/view';
+      this.returnUrl = params['returnUrl'] || '/about';
     });
 
     // Ждем инициализации Supabase

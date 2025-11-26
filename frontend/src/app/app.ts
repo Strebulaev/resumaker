@@ -9,7 +9,7 @@ import { SupabaseService } from './shared/db/supabase.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TranslateService, TranslatePipe } from "@ngx-translate/core";
 import { TooltipModule } from 'primeng/tooltip';
-import { filter, Subject, take, takeUntil } from 'rxjs';
+import { filter, take } from 'rxjs';
 import { AppStateService } from './shared/state/app-state.service';
 import { LanguageService } from './shared/utils/language.service';
 import { SelectModule } from "primeng/select";
@@ -26,7 +26,6 @@ import { CookiesConsentComponent } from "./components/Pages/cookies-consent/cook
 import { AnalyticsService } from './shared/analytics.service';
 import { NotificationBellComponent } from './components/Notifications/notification-bell/notification-bell.component';
 import { ConfigService } from './shared/config/config.service';
-import { ProgressSpinnerModule } from "primeng/progressspinner";
 
 @Component({
   selector: 'app-root',
@@ -49,8 +48,7 @@ import { ProgressSpinnerModule } from "primeng/progressspinner";
     ErrorToastComponent,
     PersonalDataConsentComponent,
     CookiesConsentComponent,
-    NotificationBellComponent,
-    ProgressSpinnerModule
+    NotificationBellComponent
 ],
   templateUrl: './app.html',
   styleUrl: './app.scss'
@@ -67,8 +65,6 @@ export class App implements OnInit {
   showLanguageDropdown: boolean = false;
   showAIConfigModal = false;
   currentAIProvider: string = 'Не настроен';
-  private destroy$ = new Subject<void>();
-  isLoading = true;
 
   constructor(
     public supabase: SupabaseService,
@@ -82,6 +78,17 @@ export class App implements OnInit {
   ) {
     this.setupNavigationHandling();
     this.setupErrorHandling();
+    this.initializeApp();
+  }
+
+  private async initializeApp(): Promise<void> {
+    try {
+      // Загружаем конфиг и инициализируем Supabase
+      const config = await this.configService.loadConfig();
+      await this.supabase.initialize(config);
+    } catch (error) {
+      console.error('App initialization failed:', error);
+    }
   }
 
   private setupErrorHandling(): void {
@@ -102,68 +109,31 @@ export class App implements OnInit {
     }
   }
   
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-
   ngOnInit(): void {
-    this.initializeApp();
-  }
-  
-  private async initializeApp(): Promise<void> {
-    try {
-      this.isLoading = true;
-      
-      // Инициализируем языки
-      this.initializeLanguages();
-      this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
-      
-      // Загружаем конфиг и инициализируем Supabase
-      const config = await this.configService.loadConfig();
-      await this.supabase.initialize(config);
-
-      // Подписываемся на события после инициализации
-      this.setupSubscriptions();
-      
-      this.restoreAppState();
-      
-    } catch (error) {
-      console.error('App initialization failed:', error);
-      this.errorHandler.showError('Ошибка инициализации приложения', 'AppComponent');
-    } finally {
-      this.isLoading = false;
-    }
-  }
-
-  private setupSubscriptions(): void {
-    // Перенесите сюда все подписки из ngOnInit
-    this.aiGuard.getCurrentProviderNameObservable().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(provider => {
+    this.initializeLanguages();
+    this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
+    
+    // Подписываемся на изменения текущего AI провайдера
+    this.aiGuard.getCurrentProviderNameObservable().subscribe(provider => {
       this.currentAIProvider = provider;
     });
     
-    this.translate.onLangChange.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
+    this.restoreAppState();
+    
+    this.translate.onLangChange.subscribe(() => {
       this.items = this.buildMenu();
       this.currentLang = this.translate.currentLang;
     });
     
     this.supabase.initialized$.pipe(
       filter(initialized => initialized),
-      take(1),
-      takeUntil(this.destroy$)
+      take(1)
     ).subscribe(() => {
       this.items = this.buildMenu();
       this.restoreNavigation();
     });
-
     this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd),
-      takeUntil(this.destroy$)
+      filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
       this.analyticsService.trackPageView(
         this.getPageTitle(event.url),
@@ -171,6 +141,7 @@ export class App implements OnInit {
       );
     });
   }
+
   private getPageTitle(url: string): string {
     const routes: {[key: string]: string} = {
       '/': 'Главная',

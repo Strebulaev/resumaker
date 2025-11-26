@@ -45,11 +45,10 @@ export interface UserProfile {
 export class SupabaseService {
   private supabase: SupabaseClient | undefined;
   private session: AuthSession | null = null;
-  public userSubject = new BehaviorSubject<User | null>(null);
+  private userSubject = new BehaviorSubject<User | null>(null);
   private _initialized = false;
   private initializedSubject = new BehaviorSubject<boolean>(false);
   public initialized$: Observable<boolean> = this.initializedSubject.asObservable();
-  private initializationPromise: Promise<void> | null = null; 
 
   get initialized(): boolean {
     return this.initializedSubject.value;
@@ -59,7 +58,7 @@ export class SupabaseService {
     private router: Router, 
     private errorHandler: ErrorHandlerService
   ) {}
-
+  
   private setupAuthStateHandling(): void {
     if (!this.supabase) return;
   
@@ -77,7 +76,7 @@ export class SupabaseService {
         }
         
         // Используем сохраненный returnUrl или дефолтный
-        const returnUrl = this.getReturnUrl() || '/profile/view';
+        const returnUrl = this.getReturnUrl() || '/';
         console.log('Redirecting to:', returnUrl);
         
         // Небольшая задержка для гарантии завершения инициализации
@@ -168,17 +167,8 @@ export class SupabaseService {
     }
     return this.supabase;
   }
+
   async initialize(config: AppConfig): Promise<void> {
-    // Если уже инициализируемся, возвращаем существующий промис
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-
-    this.initializationPromise = this.initializeSupabase(config);
-    return this.initializationPromise;
-  }
-
-  private async initializeSupabase(config: AppConfig): Promise<void> {
     try {
       console.log('Initializing Supabase with config from:', 
         environment.production ? 'API endpoint' : 'environment.ts');
@@ -220,84 +210,11 @@ export class SupabaseService {
         }
       });
 
-      // Настраиваем обработчик аутентификации ДО инициализации
-      this.setupAuthStateHandling();
-
       await this.initAuth();
 
     } catch (error) {
       console.error('Supabase initialization failed, using mock mode:', error);
       this.setupMockAuth();
-    }
-  }
-
-  private async initAuth(): Promise<void> {
-    if (!this.supabase) return;
-  
-    try {
-      // Сначала проверяем OAuth callback
-      await this.handleOAuthCallback();
-      
-      const { data: { session }, error } = await this.supabase.auth.getSession();
-      
-      if (error) {
-        console.warn('Session error:', error);
-        await this.tryRecoverSession();
-      } else if (session) {
-        this.session = session;
-        this.userSubject.next(session.user);
-      }
-  
-      this.initializedSubject.next(true);
-      console.log('Supabase auth initialized successfully');
-
-    } catch (error) {
-      console.error('Auth initialization failed:', error);
-      this.initializedSubject.next(true);
-    }
-  }
-
-  private async handleOAuthCallback(): Promise<void> {
-    if (!this.supabase) return;
-
-    // Проверяем, есть ли параметры OAuth callback в URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    
-    const hasAuthParams = 
-      urlParams.has('code') || 
-      urlParams.has('error') ||
-      hashParams.has('access_token') ||
-      hashParams.has('error');
-    
-    if (hasAuthParams) {
-      console.log('Handling OAuth callback...');
-      
-      try {
-        // Даем время Supabase обработать callback
-        const { data, error } = await this.supabase.auth.getSession();
-        
-        if (error) {
-          console.error('OAuth callback error:', error);
-        } else if (data.session) {
-          console.log('OAuth callback successful, user:', data.session.user.email);
-        }
-        
-        // Очищаем URL параметры после обработки
-        this.cleanUrlParams();
-        
-      } catch (error) {
-        console.error('Error handling OAuth callback:', error);
-        this.cleanUrlParams();
-      }
-    }
-  }
-
-  private cleanUrlParams(): void {
-    if (window.location.search || window.location.hash) {
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, '', cleanUrl);
-      console.log('Cleaned URL parameters');
     }
   }
 
@@ -359,8 +276,8 @@ export class SupabaseService {
 
     try {
       const redirectTo = environment.production 
-        ? 'https://rezulution.vercel.app/profile/view'
-        : `${window.location.origin}/profile/view`;
+        ? 'https://rezulution.vercel.app'
+        : `${window.location.origin}/`;
 
       const { error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
@@ -380,102 +297,7 @@ export class SupabaseService {
       return this.mockOAuthSignIn(provider);
     }
   }
-  async getFullProfile(): Promise<UserProfile | null> {
-    try {
-      if (!this.currentUser?.id) {
-        return null;
-      }
-  
-      if (!environment.production) {
-        const profile = localStorage.getItem('sb-local-profile');
-        return profile ? JSON.parse(profile) : this.createDefaultProfile();
-      }
-  
-      const { data, error } = await this.supabase!
-        .from('user_profiles')
-        .select('*')
-        .eq('id', this.currentUser.id)
-        .maybeSingle(); // Используем maybeSingle вместо single
-  
-      if (error) {
-        console.error('Supabase error loading profile:', error);
-        
-        // Если ошибка "нет данных", создаем профиль по умолчанию
-        if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating default profile...');
-          return await this.createAndSaveDefaultProfile();
-        }
-        
-        return this.createDefaultProfile();
-      }
-  
-      // Если данные есть - возвращаем, иначе создаем профиль
-      return data || await this.createAndSaveDefaultProfile();
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      this.errorHandler.showError('Ошибка загрузки профиля', 'SupabaseService');
-      return this.createDefaultProfile();
-    }
-  }
-  
-  // Добавьте метод для создания и сохранения профиля по умолчанию
-  private async createAndSaveDefaultProfile(): Promise<UserProfile> {
-    const defaultProfile = this.createDefaultProfile();
-    
-    try {
-      // Сохраняем профиль в базу данных
-      const { error } = await this.supabase!
-        .from('user_profiles')
-        .upsert(defaultProfile, { onConflict: 'id' });
-      
-      if (error) {
-        console.error('Error saving default profile:', error);
-      } else {
-        console.log('Default profile created successfully');
-      }
-    } catch (error) {
-      console.error('Error creating default profile:', error);
-    }
-    
-    return defaultProfile;
-  }
-  
-  private createDefaultProfile(): UserProfile {
-    const userEmail = this.currentUser?.email || '';
-    const userName = this.currentUser?.user_metadata?.['full_name'] || 
-                     userEmail.split('@')[0] || 'User';
-    
-    return {
-      id: this.currentUser?.id || 'local-user',
-      email: userEmail,
-      full_name: userName,
-      phone: '',
-      gender: 'unknown',
-      avatar_url: this.currentUser?.user_metadata?.['avatar_url'] || '',
-      profile_data: {
-        desiredPositions: [],
-        contact: {
-          linkedin: '',
-          github: ''
-        },
-        location: {
-          country: '',
-          city: '',
-          relocation: false,
-          remote: false,
-          business_trips: false
-        },
-        languages: [],
-        skills: [],
-        education: [],
-        experience: [],
-        hobby: [],
-        literature: []
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-  }
+
   private async mockSignUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
     console.log('Mock password sign-up triggered for:', email);
     
@@ -552,7 +374,7 @@ export class SupabaseService {
     this.session = mockSession;
     this.userSubject.next(userData.user);
     
-    this.router.navigate(['/profile/view']);
+    this.router.navigate(['/']);
     
     return { data: { user: userData.user, session: mockSession }, error: null };
   }
@@ -592,33 +414,58 @@ export class SupabaseService {
     
     await this.createUserProfile(mockUser);
     
-    this.router.navigate(['/profile/view']);
+    this.router.navigate(['/']);
     
     return { data: { user: mockUser }, error: null };
   }
 
   private createSafeStorage() {
+    const isLockManagerError = (error: any): boolean => {
+      return error && error.message && 
+             error.message.includes('Navigator LockManager') ||
+             error.message.includes('lock:sb-');
+    };
+  
     return {
       getItem: (key: string): Promise<string | null> => {
         return new Promise((resolve) => {
           try {
-            // Разрешаем доступ к auth токенам
-            const value = localStorage.getItem(key);
-            resolve(value);
+            if (key.includes('auth-token') && key.includes('sb-')) {
+              console.log('Skipping potentially problematic auth token access');
+              resolve(null);
+            } else {
+              const value = localStorage.getItem(key);
+              resolve(value);
+            }
           } catch (error) {
-            console.warn('Storage getItem failed:', error);
-            resolve(null);
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in getItem, skipping:', key);
+              resolve(null);
+            } else {
+              console.warn('Storage getItem failed:', error);
+              resolve(null);
+            }
           }
         });
       },
       setItem: (key: string, value: string): Promise<void> => {
         return new Promise((resolve) => {
           try {
-            localStorage.setItem(key, value);
-            resolve();
+            if (key.includes('auth-token') && key.includes('sb-')) {
+              console.log('Skipping potentially problematic auth token storage');
+              resolve();
+            } else {
+              localStorage.setItem(key, value);
+              resolve();
+            }
           } catch (error) {
-            console.warn('Storage setItem failed:', error);
-            resolve();
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in setItem, skipping:', key);
+              resolve();
+            } else {
+              console.warn('Storage setItem failed:', error);
+              resolve();
+            }
           }
         });
       },
@@ -628,12 +475,66 @@ export class SupabaseService {
             localStorage.removeItem(key);
             resolve();
           } catch (error) {
-            console.warn('Storage removeItem failed:', error);
-            resolve();
+            if (isLockManagerError(error)) {
+              console.warn('LockManager error in removeItem, skipping:', key);
+              resolve();
+            } else {
+              console.warn('Storage removeItem failed:', error);
+              resolve();
+            }
           }
         });
       }
     };
+  }
+
+  private async initAuth(): Promise<void> {
+    if (!this.supabase) return;
+  
+    try {
+      // Проверяем, есть ли OAuth callback в URL
+      await this.handleOAuthCallback();
+      
+      const { data: { session }, error } = await this.supabase.auth.getSession();
+      
+      if (error) {
+        console.warn('Session error:', error);
+        await this.tryRecoverSession();
+      } else if (session) {
+        this.session = session;
+        this.userSubject.next(session.user);
+      }
+  
+      // Настраиваем обработчик изменений состояния аутентификации
+      this.setupAuthStateHandling();
+  
+      this.initializedSubject.next(true);
+  
+    } catch (error) {
+      console.error('Auth initialization failed:', error);
+      this.initializedSubject.next(true);
+    }
+  }
+
+  private async handleOAuthCallback(): Promise<void> {
+    // Проверяем, есть ли параметры OAuth callback в URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasAuthParams = urlParams.has('code') || urlParams.has('error');
+    
+    if (hasAuthParams) {
+      console.log('Handling OAuth callback...');
+      
+      const { data, error } = await this.supabase!.auth.getSession();
+      
+      if (error) {
+        console.error('OAuth callback error:', error);
+      } else if (data.session) {
+        console.log('OAuth callback successful, user:', data.session.user.email);
+        
+        // Очищаем URL параметры после успешной аутентификации
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
   }
 
   private async tryRecoverSession(): Promise<void> {
@@ -754,6 +655,78 @@ export class SupabaseService {
       console.error('Error saving profile:', error);
       return { data: null, error: error as Error };
     }
+  }
+
+  async getFullProfile(): Promise<UserProfile | null> {
+    try {
+      if (!this.currentUser?.id) {
+        return null;
+      }
+  
+      if (!environment.production) {
+        const profile = localStorage.getItem('sb-local-profile');
+        return profile ? JSON.parse(profile) : this.createDefaultProfile();
+      }
+  
+      const { data, error } = await this.supabase!
+        .from('user_profiles')
+        .select('*')
+        .eq('id', this.currentUser.id)
+        .single();
+  
+      if (error) {
+        console.error('Supabase error loading profile:', error);
+        
+        if (error.code === 'PGRST116') {
+          const defaultProfile = this.createDefaultProfile();
+          return defaultProfile;
+        }
+        
+        return this.createDefaultProfile();
+      }
+  
+      return data || this.createDefaultProfile();
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      this.errorHandler.showError('Ошибка загрузки профиля', 'SupabaseService');
+      return this.createDefaultProfile();
+    }
+  }
+
+  private createDefaultProfile(): UserProfile {
+    // Используем аватарку из первого провайдера, если есть
+    const avatarUrl = this.currentUser?.user_metadata?.['avatar_url'] || '';
+    
+    return {
+      id: this.currentUser?.id || 'local-user',
+      email: this.currentUser?.email || '',
+      full_name: this.currentUser?.user_metadata?.['full_name'] || 'User',
+      phone: '',
+      gender: 'unknown',
+      avatar_url: avatarUrl, // Сохраняем аватарку по умолчанию
+      profile_data: {
+        desiredPositions: [],
+        contact: {
+          linkedin: '',
+          github: ''
+        },
+        location: {
+          country: '',
+          city: '',
+          relocation: false,
+          remote: false,
+          business_trips: false
+        },
+        languages: [],
+        skills: [],
+        education: [],
+        experience: [],
+        hobby: [],
+        literature: []
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
   }
 
   private generateValidUUID(): string {
