@@ -45,7 +45,7 @@ export interface UserProfile {
 export class SupabaseService {
   private supabase: SupabaseClient | undefined;
   private session: AuthSession | null = null;
-  private userSubject = new BehaviorSubject<User | null>(null);
+  public userSubject = new BehaviorSubject<User | null>(null);
   private _initialized = false;
   private initializedSubject = new BehaviorSubject<boolean>(false);
   public initialized$: Observable<boolean> = this.initializedSubject.asObservable();
@@ -57,7 +57,6 @@ export class SupabaseService {
 
   constructor(
     private router: Router, 
-    private appStateService: AppStateService,
     private errorHandler: ErrorHandlerService
   ) {}
 
@@ -381,7 +380,102 @@ export class SupabaseService {
       return this.mockOAuthSignIn(provider);
     }
   }
-
+  async getFullProfile(): Promise<UserProfile | null> {
+    try {
+      if (!this.currentUser?.id) {
+        return null;
+      }
+  
+      if (!environment.production) {
+        const profile = localStorage.getItem('sb-local-profile');
+        return profile ? JSON.parse(profile) : this.createDefaultProfile();
+      }
+  
+      const { data, error } = await this.supabase!
+        .from('user_profiles')
+        .select('*')
+        .eq('id', this.currentUser.id)
+        .maybeSingle(); // Используем maybeSingle вместо single
+  
+      if (error) {
+        console.error('Supabase error loading profile:', error);
+        
+        // Если ошибка "нет данных", создаем профиль по умолчанию
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating default profile...');
+          return await this.createAndSaveDefaultProfile();
+        }
+        
+        return this.createDefaultProfile();
+      }
+  
+      // Если данные есть - возвращаем, иначе создаем профиль
+      return data || await this.createAndSaveDefaultProfile();
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      this.errorHandler.showError('Ошибка загрузки профиля', 'SupabaseService');
+      return this.createDefaultProfile();
+    }
+  }
+  
+  // Добавьте метод для создания и сохранения профиля по умолчанию
+  private async createAndSaveDefaultProfile(): Promise<UserProfile> {
+    const defaultProfile = this.createDefaultProfile();
+    
+    try {
+      // Сохраняем профиль в базу данных
+      const { error } = await this.supabase!
+        .from('user_profiles')
+        .upsert(defaultProfile, { onConflict: 'id' });
+      
+      if (error) {
+        console.error('Error saving default profile:', error);
+      } else {
+        console.log('Default profile created successfully');
+      }
+    } catch (error) {
+      console.error('Error creating default profile:', error);
+    }
+    
+    return defaultProfile;
+  }
+  
+  private createDefaultProfile(): UserProfile {
+    const userEmail = this.currentUser?.email || '';
+    const userName = this.currentUser?.user_metadata?.['full_name'] || 
+                     userEmail.split('@')[0] || 'User';
+    
+    return {
+      id: this.currentUser?.id || 'local-user',
+      email: userEmail,
+      full_name: userName,
+      phone: '',
+      gender: 'unknown',
+      avatar_url: this.currentUser?.user_metadata?.['avatar_url'] || '',
+      profile_data: {
+        desiredPositions: [],
+        contact: {
+          linkedin: '',
+          github: ''
+        },
+        location: {
+          country: '',
+          city: '',
+          relocation: false,
+          remote: false,
+          business_trips: false
+        },
+        languages: [],
+        skills: [],
+        education: [],
+        experience: [],
+        hobby: [],
+        literature: []
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  }
   private async mockSignUpWithPassword(email: string, password: string): Promise<{ data: any; error: any }> {
     console.log('Mock password sign-up triggered for:', email);
     
@@ -502,7 +596,7 @@ export class SupabaseService {
     
     return { data: { user: mockUser }, error: null };
   }
-  
+
   private createSafeStorage() {
     return {
       getItem: (key: string): Promise<string | null> => {
@@ -660,78 +754,6 @@ export class SupabaseService {
       console.error('Error saving profile:', error);
       return { data: null, error: error as Error };
     }
-  }
-
-  async getFullProfile(): Promise<UserProfile | null> {
-    try {
-      if (!this.currentUser?.id) {
-        return null;
-      }
-  
-      if (!environment.production) {
-        const profile = localStorage.getItem('sb-local-profile');
-        return profile ? JSON.parse(profile) : this.createDefaultProfile();
-      }
-  
-      const { data, error } = await this.supabase!
-        .from('user_profiles')
-        .select('*')
-        .eq('id', this.currentUser.id)
-        .single();
-  
-      if (error) {
-        console.error('Supabase error loading profile:', error);
-        
-        if (error.code === 'PGRST116') {
-          const defaultProfile = this.createDefaultProfile();
-          return defaultProfile;
-        }
-        
-        return this.createDefaultProfile();
-      }
-  
-      return data || this.createDefaultProfile();
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      this.errorHandler.showError('Ошибка загрузки профиля', 'SupabaseService');
-      return this.createDefaultProfile();
-    }
-  }
-
-  private createDefaultProfile(): UserProfile {
-    // Используем аватарку из первого провайдера, если есть
-    const avatarUrl = this.currentUser?.user_metadata?.['avatar_url'] || '';
-    
-    return {
-      id: this.currentUser?.id || 'local-user',
-      email: this.currentUser?.email || '',
-      full_name: this.currentUser?.user_metadata?.['full_name'] || 'User',
-      phone: '',
-      gender: 'unknown',
-      avatar_url: avatarUrl, // Сохраняем аватарку по умолчанию
-      profile_data: {
-        desiredPositions: [],
-        contact: {
-          linkedin: '',
-          github: ''
-        },
-        location: {
-          country: '',
-          city: '',
-          relocation: false,
-          remote: false,
-          business_trips: false
-        },
-        languages: [],
-        skills: [],
-        education: [],
-        experience: [],
-        hobby: [],
-        literature: []
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
   }
 
   private generateValidUUID(): string {

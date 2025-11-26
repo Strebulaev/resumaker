@@ -51,16 +51,20 @@ export class ProfileService {
   loadProfile(): Observable<Person | null> {
     return from(this.supabase.getFullProfile()).pipe(
       map((profileData: any) => {
-        if (!profileData) return null;
+        if (!profileData) {
+          console.log('No profile data found, creating empty profile');
+          return this.createEmptyProfile();
+        }
         return this.transformSupabaseProfileToPerson(profileData);
       }),
       catchError(error => {
+        console.error('Error loading profile in ProfileService:', error);
         this.errorHandler.showError('Ошибка загрузки профиля', 'ProfileService');
-        return of(null);
+        return of(this.createEmptyProfile()); // Возвращаем пустой профиль вместо null
       })
     );
   }
-    
+  
   saveProfile(person: Person): Observable<boolean> {
     const validation = personSchema.safeParse({ person });
     
