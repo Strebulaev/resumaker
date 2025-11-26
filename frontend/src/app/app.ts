@@ -9,7 +9,7 @@ import { SupabaseService } from './shared/db/supabase.service';
 import { AvatarModule } from 'primeng/avatar';
 import { TranslateService, TranslatePipe } from "@ngx-translate/core";
 import { TooltipModule } from 'primeng/tooltip';
-import { filter, Subject, switchMap, take, takeUntil } from 'rxjs';
+import { filter, Subject, take, takeUntil } from 'rxjs';
 import { AppStateService } from './shared/state/app-state.service';
 import { LanguageService } from './shared/utils/language.service';
 import { SelectModule } from "primeng/select";
@@ -140,6 +140,40 @@ export class App implements OnInit {
     }
   }
 
+  private setupSubscriptions(): void {
+    // Перенесите сюда все подписки из ngOnInit
+    this.aiGuard.getCurrentProviderNameObservable().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(provider => {
+      this.currentAIProvider = provider;
+    });
+    
+    this.translate.onLangChange.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.items = this.buildMenu();
+      this.currentLang = this.translate.currentLang;
+    });
+    
+    this.supabase.initialized$.pipe(
+      filter(initialized => initialized),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.items = this.buildMenu();
+      this.restoreNavigation();
+    });
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe((event: NavigationEnd) => {
+      this.analyticsService.trackPageView(
+        this.getPageTitle(event.url),
+        event.url
+      );
+    });
+  }
   private getPageTitle(url: string): string {
     const routes: {[key: string]: string} = {
       '/': 'Главная',
@@ -236,44 +270,26 @@ export class App implements OnInit {
     const savedState = this.appStateService.getState();
     const lastUrl = this.appStateService.getLastUrl();
     
-    if (this.supabase.currentUser && lastUrl && this.router.url === '/') {
+    if (savedState.user && lastUrl && this.router.url === '/') {
       const allowedRoutes = [
         '/resume-generation',
         '/cover-letter',
         '/interview-prep', 
         '/vacancy-search',
         '/job-platforms',
-        '/about',
-        '/profile'
+        '/about'
       ];
       
       if (lastUrl && allowedRoutes.some(route => lastUrl.startsWith(route))) {
         setTimeout(() => {
-          this.router.navigateByUrl(lastUrl, { replaceUrl: true }).catch(error => {
-            console.error('Failed to restore navigation:', error);
-            this.router.navigate(['/profile/view']);
-          });
+          this.router.navigateByUrl(lastUrl, { replaceUrl: true });
         }, 100);
       }
     }
   }
 
   private buildMenu(): MenuItem[] {
-    const isAuthenticated = !!this.supabase.currentUser;
-    
-    const baseMenu: MenuItem[] = [
-      {
-        label: this.translate.instant('MAIN_MENU.ABOUT.name'),
-        routerLink: '/about'
-      }
-    ];
-  
-    if (!isAuthenticated) {
-      return baseMenu;
-    }
-  
-    // Меню для авторизованного пользователя
-    const authenticatedMenu: MenuItem[] = [
+    return [
       {
         label: this.translate.instant('MAIN_MENU.PROFILE.name'),
         items: [
@@ -287,7 +303,7 @@ export class App implements OnInit {
           },
           {
             label: this.translate.instant('BILLING.MANAGE_SUBSCRIPTION'),
-            routerLink: '/billing/subscription'
+            routerLink: '/billing/subscription',
           }
         ]
       },
@@ -317,58 +333,22 @@ export class App implements OnInit {
         routerLink: '/interview-prep'
       },
       {
-        label: this.translate.instant('BILLING.TARIFS'),
-        routerLink: '/billing/pricing'
-      },
-      {
         label: this.translate.instant('MAIN_MENU.ABOUT.name'),
         routerLink: '/about'
-      }
+      },
+      {
+        label: this.translate.instant('BILLING.TARIFS'),
+        routerLink: '/billing/pricing',
+      },
+      // {
+      //   label: 'Избранное',
+      //   icon: 'pi pi-heart',
+      //   routerLink: '/vacancy-search',
+      //   queryParams: { section: 'favorites' }
+      // }
     ];
-  
-    return authenticatedMenu;
   }
 
-  private setupSubscriptions(): void {
-    this.aiGuard.getCurrentProviderNameObservable().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(provider => {
-      this.currentAIProvider = provider;
-    });
-    
-    this.translate.onLangChange.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.items = this.buildMenu();
-      this.currentLang = this.translate.currentLang;
-    });
-    
-    this.supabase.initialized$.pipe(
-      filter(initialized => initialized),
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.items = this.buildMenu();
-      this.restoreNavigation();
-    });
-  
-    this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd),
-      takeUntil(this.destroy$)
-    ).subscribe((event: NavigationEnd) => {
-      this.analyticsService.trackPageView(
-        this.getPageTitle(event.url),
-        event.url
-      );
-    });
-  
-    this.supabase.initialized$.pipe(
-      filter(initialized => initialized),
-      switchMap(() => this.supabase.userSubject),
-      takeUntil(this.destroy$)
-    ).subscribe(user => {
-      this.items = this.buildMenu();
-    });
-  }
   get userAvatar(): string {
     return this.supabase.currentUser?.user_metadata?.['avatar_url'] || 'default_avatar.jpg';
   }
