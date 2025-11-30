@@ -101,7 +101,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
         this.handleSuperJobCallback(code!, state);
       }
       // Если мы на основном маршруте и есть параметры (после редиректа)
-      else if (currentPath === '/job-platforms' && params['code'] && !this.isProcessingCallback) {
+      else if (currentPath === 'auth/callback' && params['code'] && !this.isProcessingCallback) {
         this.isProcessingCallback = true;
         
         const platform = params['state']?.split('_')[0];
@@ -347,7 +347,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       
       // ТОЛЬКО ПОСЛЕ успешной обработки делаем редирект
       console.log('SuperJob connected successfully, redirecting to job-platforms');
-      this.router.navigate(['/job-platforms'], { 
+      this.router.navigate(['/auth/callback'], { 
         replaceUrl: true 
       });
       
@@ -365,7 +365,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
-      this.router.navigate(['/job-platforms'], { 
+      this.router.navigate(['/auth/callback'], { 
         replaceUrl: true 
       });
       
@@ -409,7 +409,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       this.successMessage = `Успешное подключение к ${platform.toUpperCase()}!`;
       this.checkConnectionStatus();
       
-      this.router.navigate(['/job-platforms'], { 
+      this.router.navigate(['/auth/callback'], { 
         replaceUrl: true 
       });
 
