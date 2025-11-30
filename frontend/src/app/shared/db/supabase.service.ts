@@ -182,12 +182,6 @@ export class SupabaseService {
       switch (event) {
         case 'SIGNED_IN':
           console.log('✅ User signed in:', session?.user?.email);
-          
-          setTimeout(() => {
-            const returnUrl = this.getReturnUrl() || '/';
-            console.log('🔀 Redirecting to:', returnUrl);
-            this.router.navigateByUrl(returnUrl);
-          }, 100);
           break;
           
         case 'SIGNED_OUT':
