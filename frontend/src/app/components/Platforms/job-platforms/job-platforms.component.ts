@@ -341,12 +341,15 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       this.successMessage = 'Успешное подключение к SuperJob!';
       this.checkConnectionStatus();
       
+      // Очищаем состояние ДО редиректа
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
-      const cleanUrl = window.location.origin + '/job-platforms';
-      window.history.replaceState({}, '', cleanUrl);
-      console.log('URL cleaned, redirected to:', cleanUrl);
+      // ТОЛЬКО ПОСЛЕ успешной обработки делаем редирект
+      console.log('SuperJob connected successfully, redirecting to job-platforms');
+      this.router.navigate(['/job-platforms'], { 
+        replaceUrl: true 
+      });
       
       this.messageService.add({
         severity: 'success',
@@ -358,8 +361,13 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       console.error('SuperJob Auth error:', error);
       this.errorMessage = error.message || 'Ошибка подключения к SuperJob';
       
+      // Очищаем состояние при ошибке
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
+      
+      this.router.navigate(['/job-platforms'], { 
+        replaceUrl: true 
+      });
       
       this.messageService.add({
         severity: 'error',
@@ -401,7 +409,6 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       this.successMessage = `Успешное подключение к ${platform.toUpperCase()}!`;
       this.checkConnectionStatus();
       
-      // Очищаем URL и переходим обратно на страницу платформ
       this.router.navigate(['/job-platforms'], { 
         replaceUrl: true 
       });
