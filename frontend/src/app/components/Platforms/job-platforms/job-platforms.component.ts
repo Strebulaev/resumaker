@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { HabrAuthService } from '../../../shared/job-platforms/habr/habr-auth.service';
 import { HHAuthService } from '../../../shared/job-platforms/hh/hh-auth.service';
 import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/superjob-auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-job-platforms',
@@ -19,13 +20,16 @@ import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/sup
     TranslatePipe
   ]
 })
-export class JobPlatformsComponent implements OnInit {
+export class JobPlatformsComponent implements OnInit, OnDestroy {
   isLoading = false;
   successMessage: string | null = null;
   errorMessage: string | null = null;
   isHHConnected = false;
   isSuperJobConnected = false;
   isHabrConnected = false;
+  
+  private queryParamsSubscription: Subscription | null = null;
+  private isProcessingCallback = false;
 
   constructor(
     private hhAuthService: HHAuthService,
@@ -34,54 +38,90 @@ export class JobPlatformsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private messageService: MessageService
-  ) {
-    this.route.queryParams.subscribe(params => {
-      if (params['code']) {
+  ) {}
+
+  ngOnInit() {
+    this.initializeComponent();
+  }
+
+  ngOnDestroy() {
+    if (this.queryParamsSubscription) {
+      this.queryParamsSubscription.unsubscribe();
+    }
+  }
+
+  private async initializeComponent(): Promise<void> {
+    try {
+      this.isLoading = true;
+      
+      // Сначала инициализируем платформы
+      await this.initializePlatforms();
+      
+      // Затем подписываемся на параметры
+      this.setupQueryParamsListener();
+      
+      // Проверяем статус подключения
+      this.checkConnectionStatus();
+      
+      // Очищаем старые состояния
+      this.cleanupOldStates();
+      
+    } catch (error) {
+      console.error('Component initialization error:', error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  private setupQueryParamsListener(): void {
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      // Проверяем, что это callback и мы еще не обрабатываем его
+      if (params['code'] && !this.isProcessingCallback) {
+        this.isProcessingCallback = true;
+        
         const platform = params['state']?.split('_')[0];
+        console.log('Processing OAuth callback for platform:', platform);
+        
         if (platform === 'superjob') {
           this.handleSuperJobCallback(params['code'], params['state']);
         } else if (platform === 'habr') {
           this.handleHabrCallback(params['code'], params['state']);
-        } else {
+        } else if (platform === 'hh') {
           this.handleHHCallback(params['code'], params['state']);
+        } else {
+          console.warn('Unknown platform in callback:', platform);
+          this.isProcessingCallback = false;
         }
       }
     });
-    this.superJobAuthService.initializeConfig().catch(() => {
-      console.warn('SuperJob config initialization failed');
-    });    
-    this.initializePlatforms();
   }
   
   private async initializePlatforms(): Promise<void> {
     try {
-      // Ждем инициализации всех сервисов
+      // Инициализируем все сервисы параллельно
       await Promise.allSettled([
         this.hhAuthService.initializeConfig(),
         this.superJobAuthService.initializeConfig(),
         this.habrAuthService.initializeConfig()
       ]);
       
-      this.checkConnectionStatus();
+      console.log('Platform services initialized');
     } catch (error) {
       console.error('Failed to initialize platform services:', error);
+      throw error;
     }
   }
   
-  ngOnInit() {
-    this.checkConnectionStatus();
-    
-    this.cleanupOldStates();
-  }
   private cleanupOldStates(): void {
     // Очищаем состояния, которым больше 1 часа
     const states = ['superjob_oauth_state', 'hh_oauth_state', 'habr_oauth_state'];
+    const oneHourAgo = Date.now() - 3600000;
     
     states.forEach(key => {
       const state = localStorage.getItem(key);
       if (state) {
         const timestamp = state.split('_').pop();
-        if (timestamp && Date.now() - parseInt(timestamp) > 3600000) {
+        if (timestamp && parseInt(timestamp) < oneHourAgo) {
           localStorage.removeItem(key);
           sessionStorage.removeItem(key);
         }
@@ -94,15 +134,24 @@ export class JobPlatformsComponent implements OnInit {
            Math.random().toString(36).substring(2, 15) +
            '_' + Date.now();
   }
+
   checkConnectionStatus(): void {
     this.isHHConnected = this.hhAuthService.isTokenValid();
     this.isSuperJobConnected = this.superJobAuthService.isTokenValid();
     this.isHabrConnected = this.habrAuthService.isTokenValid();
+    
+    console.log('Connection status:', {
+      hh: this.isHHConnected,
+      superjob: this.isSuperJobConnected,
+      habr: this.isHabrConnected
+    });
   }
+
   closeMessage(): void {
     this.successMessage = null;
     this.errorMessage = null;
   }
+
   async connectToHH(): Promise<void> {
     try {
       await this.initiateAuth(this.hhAuthService, 'hh');
@@ -143,13 +192,11 @@ export class JobPlatformsComponent implements OnInit {
       
       const state = `superjob_${this.generateState()}`;
       
-      // Сохраняем в sessionStorage вместо localStorage
+      // Сохраняем в sessionStorage и localStorage
       sessionStorage.setItem('superjob_oauth_state', state);
-      // Также сохраняем в localStorage как fallback
       localStorage.setItem('superjob_oauth_state', state);
       
       console.log('Initiating SuperJob auth with state:', state);
-      console.log('Saved state to sessionStorage and localStorage');
       
       const authUrl = this.superJobAuthService.getAuthUrl(state);
       console.log('Redirecting to:', authUrl);
@@ -174,15 +221,22 @@ export class JobPlatformsComponent implements OnInit {
     this.successMessage = null;
     this.errorMessage = null;
     
-    const state = `${platform}_${this.generateState()}`;
-    
     try {
+      await authService.initializeConfig();
+      
+      const state = `${platform}_${this.generateState()}`;
       const authUrl = authService.getAuthUrl(state);
+      
+      // Сохраняем состояние
       localStorage.setItem(`${platform}_oauth_state`, state);
+      
+      console.log(`Initiating ${platform} OAuth with state:`, state);
+      console.log('Redirecting to:', authUrl);
+      
       window.location.href = authUrl;
-    } catch (error) {
+      
+    } catch (error: any) {
       this.isLoading = false;
-      this.errorMessage = `Ошибка инициализации OAuth для ${platform}`;
       console.error(`${platform} OAuth init error:`, error);
       throw error;
     }
@@ -198,32 +252,33 @@ export class JobPlatformsComponent implements OnInit {
       this.successMessage = null;
       this.errorMessage = null;
       
+      // Получаем сохраненное состояние из sessionStorage или localStorage
       let savedState = sessionStorage.getItem('superjob_oauth_state');
       if (!savedState) {
         savedState = localStorage.getItem('superjob_oauth_state');
       }
       
-      console.log('SuperJob callback state check:', { 
-        received: state, 
-        sessionStorage: sessionStorage.getItem('superjob_oauth_state'),
-        localStorage: localStorage.getItem('superjob_oauth_state'),
-        saved: savedState
+      console.log('SuperJob callback state verification:', { 
+        receivedState: state, 
+        savedState: savedState 
       });
       
-      if (state !== savedState) {
-        throw new Error('Invalid state parameter');
+      if (!state || state !== savedState) {
+        throw new Error('Неверный параметр state. Возможно, сессия устарела.');
       }
   
+      // Обмениваем код на токен
       await this.superJobAuthService.exchangeCodeForToken(code);
       
       this.successMessage = 'Успешное подключение к SuperJob!';
       this.checkConnectionStatus();
       
+      // Очищаем состояние
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
-      this.router.navigate([], { 
-        queryParams: {},
+      // Очищаем URL
+      this.router.navigate(['/job-platforms'], { 
         replaceUrl: true 
       });
   
@@ -237,6 +292,7 @@ export class JobPlatformsComponent implements OnInit {
       console.error('SuperJob Auth error:', error);
       this.errorMessage = error.message || 'Ошибка подключения к SuperJob';
       
+      // Всегда очищаем состояние при ошибке
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
@@ -247,6 +303,7 @@ export class JobPlatformsComponent implements OnInit {
       });
     } finally {
       this.isLoading = false;
+      this.isProcessingCallback = false;
     }
   }
 
@@ -261,17 +318,24 @@ export class JobPlatformsComponent implements OnInit {
       this.errorMessage = null;
       
       const savedState = localStorage.getItem(`${platform}_oauth_state`);
-      if (state !== savedState) {
-        throw new Error('Invalid state parameter');
+      
+      console.log(`${platform} callback state verification:`, { 
+        receivedState: state, 
+        savedState: savedState 
+      });
+      
+      if (!state || state !== savedState) {
+        throw new Error('Неверный параметр state. Возможно, сессия устарела.');
       }
 
+      // Обмениваем код на токен
       await authService.exchangeCodeForToken(code);
       
       this.successMessage = `Успешное подключение к ${platform.toUpperCase()}!`;
       this.checkConnectionStatus();
       
-      this.router.navigate([], { 
-        queryParams: {},
+      // Очищаем URL
+      this.router.navigate(['/job-platforms'], { 
         replaceUrl: true 
       });
 
@@ -293,6 +357,7 @@ export class JobPlatformsComponent implements OnInit {
     } finally {
       this.isLoading = false;
       localStorage.removeItem(`${platform}_oauth_state`);
+      this.isProcessingCallback = false;
     }
   }
 
