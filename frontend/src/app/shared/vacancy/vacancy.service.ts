@@ -236,7 +236,8 @@ export class VacancyService {
 
   private cleanHtml(text: string): string {
     if (!text) return '';
-    return text
+    const safeText = text || '';
+    return safeText
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')
@@ -266,7 +267,10 @@ export class VacancyService {
     }
     
     if (vacancy.description) {
-      text += `Описание: ${this.cleanHtml(vacancy.description.substring(0, 500))}...\n`;
+      text += `=== ОПИСАНИЕ ===\n`;
+      const description = vacancy.description || '';
+      text += `${this.cleanHtml(description.substring(0, 500))}${description.length > 500 ? '...' : ''}\n\n`;
+      
     }
     
     if (vacancy.key_skills && vacancy.key_skills.length > 0) {

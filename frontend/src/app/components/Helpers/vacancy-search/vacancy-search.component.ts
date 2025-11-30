@@ -527,36 +527,34 @@ export class VacancySearchComponent implements OnInit {
     return text.trim();
   }
 
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString();
+  }
+
+
   cleanHtml(text: string): string {
     if (!text) return '';
-    return text
+    
+    const safeText = text || '';
+    
+    return safeText
       .replace(/<[^>]*>/g, '')
       .replace(/&nbsp;/g, ' ')
       .replace(/&amp;/g, '&')
       .replace(/\s+/g, ' ')
       .trim();
   }
-
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString();
-  }
-
+  
   formatDescription(description: string = ''): string {
-    const cleanDesc = this.cleanHtml(description || '');
+    const safeDescription = description || '';
+    const cleanDesc = this.cleanHtml(safeDescription);
     return cleanDesc
       .replace(/\n/g, '<br>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>');
   }
-
-  getAddressText(address: any): string {
-    if (!address) return '';
-    
-    const parts = [address.city, address.street, address.building].filter(Boolean);
-    return parts.join(', ');
-  }
-
+  
   private exportVacancyToText(vacancy: Vacancy, format: string): string {
     if (format === 'json') {
       return JSON.stringify(vacancy, null, 2);
@@ -578,7 +576,11 @@ export class VacancySearchComponent implements OnInit {
     }
     
     text += `=== ${this.translate.instant('EXPORT.DESCRIPTION')} ===\n`;
-    text += `${this.cleanHtml(vacancy.description || '')}\n\n`;
+    // Безопасная проверка description
+    const description = vacancy.description || '';
+    const cleanDescription = this.cleanHtml(description);
+    const truncatedDescription = cleanDescription.substring(0, 500);
+    text += `${truncatedDescription}${cleanDescription.length > 500 ? '...' : ''}\n\n`;
     
     if (vacancy.key_skills?.length > 0) {
       text += `=== ${this.translate.instant('EXPORT.SKILLS')} ===\n`;
@@ -603,7 +605,14 @@ export class VacancySearchComponent implements OnInit {
     
     return text;
   }
-  
+
+  getAddressText(address: any): string {
+    if (!address) return '';
+    
+    const parts = [address.city, address.street, address.building].filter(Boolean);
+    return parts.join(', ');
+  }
+
   exportVacancy(vacancy: Vacancy, format: 'txt' | 'json' = 'txt'): void {
     const content = this.exportVacancyToText(vacancy, format);
     const filename = `vacancy_${this.getVacancyPlatform(vacancy)}_${vacancy.id}`;

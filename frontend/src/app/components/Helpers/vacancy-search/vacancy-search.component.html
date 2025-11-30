@@ -185,7 +185,7 @@
           </div>
 
           <div class="vacancy-description">
-            <p>{{ cleanHtml(vacancy.description.substring(0, 200) || '') }}...</p>
+            <p>{{ cleanHtml((vacancy.description || '').substring(0, 200)) }}{{ (vacancy.description || '').length > 200 ? '...' : '' }}</p>
           </div>
 
           <div class="vacancy-meta">
@@ -205,7 +205,7 @@
             </span>
           </div>
 
-          <div class="vacancy-skills" *ngIf="vacancy.key_skills.length > 0">
+          <div class="vacancy-skills" *ngIf="vacancy.key_skills && vacancy.key_skills.length > 0">
             <div class="skills-label">{{ 'VACANCY.SKILLS' | translate }}:</div>
             <div class="skills-list">
               <span *ngFor="let skill of vacancy.key_skills.slice(0, 5)" 
