@@ -54,17 +54,10 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   private async initializeComponent(): Promise<void> {
     try {
       this.isLoading = true;
-      
-      // Сначала инициализируем платформы
       await this.initializePlatforms();
-      
-      // Затем подписываемся на параметры
+      this.processCallbackFromUrl();
       this.setupQueryParamsListener();
-      
-      // Проверяем статус подключения
       this.checkConnectionStatus();
-      
-      // Очищаем старые состояния
       this.cleanupOldStates();
       
     } catch (error) {
@@ -79,31 +72,42 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       console.log('Query params changed:', params);
       console.log('Current URL:', window.location.href);
       
-      const currentPath = window.location.pathname;
+      // Получаем полный URL для анализа
+      const currentUrl = new URL(window.location.href);
+      const currentPath = currentUrl.pathname;
+      const urlParams = new URLSearchParams(currentUrl.search);
       
-      if ((currentPath.includes('callback') && params['code']) && !this.isProcessingCallback) {
+      console.log('Full URL analysis:', {
+        path: currentPath,
+        search: currentUrl.search,
+        hasCode: urlParams.has('code'),
+        hasState: urlParams.has('state')
+      });
+      
+      // Если мы на callback маршруте SuperJob и есть код
+      if (currentPath.includes('superjob-callback') && urlParams.has('code') && !this.isProcessingCallback) {
         this.isProcessingCallback = true;
         
-        let platform = params['state']?.split('_')[0];
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
         
-        if (!platform) {
-          if (currentPath.includes('hh-callback')) {
-            platform = 'hh';
-          } else if (currentPath.includes('superjob-callback')) {
-            platform = 'superjob';
-          } else if (currentPath.includes('habr-callback')) {
-            platform = 'habr';
-          }
-        }
+        console.log('Processing SuperJob callback directly from URL:', { code, state });
         
-        console.log('Processing OAuth callback for platform:', platform, 'from path:', currentPath);
+        this.handleSuperJobCallback(code!, state);
+      }
+      // Если мы на основном маршруте и есть параметры (после редиректа)
+      else if (currentPath === '/job-platforms' && params['code'] && !this.isProcessingCallback) {
+        this.isProcessingCallback = true;
+        
+        const platform = params['state']?.split('_')[0];
+        console.log('Processing OAuth callback from route params:', { platform, code: params['code'], state: params['state'] });
         
         if (platform === 'superjob') {
           this.handleSuperJobCallback(params['code'], params['state']);
-        } else if (platform === 'habr') {
-          this.handleHabrCallback(params['code'], params['state']);
         } else if (platform === 'hh') {
           this.handleHHCallback(params['code'], params['state']);
+        } else if (platform === 'habr') {
+          this.handleHabrCallback(params['code'], params['state']);
         } else {
           console.warn('Unknown platform in callback:', platform);
           this.isProcessingCallback = false;
@@ -126,7 +130,22 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       throw error;
     }
   }
-  
+  private processCallbackFromUrl(): void {
+    const currentUrl = new URL(window.location.href);
+    const currentPath = currentUrl.pathname;
+    const urlParams = new URLSearchParams(currentUrl.search);
+    
+    if (currentPath.includes('superjob-callback') && urlParams.has('code') && !this.isProcessingCallback) {
+      this.isProcessingCallback = true;
+      
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      console.log('Processing SuperJob callback directly from URL on init:', { code, state });
+      
+      this.handleSuperJobCallback(code!, state);
+    }
+  }
   private cleanupOldStates(): void {
     // Очищаем состояния, которым больше 1 часа
     const states = ['superjob_oauth_state', 'hh_oauth_state', 'habr_oauth_state'];
@@ -279,7 +298,6 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       this.successMessage = null;
       this.errorMessage = null;
       
-      // Получаем сохраненное состояние из sessionStorage или localStorage
       let savedState = sessionStorage.getItem('superjob_oauth_state');
       if (!savedState) {
         savedState = localStorage.getItem('superjob_oauth_state');
@@ -294,22 +312,19 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
         throw new Error('Неверный параметр state. Возможно, сессия устарела.');
       }
   
-      // Обмениваем код на токен
       console.log('Exchanging code for SuperJob token...');
       await this.superJobAuthService.exchangeCodeForToken(code);
       
       this.successMessage = 'Успешное подключение к SuperJob!';
       this.checkConnectionStatus();
       
-      // Очищаем состояние
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
-      // Очищаем URL и переходим обратно на страницу платформ
-      this.router.navigate(['/job-platforms'], { 
-        replaceUrl: true 
-      });
-  
+      const cleanUrl = window.location.origin + '/job-platforms';
+      window.history.replaceState({}, '', cleanUrl);
+      console.log('URL cleaned, redirected to:', cleanUrl);
+      
       this.messageService.add({
         severity: 'success',
         summary: 'Успешное подключение',
@@ -320,7 +335,6 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       console.error('SuperJob Auth error:', error);
       this.errorMessage = error.message || 'Ошибка подключения к SuperJob';
       
-      // Всегда очищаем состояние при ошибке
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
