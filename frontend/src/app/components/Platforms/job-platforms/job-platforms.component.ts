@@ -41,6 +41,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    console.log('JobPlatformsComponent initialized');
     this.initializeComponent();
   }
 
@@ -73,6 +74,45 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
     }
   }
 
+  private setupQueryParamsListener(): void {
+    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
+      console.log('Query params changed:', params);
+      console.log('Current URL:', window.location.href);
+      
+      // Проверяем, что это callback и мы еще не обрабатываем его
+      if (params['code'] && !this.isProcessingCallback) {
+        this.isProcessingCallback = true;
+        
+        const currentPath = window.location.pathname;
+        let platform = params['state']?.split('_')[0];
+        
+        // Определяем платформу по URL пути
+        if (!platform) {
+          if (currentPath.includes('hh-callback')) {
+            platform = 'hh';
+          } else if (currentPath.includes('superjob-callback')) {
+            platform = 'superjob';
+          } else if (currentPath.includes('habr-callback')) {
+            platform = 'habr';
+          }
+        }
+        
+        console.log('Processing OAuth callback for platform:', platform, 'from path:', currentPath);
+        
+        if (platform === 'superjob') {
+          this.handleSuperJobCallback(params['code'], params['state']);
+        } else if (platform === 'habr') {
+          this.handleHabrCallback(params['code'], params['state']);
+        } else if (platform === 'hh') {
+          this.handleHHCallback(params['code'], params['state']);
+        } else {
+          console.warn('Unknown platform in callback:', platform);
+          this.isProcessingCallback = false;
+        }
+      }
+    });
+  }
+  
   private async initializePlatforms(): Promise<void> {
     try {
       // Инициализируем все сервисы параллельно
@@ -202,14 +242,18 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       await authService.initializeConfig();
       
       const state = `${platform}_${this.generateState()}`;
+      let authUrl: string;
       
-      let authUrl;
+      // Для разных платформ используем разные подходы
       if (platform === 'hh') {
-        authUrl = `https://hh.ru/oauth/authorize?response_type=code&client_id=${this.hhAuthService.clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/hh-callback')}&state=${state}`;
+        // Для HH.ru формируем URL вручную с правильным redirect_uri
+        authUrl = `https://hh.ru/oauth/authorize?response_type=code&client_id=${this.hhAuthService['clientId']}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/hh-callback')}&state=${state}`;
       } else {
+        // Для других платформ используем стандартный метод
         authUrl = authService.getAuthUrl(state);
       }
       
+      // Сохраняем состояние
       localStorage.setItem(`${platform}_oauth_state`, state);
       
       console.log(`Initiating ${platform} OAuth with state:`, state);
@@ -225,10 +269,12 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   }
 
   private async handleHHCallback(code: string, state: string | null): Promise<void> {
+    console.log('Handling HH callback with code:', code, 'state:', state);
     await this.handleAuthCallback(code, state, 'hh', this.hhAuthService);
   }
 
   private async handleSuperJobCallback(code: string, state: string | null): Promise<void> {
+    console.log('Handling SuperJob callback with code:', code, 'state:', state);
     try {
       this.isLoading = true;
       this.successMessage = null;
@@ -250,6 +296,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       }
   
       // Обмениваем код на токен
+      console.log('Exchanging code for SuperJob token...');
       await this.superJobAuthService.exchangeCodeForToken(code);
       
       this.successMessage = 'Успешное подключение к SuperJob!';
@@ -259,7 +306,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       sessionStorage.removeItem('superjob_oauth_state');
       localStorage.removeItem('superjob_oauth_state');
       
-      // Очищаем URL
+      // Очищаем URL и переходим обратно на страницу платформ
       this.router.navigate(['/job-platforms'], { 
         replaceUrl: true 
       });
@@ -290,6 +337,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   }
 
   private async handleHabrCallback(code: string, state: string | null): Promise<void> {
+    console.log('Handling Habr callback with code:', code, 'state:', state);
     await this.handleAuthCallback(code, state, 'habr', this.habrAuthService);
   }
 
@@ -311,12 +359,13 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       }
 
       // Обмениваем код на токен
+      console.log(`Exchanging code for ${platform} token...`);
       await authService.exchangeCodeForToken(code);
       
       this.successMessage = `Успешное подключение к ${platform.toUpperCase()}!`;
       this.checkConnectionStatus();
       
-      // Очищаем URL
+      // Очищаем URL и переходим обратно на страницу платформ
       this.router.navigate(['/job-platforms'], { 
         replaceUrl: true 
       });
@@ -364,47 +413,6 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       severity: 'info',
       summary: 'Отключено',
       detail: `Соединение с ${platformName} разорвано`
-    });
-  }
-
-  private setupQueryParamsListener(): void {
-    this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
-      // Проверяем текущий URL path чтобы определить тип callback'а
-      const currentPath = window.location.pathname;
-      
-      if (params['code'] && !this.isProcessingCallback) {
-        this.isProcessingCallback = true;
-        
-        let platform = params['state']?.split('_')[0];
-        
-        // Если platform не определился из state, определяем по URL
-        if (!platform) {
-          if (currentPath.includes('hh-callback')) {
-            platform = 'hh';
-          } else if (currentPath.includes('superjob-callback')) {
-            platform = 'superjob';
-          } else if (currentPath.includes('habr-callback')) {
-            platform = 'habr';
-          } else if (currentPath.includes('callback')) {
-            // Это может быть Supabase callback, пропускаем
-            this.isProcessingCallback = false;
-            return;
-          }
-        }
-        
-        console.log('Processing OAuth callback for platform:', platform, 'from path:', currentPath);
-        
-        if (platform === 'superjob') {
-          this.handleSuperJobCallback(params['code'], params['state']);
-        } else if (platform === 'habr') {
-          this.handleHabrCallback(params['code'], params['state']);
-        } else if (platform === 'hh') {
-          this.handleHHCallback(params['code'], params['state']);
-        } else {
-          console.warn('Unknown platform in callback:', platform);
-          this.isProcessingCallback = false;
-        }
-      }
     });
   }
 }
