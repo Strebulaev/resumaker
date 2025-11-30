@@ -62,6 +62,11 @@ export const routes: Routes = [
     component: JobPlatformsComponent,
     canActivate: [AuthGuard]
   },
+  {
+    path: 'job-platforms',
+    component: JobPlatformsComponent,
+    canActivate: [AuthGuard]
+  },
   { 
     path: 'auth/hh-callback', 
     component: JobPlatformsComponent,

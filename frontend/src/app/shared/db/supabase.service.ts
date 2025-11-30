@@ -147,22 +147,31 @@ export class SupabaseService {
         hasCode: urlParams.has('code'),
         fullUrl: window.location.href
       });
-
-      if (urlParams.has('code')) {
-        console.log('🔐 Processing OAuth code exchange...');
+  
+      // Проверяем, что это именно Supabase OAuth, а не callback платформ
+      const currentPath = window.location.pathname;
+      const isPlatformCallback = currentPath.includes('hh-callback') || 
+                                currentPath.includes('superjob-callback') || 
+                                currentPath.includes('habr-callback');
+      
+      // Обрабатываем только Supabase OAuth на основном callback маршруте
+      if (urlParams.has('code') && !isPlatformCallback) {
+        console.log('🔐 Processing Supabase OAuth code exchange...');
         
         const { data, error } = await this.supabase!.auth.getSession();
         
         if (error) {
-          console.error('❌ OAuth code exchange failed:', error);
+          console.error('❌ Supabase OAuth code exchange failed:', error);
           this.errorHandler.showError('Ошибка авторизации', 'SupabaseService');
         } else if (data.session) {
-          console.log('✅ OAuth successful, user:', data.session.user.email);
+          console.log('✅ Supabase OAuth successful, user:', data.session.user.email);
           
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, '', cleanUrl);
-          console.log('✅ URL cleaned');
+          console.log('✅ Supabase URL cleaned');
         }
+      } else if (isPlatformCallback) {
+        console.log('ℹ️ Platform OAuth callback detected, skipping Supabase processing');
       }
       
     } catch (error) {
