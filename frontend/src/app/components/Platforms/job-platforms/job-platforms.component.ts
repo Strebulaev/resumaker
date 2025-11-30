@@ -42,6 +42,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('JobPlatformsComponent initialized');
+    this.processCallbackFromUrl();
     this.initializeComponent();
   }
 
@@ -54,8 +55,12 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   private async initializeComponent(): Promise<void> {
     try {
       this.isLoading = true;
+      
+      if (this.isProcessingCallback) {
+        console.log('Skipping platform initialization - processing callback');
+        return;
+      }
       await this.initializePlatforms();
-      this.processCallbackFromUrl();
       this.setupQueryParamsListener();
       this.checkConnectionStatus();
       this.cleanupOldStates();
@@ -131,21 +136,39 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
     }
   }
   private processCallbackFromUrl(): void {
-    const currentUrl = new URL(window.location.href);
-    const currentPath = currentUrl.pathname;
-    const urlParams = new URLSearchParams(currentUrl.search);
+    // Получаем полный текущий URL
+    const currentUrl = window.location.href;
+    console.log('Processing callback from URL:', currentUrl);
     
+    // Создаем URL объект для парсинга
+    const url = new URL(currentUrl);
+    const currentPath = url.pathname;
+    const urlParams = new URLSearchParams(url.search);
+    
+    console.log('URL analysis:', {
+      path: currentPath,
+      search: url.search,
+      hasCode: urlParams.has('code'),
+      hasState: urlParams.has('state'),
+      code: urlParams.get('code'),
+      state: urlParams.get('state')
+    });
+    
+    // Если мы на callback маршруте SuperJob и есть код
     if (currentPath.includes('superjob-callback') && urlParams.has('code') && !this.isProcessingCallback) {
       this.isProcessingCallback = true;
       
       const code = urlParams.get('code');
       const state = urlParams.get('state');
       
-      console.log('Processing SuperJob callback directly from URL on init:', { code, state });
+      console.log('Processing SuperJob callback directly from URL:', { code, state });
       
-      this.handleSuperJobCallback(code!, state);
+      setTimeout(() => {
+        this.handleSuperJobCallback(code!, state);
+      }, 100);
     }
   }
+
   private cleanupOldStates(): void {
     // Очищаем состояния, которым больше 1 часа
     const states = ['superjob_oauth_state', 'hh_oauth_state', 'habr_oauth_state'];
