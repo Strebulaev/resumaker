@@ -258,5 +258,4 @@ properties:
         experience,
       ]
 required: [person]
-
 "

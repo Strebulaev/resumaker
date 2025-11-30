@@ -13,7 +13,7 @@ export interface UserProfile {
   full_name: string;
   phone?: string;
   gender: 'male' | 'female' | 'unknown';
-  avatar_url?: string; // Добавляем поле для аватарки
+  avatar_url?: string;
   profile_data: {
     desiredPositions: string[];
     contact: {
@@ -566,7 +566,7 @@ export class SupabaseService {
       return { data: null, error: error as Error };
     }
   }
-
+  
   async getFullProfile(): Promise<UserProfile | null> {
     try {
       if (!this.currentUser?.id) {
@@ -602,18 +602,15 @@ export class SupabaseService {
       return this.createDefaultProfile();
     }
   }
-
+  
   private createDefaultProfile(): UserProfile {
-    // Используем аватарку из первого провайдера, если есть
-    const avatarUrl = this.currentUser?.user_metadata?.['avatar_url'] || '';
-    
     return {
       id: this.currentUser?.id || 'local-user',
       email: this.currentUser?.email || '',
       full_name: this.currentUser?.user_metadata?.['full_name'] || 'User',
       phone: '',
       gender: 'unknown',
-      avatar_url: avatarUrl, // Сохраняем аватарку по умолчанию
+      avatar_url: '',
       profile_data: {
         desiredPositions: [],
         contact: {

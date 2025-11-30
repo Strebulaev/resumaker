@@ -24,6 +24,7 @@ import { VacancyService } from '../../../shared/vacancy/vacancy.service';
 import { ResumeSelectorComponent, Resume } from '../../Helpers/resume-selector/resume-selector.component';
 import { AiConfigModalComponent } from "../../Pages/ai-config-modal/ai-config-modal.component";
 import { VacancySelectorComponent } from "../../Helpers/vacancy-selector/vacancy-selector.component";
+import { DocumentsService } from '../../../shared/documents.service';
 
 @Component({
   selector: 'app-cover-letter-generate',
@@ -77,6 +78,7 @@ export class CoverLetterGenerateComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private coverLetterService: CoverLetterService,
+    private documentsService: DocumentsService,
     private supabase: SupabaseService,
     private profileService: ProfileService,
     private hhAuthService: HHAuthService,

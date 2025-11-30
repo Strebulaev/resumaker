@@ -244,7 +244,7 @@
         </div>
       </div>
 
-      <div class="pagination" *ngIf="totalPages > 1">
+      <div class="pagination" *ngIf="totalPages > 1 && !isLoadingMore">
         <button pButton 
                 [label]="'PAGINATION.PREVIOUS' | translate" 
                 (click)="prevPage()"
@@ -266,6 +266,15 @@
                 class="p-button-text">
         </button>
       </div>
+
+      <!-- Добавьте индикатор загрузки для бесконечной прокрутки -->
+      <div *ngIf="isLoadingMore" class="loading-more">
+        <p-progressSpinner [style]="{'width': '30px', 'height': '30px'}"></p-progressSpinner>
+        <span>{{ 'LOADING.MORE_VACANCIES' | translate }}</span>
+      </div>
+
+      <!-- Добавьте триггер для бесконечной прокрутки -->
+      <div #scrollTrigger class="scroll-trigger" *ngIf="hasMoreVacancies && !isLoadingMore"></div>
     </div>
 
     <div *ngIf="vacancies.length === 0 && !isLoading && searchPerformed" class="no-results">

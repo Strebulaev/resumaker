@@ -16,101 +16,6 @@ export class ProfileService {
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) {}
-
-  transformSupabaseProfileToPerson(profileData: any): Person {
-    if (!profileData) {
-      return this.createEmptyProfile();
-    }
-
-    return {
-      name: profileData.full_name || '',
-      gender: profileData.gender || 'unknown',
-      desiredPositions: profileData.profile_data?.desiredPositions || [],
-      contact: {
-        phone: profileData.phone || '',
-        email: profileData.email || '',
-        linkedin: profileData.profile_data?.contact?.['linkedin'] || '',
-        github: profileData.profile_data?.contact?.['github'] || ''
-      },
-      location: {
-        country: profileData.profile_data?.location?.country || '',
-        city: profileData.profile_data?.location?.city || '',
-        relocation: profileData.profile_data?.location?.relocation || false,
-        remote: profileData.profile_data?.location?.remote || false,
-        business_trips: profileData.profile_data?.location?.business_trips || false
-      },
-      languages: profileData.profile_data?.languages || [],
-      skills: profileData.profile_data?.skills || [],
-      education: profileData.profile_data?.education || [],
-      experience: profileData.profile_data?.experience || [],
-      hobby: profileData.profile_data?.hobby || [],
-      literature: profileData.profile_data?.literature || []
-    };
-  }
-
-  loadProfile(): Observable<Person | null> {
-    return from(this.supabase.getFullProfile()).pipe(
-      map((profileData: any) => {
-        if (!profileData) {
-          console.log('No profile data found, creating empty profile');
-          return this.createEmptyProfile();
-        }
-        return this.transformSupabaseProfileToPerson(profileData);
-      }),
-      catchError(error => {
-        console.error('Error loading profile in ProfileService:', error);
-        this.errorHandler.showError('Ошибка загрузки профиля', 'ProfileService');
-        return of(this.createEmptyProfile()); // Возвращаем пустой профиль вместо null
-      })
-    );
-  }
-  
-  saveProfile(person: Person): Observable<boolean> {
-    const validation = personSchema.safeParse({ person });
-    
-    if (!validation.success) {
-      console.warn('Validation warnings:', validation.error);
-    }
-  
-    return from(this.supabase.saveFullProfile(person)).pipe(
-      map(result => !result.error),
-      catchError(error => {
-        this.errorHandler.showError('Ошибка сохранения профиля', 'ProfileService');
-        return of(false);
-      })
-    );
-  }
-
-  private transformToPerson(profileData: any): Person {
-    if (!profileData) {
-      return this.createEmptyProfile();
-    }
-  
-    return {
-      name: profileData.full_name || '',
-      gender: profileData.gender || 'unknown',
-      desiredPositions: profileData.profile_data?.desiredPositions || [],
-      contact: {
-        phone: profileData.phone || '',
-        email: profileData.email || '',
-        linkedin: profileData.profile_data?.contact?.['linkedin'] || '',
-        github: profileData.profile_data?.contact?.['github'] || ''
-      },
-      location: {
-        country: profileData.profile_data?.location?.country || '',
-        city: profileData.profile_data?.location?.city || '',
-        relocation: profileData.profile_data?.location?.relocation || false,
-        remote: profileData.profile_data?.location?.remote || false,
-        business_trips: profileData.profile_data?.location?.business_trips || false
-      },
-      languages: profileData.profile_data?.languages || [],
-      skills: profileData.profile_data?.skills || [],
-      education: profileData.profile_data?.education || [],
-      experience: profileData.profile_data?.experience || [],
-      hobby: profileData.profile_data?.hobby || [],
-      literature: profileData.profile_data?.literature || []
-    };
-  }
   
   private createEmptyProfile(): Person {
     return {
@@ -323,5 +228,69 @@ export class ProfileService {
       this.errorHandler.showError('Ошибка сохранения профиля', 'ProfileService');
       return false;
     }
+  }
+
+  transformSupabaseProfileToPerson(profileData: any): Person {
+    if (!profileData) {
+      return this.createEmptyProfile();
+    }
+
+    return {
+      name: profileData.full_name || '',
+      gender: profileData.gender || 'unknown',
+      desiredPositions: profileData.profile_data?.desiredPositions || [],
+      contact: {
+        phone: profileData.phone || '',
+        email: profileData.email || '',
+        linkedin: profileData.profile_data?.contact?.['linkedin'] || '',
+        github: profileData.profile_data?.contact?.['github'] || ''
+      },
+      location: {
+        country: profileData.profile_data?.location?.country || '',
+        city: profileData.profile_data?.location?.city || '',
+        relocation: profileData.profile_data?.location?.relocation || false,
+        remote: profileData.profile_data?.location?.remote || false,
+        business_trips: profileData.profile_data?.location?.business_trips || false
+      },
+      languages: profileData.profile_data?.languages || [],
+      skills: profileData.profile_data?.skills || [],
+      education: profileData.profile_data?.education || [],
+      experience: profileData.profile_data?.experience || [],
+      hobby: profileData.profile_data?.hobby || [],
+      literature: profileData.profile_data?.literature || []
+    };
+  }
+
+  loadProfile(): Observable<Person | null> {
+    return from(this.supabase.getFullProfile()).pipe(
+      map((profileData: any) => {
+        if (!profileData) {
+          console.log('No profile data found, creating empty profile');
+          return this.createEmptyProfile();
+        }
+        return this.transformSupabaseProfileToPerson(profileData);
+      }),
+      catchError(error => {
+        console.error('Error loading profile in ProfileService:', error);
+        this.errorHandler.showError('Ошибка загрузки профиля', 'ProfileService');
+        return of(this.createEmptyProfile()); // Возвращаем пустой профиль вместо null
+      })
+    );
+  }
+
+  saveProfile(person: Person): Observable<boolean> {
+    const validation = personSchema.safeParse({ person });
+    
+    if (!validation.success) {
+      console.warn('Validation warnings:', validation.error);
+    }
+
+    return from(this.supabase.saveFullProfile(person)).pipe(
+      map(result => !result.error),
+      catchError(error => {
+        this.errorHandler.showError('Ошибка сохранения профиля', 'ProfileService');
+        return of(false);
+      })
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -21,6 +21,8 @@ import { VacancySelectorComponent } from "../vacancy-selector/vacancy-selector.c
 import { FavoritesService } from '../../../shared/favorites/favorites.service';
 import { ResumeGenerationService } from '../../../shared/resume/resume-generation.service';
 import { FavoriteVacancyCardComponent } from "../favorite-vacancy-card/favorite-vacancy-card.component";
+import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/superjob-auth.service';
+import { PlatformTokensService } from '../../../shared/platform-tokens.service';
 
 interface FavoriteVacancy extends Vacancy {
   isFavorite: boolean;
@@ -51,9 +53,13 @@ interface FavoriteVacancy extends Vacancy {
     CheckboxModule,
     VacancySelectorComponent,
     FavoriteVacancyCardComponent
-]
+  ]
 })
 export class VacancySearchComponent implements OnInit {
+  @ViewChild('scrollTrigger') scrollTrigger!: ElementRef;
+  isLoadingMore = false;
+  hasMoreVacancies = true;
+  private observer!: IntersectionObserver;
   urlForm!: FormGroup;
   searchForm!: FormGroup;
   vacancies: FavoriteVacancy[] = [];
@@ -80,14 +86,15 @@ export class VacancySearchComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    // private superJobService: SuperJobAuthService,
+    private superJobService: SuperJobAuthService,
     private hhAuthService: HHAuthService,
+    private favoritesService: FavoritesService,
     private coverLetterService: CoverLetterService,
     private messageService: MessageService,
     private translate: TranslateService,
+    private platformTokensService: PlatformTokensService,
     private errorHandler: ErrorHandlerService,
     private vacancyService: VacancyService,
-    private favoritesService: FavoritesService,
     private resumeService: ResumeGenerationService,
   ) {
     this.initializeForms();
@@ -105,8 +112,129 @@ export class VacancySearchComponent implements OnInit {
     this.translate.onLangChange.subscribe(() => {
       this.initializeOptions();
     });
+    this.setupInfiniteScroll();
   }
-
+  private setupInfiniteScroll(): void {
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && this.hasMoreVacancies && !this.isLoadingMore) {
+          this.loadMoreVacancies();
+        }
+      });
+    });
+  
+    // Начнем наблюдение после инициализации представления
+    setTimeout(() => {
+      if (this.scrollTrigger) {
+        this.observer.observe(this.scrollTrigger.nativeElement);
+      }
+    }, 1000);
+  }
+  
+  private async loadMoreVacancies(): Promise<void> {
+    if (this.isLoadingMore || !this.hasMoreVacancies) return;
+  
+    this.isLoadingMore = true;
+    this.currentPage++;
+  
+    try {
+      const params = {
+        ...this.searchForm.value,
+        page: this.currentPage,
+        per_page: this.itemsPerPage
+      };
+  
+      const searchResults = await this.vacancyService.searchVacancies(params).toPromise();
+      
+      if (searchResults && searchResults.length > 0) {
+        const newVacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
+          if (result.results && result.results.items) {
+            return result.results.items.map((vacancy: any) => {
+              const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
+              return {
+                ...vacancy,
+                platform: result.platform,
+                isFavorite: isFavorite,
+                isGeneratingLetter: false,
+                isSending: false
+              } as FavoriteVacancy;
+            });
+          }
+          return [];
+        });
+  
+        this.vacancies = [...this.vacancies, ...newVacancies];
+        this.sortVacancies();
+        
+        // Проверяем, есть ли еще вакансии
+        this.hasMoreVacancies = newVacancies.length === this.itemsPerPage;
+      } else {
+        this.hasMoreVacancies = false;
+      }
+    } catch (error) {
+      console.error('Error loading more vacancies:', error);
+      this.currentPage--; // Откатываем страницу при ошибке
+    } finally {
+      this.isLoadingMore = false;
+    }
+  }
+  
+  // Обновите метод searchVacancies
+  async searchVacancies(): Promise<void> {
+    if (this.isLoading) return;
+  
+    this.isLoading = true;
+    this.searchPerformed = true;
+    this.vacancies = [];
+    this.currentPage = 1;
+    this.hasMoreVacancies = true;
+  
+    const params = {
+      ...this.searchForm.value,
+      page: this.currentPage,
+      per_page: this.itemsPerPage
+    };
+    
+    try {
+      const searchResults = await this.vacancyService.searchVacancies(params).toPromise();
+      
+      if (searchResults) {
+        this.vacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
+          if (result.results && result.results.items) {
+            return result.results.items.map((vacancy: any) => {
+              const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
+              return {
+                ...vacancy,
+                platform: result.platform,
+                isFavorite: isFavorite,
+                isGeneratingLetter: false,
+                isSending: false
+              } as FavoriteVacancy;
+            });
+          }
+          return [];
+        });
+        
+        this.sortVacancies();
+        this.hasMoreVacancies = this.vacancies.length === this.itemsPerPage;
+      }
+  
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Ошибка поиска',
+        detail: 'Попробуйте изменить параметры поиска'
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+  
+  ngOnDestroy(): void {
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+  }
   private initializeOptions(): void {
     this.experienceOptions = [
       { label: this.translate.instant('FILTERS.EXPERIENCE.NO_EXPERIENCE'), value: 'noExperience' },
@@ -165,26 +293,100 @@ export class VacancySearchComponent implements OnInit {
     });
   }
 
-  private loadUserResumes(): void {
-    const hhToken = localStorage.getItem('hh_access_token');
-    if (hhToken && this.hhAuthService.isTokenValid()) {
-      this.hhAuthService.getUserResumes().then(resumes => {
-        this.userResumes = resumes;
-      }).catch(error => {
-        console.error('Error loading resumes:', error);
-      });
-    }
-  }
-
   private loadFavorites(): void {
-    const favorites = localStorage.getItem('favorite_vacancies');
-    if (favorites) {
-      this.favoriteVacancies = JSON.parse(favorites);
+    this.favoritesService.favorites$.subscribe(favorites => {
+      this.favoriteVacancies = favorites;
+    });
+  }
+
+  toggleFavorite(vacancy: any): void {
+    if (this.favoritesService.isFavorite(vacancy.id)) {
+      this.favoritesService.removeFromFavorites(vacancy.id);
+    } else {
+      this.favoritesService.addToFavorites(vacancy);
     }
   }
 
-  private saveFavorites(): void {
-    localStorage.setItem('favorite_vacancies', JSON.stringify(this.favoriteVacancies));
+  removeFromFavorites(vacancyId: string): void {
+    this.favoritesService.removeFromFavorites(vacancyId);
+  }
+
+  async generateCoverLetterForFavorite(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy || !this.selectedResume) return;
+
+    try {
+      const request = {
+        resume_id: this.selectedResume.id,
+        vacancy_id: vacancy.id,
+        style: 'formal',
+        tone: 'professional',
+        selected_resume: this.selectedResume
+      };
+
+      const response = await this.coverLetterService.generateCoverLetter(request).toPromise();
+      
+      // Обновляем через сервис
+      await this.favoritesService.updateFavorite(vacancyId, {
+        coverLetter: response.content,
+        lastGenerated: new Date().toISOString()
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Сопроводительное письмо сгенерировано'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации письма', 'VacancySearchComponent');
+    }
+  }
+
+  async generateDevelopmentPlanForFavorite(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy) return;
+
+    try {
+      const developmentPlan = await this.generateDevelopmentPlan(vacancy);
+      
+      // Обновляем через сервис
+      await this.favoritesService.updateFavorite(vacancyId, {
+        developmentPlan: developmentPlan,
+        lastGenerated: new Date().toISOString()
+      });
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'План развития сгенерирован'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации плана развития', 'VacancySearchComponent');
+    }
+  }
+
+  async generateResumeForFavorite(vacancyId: string): Promise<void> {
+    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
+    if (!vacancy) return;
+  
+    try {
+      // Устанавливаем текущую вакансию в сервисе для контекста генерации
+      this.resumeService.setCurrentVacancy(vacancy);
+      
+      // Генерируем резюме с контекстом вакансии
+      const resume = await this.resumeService.generateResume(vacancyId).toPromise();
+      
+      // Обновляем избранную вакансию через сервис с сгенерированным резюме
+      await this.favoritesService.updateFavorite(vacancyId, {
+        generatedResume: resume,
+        lastGenerated: new Date().toISOString()
+      });
+  
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Резюме сгенерировано'
+      });
+    } catch (error) {
+      this.errorHandler.showError('Ошибка генерации резюме', 'VacancySearchComponent');
+    }
   }
 
   showSection(section: 'search' | 'favorites'): void {
@@ -219,6 +421,12 @@ export class VacancySearchComponent implements OnInit {
             const coverLetter = await this.generateCoverLetterForVacancy(vacancy);
             vacancy.coverLetter = coverLetter;
             
+            // Сохраняем в Supabase через сервис
+            await this.favoritesService.updateFavorite(vacancy.id, {
+              coverLetter: coverLetter,
+              lastGenerated: new Date().toISOString()
+            });
+
             this.messageService.add({
               severity: 'success',
               summary: `Письмо для "${vacancy.name}" сгенерировано`
@@ -234,8 +442,6 @@ export class VacancySearchComponent implements OnInit {
           }
         }
       }
-      
-      this.saveFavorites();
       
     } catch (error) {
       console.error('Error generating all letters:', error);
@@ -286,8 +492,12 @@ export class VacancySearchComponent implements OnInit {
 
     try {
       const coverLetter = await this.generateCoverLetterForVacancy(vacancy);
-      vacancy.coverLetter = coverLetter;
-      this.saveFavorites();
+      
+      // Сохраняем в Supabase через сервис
+      await this.favoritesService.updateFavorite(vacancy.id, {
+        coverLetter: coverLetter,
+        lastGenerated: new Date().toISOString()
+      });
       
       this.messageService.add({
         severity: 'success',
@@ -419,51 +629,6 @@ export class VacancySearchComponent implements OnInit {
     window.URL.revokeObjectURL(url);
   }
 
-  async searchVacancies(): Promise<void> {
-    if (this.isLoading) return;
-  
-    this.isLoading = true;
-    this.searchPerformed = true;
-    this.vacancies = [];
-    this.currentPage = 1;
-  
-    const params = this.searchForm.value;
-    
-    try {
-      const searchResults = await this.vacancyService.searchVacancies(params).toPromise();
-      
-      if (searchResults) {
-        this.vacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
-          if (result.results && result.results.items) {
-            return result.results.items.map((vacancy: any) => {
-              const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
-              return {
-                ...vacancy,
-                platform: result.platform,
-                isFavorite: isFavorite,
-                isGeneratingLetter: false,
-                isSending: false
-              } as FavoriteVacancy;
-            });
-          }
-          return [];
-        });
-        
-        this.sortVacancies();
-        this.calculatePagination();
-      }
-  
-    } catch (error) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Ошибка поиска',
-        detail: 'Попробуйте изменить параметры поиска'
-      });
-    } finally {
-      this.isLoading = false;
-    }
-  }
-  
   async loadVacancyFromUrl(): Promise<void> {
     if (this.urlForm.invalid) return;
   
@@ -613,70 +778,8 @@ export class VacancySearchComponent implements OnInit {
     this.selectedVacancy = null;
   }
 
-
-  toggleFavorite(vacancy: any): void {
-    if (this.favoritesService.isFavorite(vacancy.id)) {
-      this.favoritesService.removeFromFavorites(vacancy.id);
-    } else {
-      this.favoritesService.addToFavorites(vacancy);
-    }
-  }
-
-  removeFromFavorites(vacancyId: string): void {
-    this.favoritesService.removeFromFavorites(vacancyId);
-  }
-
-  // Новые методы для генерации контента
-  async generateCoverLetterForFavorite(vacancyId: string): Promise<void> {
-    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
-    if (!vacancy || !this.selectedResume) return;
-
-    try {
-      const request = {
-        resume_id: this.selectedResume.id,
-        vacancy_id: vacancy.id,
-        style: 'formal',
-        tone: 'professional',
-        selected_resume: this.selectedResume
-      };
-
-      const response = await this.coverLetterService.generateCoverLetter(request).toPromise();
-      this.favoritesService.updateFavorite(vacancyId, {
-        coverLetter: response.content,
-        lastGenerated: new Date().toISOString()
-      });
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Сопроводительное письмо сгенерировано'
-      });
-    } catch (error) {
-      this.errorHandler.showError('Ошибка генерации письма', 'VacancySearchComponent');
-    }
-  }
-
-  async generateDevelopmentPlanForFavorite(vacancyId: string): Promise<void> {
-    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
-    if (!vacancy) return;
-
-    try {
-      // Здесь будет логика генерации плана развития
-      const developmentPlan = await this.generateDevelopmentPlan(vacancy);
-      this.favoritesService.updateFavorite(vacancyId, {
-        developmentPlan: developmentPlan,
-        lastGenerated: new Date().toISOString()
-      });
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'План развития сгенерирован'
-      });
-    } catch (error) {
-      this.errorHandler.showError('Ошибка генерации плана развития', 'VacancySearchComponent');
-    }
-  }
   private async generateDevelopmentPlan(vacancy: FavoriteVacancy): Promise<string> {
-        return `
+    return `
     # План профессионального развития
     ## Для вакансии: ${vacancy.name}
 
@@ -691,28 +794,9 @@ export class VacancySearchComponent implements OnInit {
     - Изучить компанию: ${vacancy.employer?.name}
     - Подготовить ответы на типовые вопросы
     - Практиковать технические задачи
-        `;
+    `;
   }
-  
-  async generateResumeForFavorite(vacancyId: string): Promise<void> {
-    const vacancy = this.favoritesService.getFavoriteById(vacancyId);
-    if (!vacancy) return;
 
-    try {
-      const resume = await this.resumeService.generateResume().toPromise();
-      this.favoritesService.updateFavorite(vacancyId, {
-        generatedResume: resume,
-        lastGenerated: new Date().toISOString()
-      });
-
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Резюме сгенерировано'
-      });
-    } catch (error) {
-      this.errorHandler.showError('Ошибка генерации резюме', 'VacancySearchComponent');
-    }
-  }
   async generateAllContent(): Promise<void> {
     if (this.favoriteVacancies.length === 0) {
       this.messageService.add({
@@ -767,7 +851,8 @@ export class VacancySearchComponent implements OnInit {
     }
 
     try {
-      const hhToken = localStorage.getItem('hh_access_token');
+      // Используем сервис токенов вместо localStorage
+      const hhToken = await this.platformTokensService.getToken('hh');
       if (!hhToken) {
         throw new Error('Требуется авторизация в HH.ru');
       }
@@ -784,9 +869,21 @@ export class VacancySearchComponent implements OnInit {
         summary: `Отклик отправлен на вакансию "${vacancy.name}"`
       });
 
-      this.favoritesService.removeFromFavorites(vacancy.id);
+      await this.favoritesService.removeFromFavorites(vacancy.id);
     } catch (error: any) {
       this.errorHandler.showError('Ошибка отправки письма', 'VacancySearchComponent');
     }
+  }
+
+  private loadUserResumes(): void {
+    this.platformTokensService.getToken('hh').then(hhToken => {
+      if (hhToken && this.hhAuthService.isTokenValid()) {
+        this.hhAuthService.getUserResumes().then(resumes => {
+          this.userResumes = resumes;
+        }).catch(error => {
+          console.error('Error loading resumes:', error);
+        });
+      }
+    });
   }
 }

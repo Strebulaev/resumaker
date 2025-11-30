@@ -23,6 +23,11 @@ export class ResumeGenerationService {
     private messageService: MessageService
   ) {}
 
+  setCurrentVacancy(vacancy: any): void {
+    this.currentVacancy = vacancy;
+    console.log('Current vacancy set for resume generation:', vacancy?.name);
+  }
+  
   generateResume(coverLetterContent?: string): Observable<string> {
     return from(this.usageService.checkLimit('resumeGenerations')).pipe(
       switchMap(limitCheck => {
