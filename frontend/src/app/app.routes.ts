@@ -63,26 +63,17 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
-    path: 'job-platforms',
-    component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
-  },
-  { 
     path: 'auth/hh-callback', 
     component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
   },
   { 
     path: 'auth/superjob-callback', 
     component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
   },
   { 
     path: 'auth/habr-callback', 
     component: JobPlatformsComponent,
-    canActivate: [AuthGuard]
   },
-  // Билллинг маршруты
   {
     path: 'billing/pricing',
     component: PricingPlansComponent,
