@@ -79,14 +79,13 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       console.log('Query params changed:', params);
       console.log('Current URL:', window.location.href);
       
-      // Проверяем, что это callback и мы еще не обрабатываем его
-      if (params['code'] && !this.isProcessingCallback) {
+      const currentPath = window.location.pathname;
+      
+      if ((currentPath.includes('callback') && params['code']) && !this.isProcessingCallback) {
         this.isProcessingCallback = true;
         
-        const currentPath = window.location.pathname;
         let platform = params['state']?.split('_')[0];
         
-        // Определяем платформу по URL пути
         if (!platform) {
           if (currentPath.includes('hh-callback')) {
             platform = 'hh';
@@ -115,7 +114,6 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   
   private async initializePlatforms(): Promise<void> {
     try {
-      // Инициализируем все сервисы параллельно
       await Promise.allSettled([
         this.hhAuthService.initializeConfig(),
         this.superJobAuthService.initializeConfig(),
@@ -209,13 +207,14 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       
       const state = `superjob_${this.generateState()}`;
       
-      // Сохраняем в sessionStorage и localStorage
       sessionStorage.setItem('superjob_oauth_state', state);
       localStorage.setItem('superjob_oauth_state', state);
       
       console.log('Initiating SuperJob auth with state:', state);
       
-      const authUrl = this.superJobAuthService.getAuthUrl(state);
+      const redirectUri = encodeURIComponent(window.location.origin + '/auth/superjob-callback');
+      const authUrl = `https://www.superjob.ru/authorize/?client_id=${this.superJobAuthService.clientId}&redirect_uri=${redirectUri}&state=${state}&response_type=code`;
+      
       console.log('Redirecting to:', authUrl);
       
       window.location.href = authUrl;
