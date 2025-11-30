@@ -39,7 +39,7 @@ export interface HHResume {
 
 @Injectable({ providedIn: 'root' })
 export class HHAuthService {
-  private clientId: string = '';
+  public clientId: string = '';
   private clientSecret: string = '';
   private readonly HH_TOKEN_KEY = 'hh_access_token';
   private readonly HH_TOKEN_EXPIRY_KEY = 'hh_token_expiry';
@@ -74,6 +74,9 @@ export class HHAuthService {
       console.error('Failed to initialize config:', error);
       throw error;
     }
+  }
+  private getRedirectUri(): string {
+    return window.location.origin + '/auth/hh-callback';
   }
   getAuthUrl(state: string): string {
     if (!this.clientId) {
@@ -132,11 +135,6 @@ export class HHAuthService {
     if (!response.ok) {
       throw new Error(`Failed to delete resume: ${response.status}`);
     }
-  }
-  private getRedirectUri(): string {
-    return environment.production 
-      ? 'https://rezulution.vercel.app/auth/callback'
-      : 'http://localhost:4200/auth/callback';
   }
 
   async exchangeCodeForToken(code: string): Promise<HHTokenResponse> {
