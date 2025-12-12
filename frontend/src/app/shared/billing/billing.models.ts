@@ -6,6 +6,7 @@ export interface TariffPlan {
       resumeGenerations: number;
       coverLetters: number;
       interviewPlans: number;
+      githubAnalyses: number;
     };
     features: string[];
     description: string;
@@ -22,6 +23,7 @@ export interface TariffPlan {
       resumeGenerations: number;
       coverLetters: number;
       interviewPlans: number;
+      githubAnalyses: number;
       lastReset: Date;
     };
     paymentId?: string;

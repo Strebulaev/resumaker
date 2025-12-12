@@ -4,9 +4,9 @@
     <p>{{ 'BILLING.PRICING_SUBTITLE' | translate }}</p>
   </div>
 
-  <!-- Добавьте отладочную информацию -->
+  <!-- Debug information -->
   <div *ngIf="plans.length === 0" class="no-plans-warning">
-    <p>Планы не загружены. Пожалуйста, обновите страницу.</p>
+    <p>{{ 'BILLING.NO_PLANS_LOADED' | translate }}</p>
   </div>
 
   <div class="pricing-cards">
@@ -16,8 +16,8 @@
             class="plan-card">
       
       <div class="plan-price">
-        <span class="price-amount">{{ plan.price === 0 ? 'Бесплатно' : (plan.price + ' ₽') }}</span>
-        <span *ngIf="plan.price > 0" class="price-period">/месяц</span>
+        <span class="price-amount">{{ plan.price === 0 ? ('BILLING.FREE' | translate) : (plan.price + ' ₽') }}</span>
+        <span *ngIf="plan.price > 0" class="price-period">{{ 'BILLING.PER_MONTH' | translate }}</span>
       </div>
 
       <p class="plan-description">{{ plan.description }}</p>
@@ -28,21 +28,27 @@
 
       <div class="plan-limits">
         <div class="limit-item">
-          <span class="limit-label">Резюме:</span>
+          <span class="limit-label">{{ 'BILLING.RESUME_GENERATIONS' | translate }}:</span>
           <span class="limit-value">
-            {{ plan.dailyLimits.resumeGenerations === -1 ? '∞' : plan.dailyLimits.resumeGenerations }}/день
+            {{ plan.dailyLimits.resumeGenerations === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.resumeGenerations }}{{ 'BILLING.PER_DAY' | translate }}
           </span>
         </div>
         <div class="limit-item">
-          <span class="limit-label">Письма:</span>
+          <span class="limit-label">{{ 'BILLING.COVER_LETTERS' | translate }}:</span>
           <span class="limit-value">
-            {{ plan.dailyLimits.coverLetters === -1 ? '∞' : plan.dailyLimits.coverLetters }}/день
+            {{ plan.dailyLimits.coverLetters === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.coverLetters }}{{ 'BILLING.PER_DAY' | translate }}
           </span>
         </div>
         <div class="limit-item">
-          <span class="limit-label">Собеседования:</span>
+          <span class="limit-label">{{ 'BILLING.INTERVIEW_PLANS' | translate }}:</span>
           <span class="limit-value">
-            {{ plan.dailyLimits.interviewPlans === -1 ? '∞' : plan.dailyLimits.interviewPlans }}/день
+            {{ plan.dailyLimits.interviewPlans === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.interviewPlans }}{{ 'BILLING.PER_DAY' | translate }}
+          </span>
+        </div>
+        <div class="limit-item">
+          <span class="limit-label">GitHub {{ 'BILLING.RESUME_GENERATIONS' | translate | lowercase }}:</span>
+          <span class="limit-value">
+            {{ plan.dailyLimits.githubAnalyses === -1 ? ('BILLING.UNLIMITED' | translate) : plan.dailyLimits.githubAnalyses }}/month
           </span>
         </div>
       </div>
@@ -68,22 +74,22 @@
             (onHide)="closeDialog()">
     
     <ng-template pTemplate="header">
-      <span class="text-xl font-bold">Оплата тарифа {{ selectedPlan?.name }}</span>
+      <span class="text-xl font-bold">{{ 'BILLING.PAYMENT_DIALOG_TITLE' | translate }} {{ selectedPlan?.name }}</span>
     </ng-template>
 
     <div *ngIf="selectedPlan" class="payment-dialog-content">
-      <p>Вы выбрали тариф <strong>{{ selectedPlan.name }}</strong></p>
-      <p>Стоимость: <strong>{{ selectedPlan.price }} ₽</strong></p>
-      <p>После оплаты тариф будет активирован автоматически.</p>
+      <p>{{ 'BILLING.PAYMENT_SUMMARY' | translate:{planName: selectedPlan.name} }}</p>
+      <p>{{ 'BILLING.COST' | translate }} <strong>{{ selectedPlan.price }} ₽</strong></p>
+      <p>{{ 'BILLING.PAYMENT_INFO' | translate }}</p>
     </div>
 
     <ng-template pTemplate="footer">
-      <button pButton 
-              label="Отмена" 
+      <button pButton
+              [label]="'BUTTON.CANCEL' | translate"
               class="p-button-text"
               (click)="closeDialog()"></button>
-      <button pButton 
-              label="Перейти к оплате" 
+      <button pButton
+              [label]="'BILLING.PROCEED_TO_PAYMENT' | translate"
               [loading]="isLoading"
               (click)="processPayment()"
               class="p-button-primary"></button>

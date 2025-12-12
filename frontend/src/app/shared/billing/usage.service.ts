@@ -35,6 +35,12 @@ export class UsageService {
         used: subscription.usage.interviewPlans,
         limit: plan.dailyLimits.interviewPlans,
         remaining: plan.dailyLimits.interviewPlans === -1 ? -1 : plan.dailyLimits.interviewPlans - subscription.usage.interviewPlans
+      },
+      {
+        feature: 'Анализы GitHub',
+        used: subscription.usage.githubAnalyses,
+        limit: plan.dailyLimits.githubAnalyses,
+        remaining: plan.dailyLimits.githubAnalyses === -1 ? -1 : plan.dailyLimits.githubAnalyses - subscription.usage.githubAnalyses
       }
     ];
   }
@@ -49,6 +55,7 @@ export class UsageService {
         resumeGenerations: 0,
         coverLetters: 0,
         interviewPlans: 0,
+        githubAnalyses: 0,
         lastReset: now
       };
       await this.billingService.saveSubscription(subscription);
@@ -59,12 +66,13 @@ export class UsageService {
     const names: {[key: string]: string} = {
       'resumeGenerations': 'Генерация резюме',
       'coverLetters': 'Генерация сопроводительных писем',
-      'interviewPlans': 'Генерация планов собеседований'
+      'interviewPlans': 'Генерация планов собеседований',
+      'githubAnalyses': 'Анализ GitHub репозиториев'
     };
     return names[feature] || feature;
   }
 
-  async checkLimit(feature: 'resumeGenerations' | 'coverLetters' | 'interviewPlans'): Promise<UsageLimit> {
+  async checkLimit(feature: 'resumeGenerations' | 'coverLetters' | 'interviewPlans' | 'githubAnalyses'): Promise<UsageLimit> {
     try {
       const subscription = await this.billingService.getUserSubscription();
       
@@ -106,7 +114,7 @@ export class UsageService {
     }
   }
 
-  async incrementUsage(feature: 'resumeGenerations' | 'coverLetters' | 'interviewPlans'): Promise<void> {
+  async incrementUsage(feature: 'resumeGenerations' | 'coverLetters' | 'interviewPlans' | 'githubAnalyses'): Promise<void> {
     try {
       const subscription = await this.billingService.getUserSubscription();
       const plan = this.billingService.getPlan(subscription.planId);

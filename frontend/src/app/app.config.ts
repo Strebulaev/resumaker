@@ -10,11 +10,12 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { MarkdownService, SECURITY_CONTEXT } from 'ngx-markdown';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
-import { MessageService } from 'primeng/api';
+import { MessageService, Translation } from 'primeng/api';
 import { AppConfig, ConfigService } from './shared/config/config.service';
 import { SupabaseService } from './shared/db/supabase.service';
 import { environment } from '../environments/environment.prod';
 import { LanguageService } from './shared/utils/language.service';
+import { PrimeNGTranslationService } from './shared/utils/primeng-translation.service';
 import { BillingService } from './shared/billing/billing.service';
 import { PaymentService } from './shared/billing/payment.service';
 import { UsageService } from './shared/billing/usage.service';
@@ -61,14 +62,66 @@ export function initializeApp(configService: ConfigService, supabaseService: Sup
 }
 
 export function initializeTranslation(
-  translate: TranslateService, 
+  translate: TranslateService,
   languageService: LanguageService
 ) {
   return () => {
     const defaultLang = languageService.getLanguage();
     translate.setDefaultLang('en');
     translate.use(defaultLang);
+
+    // Set PrimeNG translations based on language
+    const primeNgTranslations = getPrimeNgTranslations(defaultLang);
+    translate.setTranslation(defaultLang, { PRIMENG: primeNgTranslations }, true);
   };
+}
+
+function getPrimeNgTranslations(lang: string): any {
+  if (lang === 'ru') {
+    return {
+      accept: 'Да',
+      reject: 'Нет',
+      choose: 'Выбрать',
+      upload: 'Загрузить',
+      cancel: 'Отмена',
+      dayNames: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+      dayNamesShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+      dayNamesMin: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+      monthNames: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+      monthNamesShort: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+      today: 'Сегодня',
+      clear: 'Очистить',
+      weekHeader: 'Нед',
+      firstDayOfWeek: 1,
+      dateFormat: 'dd.mm.yy',
+      weak: 'Слабый',
+      medium: 'Средний',
+      strong: 'Сильный',
+      passwordPrompt: 'Введите пароль'
+    };
+  } else {
+    return {
+      accept: 'Yes',
+      reject: 'No',
+      choose: 'Choose',
+      upload: 'Upload',
+      cancel: 'Cancel',
+      dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      dayNamesMin: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+      monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+      monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      today: 'Today',
+      clear: 'Clear',
+      weekHeader: 'Wk',
+      firstDayOfWeek: 0,
+      dateFormat: 'mm/dd/yy',
+      weak: 'Weak',
+      medium: 'Medium',
+      strong: 'Strong',
+      passwordPrompt: 'Enter a password'
+    };
+  }
 }
 
 export const appConfig: ApplicationConfig = {
@@ -97,6 +150,27 @@ export const appConfig: ApplicationConfig = {
       {
         theme: {
           preset: Aura
+        },
+        translation: {
+          accept: 'Yes',
+          reject: 'No',
+          choose: 'Choose',
+          upload: 'Upload',
+          cancel: 'Cancel',
+          dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          dayNamesMin: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+          monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+          monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          today: 'Today',
+          clear: 'Clear',
+          weekHeader: 'Wk',
+          firstDayOfWeek: 0,
+          dateFormat: 'mm/dd/yy',
+          weak: 'Weak',
+          medium: 'Medium',
+          strong: 'Strong',
+          passwordPrompt: 'Enter a password'
         }
       }
     ),
@@ -146,6 +220,7 @@ export const appConfig: ApplicationConfig = {
         prefix: '/locale/messages.',
         suffix: '.json'
       })
-    })
+    }),
+    PrimeNGTranslationService
   ]
 };

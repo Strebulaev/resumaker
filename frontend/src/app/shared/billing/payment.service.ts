@@ -85,6 +85,7 @@ export class PaymentService {
       resumeGenerations: 0,
       coverLetters: 0,
       interviewPlans: 0,
+      githubAnalyses: 0,
       lastReset: new Date()
     };
 

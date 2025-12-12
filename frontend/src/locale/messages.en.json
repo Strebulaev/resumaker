@@ -24,13 +24,16 @@
       "name": "Vacancy Search"
     }
   },
-  "LOGIN": {
-    "HEADER": "Вход в систему",
-    "VIA_GOOGLE": "Войти через Google",
-    "SIMPLE_AUTH": "Быстрый вход",
-    "EMAIL": "Email",
-    "PASSWORD": "Пароль",
-    "SIGN_IN": "Войти / Зарегистрироваться"
+  "AUTH": {
+    "LOGIN": {
+      "HEADER": "Login to System",
+      "VIA_GOOGLE": "Sign in with Google",
+      "SIMPLE_AUTH": "Quick Login",
+      "EMAIL": "Email",
+      "PASSWORD": "Password",
+      "SIGN_IN": "Sign In / Register"
+    },
+    "GO_TO_LOGIN": "Go to Login Page"
   },
   "ABOUT": {
     "TITLE": "About Rezulution Service",
@@ -729,8 +732,11 @@
   },
   "BILLING": {
     "TITLE": "Billing",
+    "PRICING_TITLE": "Choose Your Plan",
+    "PRICING_SUBTITLE": "Select the plan that best fits your needs",
+    "POPULAR_CHOICE": "Popular Choice",
     "SUBSCRIPTION": "Subscription",
-    "TARIFS": "Plans", 
+    "TARIFS": "Plans",
     "CURRENT_PLAN": "Current Plan",
     "UPGRADE_PLAN": "Upgrade Plan",
     "MANAGE_SUBSCRIPTION": "Manage Subscription",
@@ -748,7 +754,7 @@
     "CHOOSE_PLAN": "Choose suitable plan",
     "PLAN_DESCRIPTION": "Start for free and improve your experience as your needs grow",
     "POPULAR": "Popular",
-    "CURRENT": "Current", 
+    "CURRENT": "Current",
     "FREE": "Free",
     "PER_MONTH": "/month",
     "RESUME_GENERATIONS": "Resumes",
@@ -819,6 +825,7 @@
         }
       }
     },
+    "NO_PLANS_LOADED": "Plans not loaded. Please refresh the page.",
     "ERRORS": {
       "PLAN_NOT_FOUND": "Plan {{planId}} not found"
     }

@@ -100,7 +100,6 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
         
         this.handleSuperJobCallback(code!, state);
       }
-      // Если мы на основном маршруте и есть параметры (после редиректа)
       else if (currentPath === 'auth/callback' && params['code'] && !this.isProcessingCallback) {
         this.isProcessingCallback = true;
         

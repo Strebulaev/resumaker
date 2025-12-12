@@ -4,6 +4,7 @@ import { LoggedInGuard } from './shared/guards/logged-in.guard';
 import { CoverLetterGenerateComponent } from './components/Generation/cover-letter-generate/cover-letter-generate.component';
 import { InterviewPrepComponent } from './components/Generation/interview-prep/interview-prep.component';
 import { ResumeGenerationComponent } from './components/Generation/resume-generation/resume-generation.component';
+import { GitHubAnalyzeComponent } from './components/Generation/github-analyze/github-analyze.component';
 import { VacancySearchComponent } from './components/Helpers/vacancy-search/vacancy-search.component';
 import { LoginComponent } from './components/Pages/auth/login/login.component';
 import { HomeComponent } from './components/Pages/home/home.component';
@@ -55,6 +56,11 @@ export const routes: Routes = [
   {
     path: 'cover-letter/generate',
     component: CoverLetterGenerateComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'github/analyze',
+    component: GitHubAnalyzeComponent,
     canActivate: [AuthGuard]
   },
   { 

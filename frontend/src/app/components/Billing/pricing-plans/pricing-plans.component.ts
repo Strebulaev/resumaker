@@ -77,16 +77,18 @@ export class PricingPlansComponent implements OnInit {
         id: 'free',
         name: 'Бесплатный',
         price: 0,
-        dailyLimits: { 
-          resumeGenerations: 1, 
-          coverLetters: 1, 
-          interviewPlans: 1 
+        dailyLimits: {
+          resumeGenerations: 1,
+          coverLetters: 1,
+          interviewPlans: 1,
+          githubAnalyses: 2
         },
         features: [
           'Базовые функции генерации',
           '1 резюме в день',
-          '1 сопроводительное письмо в день', 
+          '1 сопроводительное письмо в день',
           '1 план собеседования в день',
+          '2 анализа GitHub репозиториев в месяц',
           'Поддержка по email'
         ],
         description: 'Для начала карьерного пути'
@@ -95,16 +97,18 @@ export class PricingPlansComponent implements OnInit {
         id: 'basic',
         name: 'Базовый',
         price: 290,
-        dailyLimits: { 
-          resumeGenerations: 5, 
-          coverLetters: 5, 
-          interviewPlans: 5 
+        dailyLimits: {
+          resumeGenerations: 5,
+          coverLetters: 5,
+          interviewPlans: 5,
+          githubAnalyses: 20
         },
         features: [
           'Все функции генерации',
           '5 резюме в день',
           '5 сопроводительных писем в день',
-          '5 планов собеседования в день', 
+          '5 планов собеседования в день',
+          '20 анализов GitHub репозиториев в месяц',
           'Приоритетная поддержка',
           'Расширенные шаблоны'
         ],
@@ -115,14 +119,16 @@ export class PricingPlansComponent implements OnInit {
         id: 'pro',
         name: 'PRO',
         price: 790,
-        dailyLimits: { 
-          resumeGenerations: -1, 
-          coverLetters: -1, 
-          interviewPlans: -1 
+        dailyLimits: {
+          resumeGenerations: -1,
+          coverLetters: -1,
+          interviewPlans: -1,
+          githubAnalyses: -1
         },
         features: [
           'Безлимитная генерация',
           'Все функции платформы',
+          'Неограниченные анализы GitHub репозиториев',
           'Премиум шаблоны',
           'Персональная поддержка',
           'Ранний доступ к новым функциям',

@@ -1,0 +1,114 @@
+<div class="github-analyze-container">
+  <div class="header-section">
+    <h2>GitHub to Resume</h2>
+    <p class="subtitle">Преобразите свой GitHub репозиторий в профессиональное описание проекта за 60 секунд</p>
+  </div>
+
+  <div class="analyze-form" [formGroup]="analyzeForm">
+    <div class="input-group">
+      <label for="repoUrl">Ссылка на GitHub репозиторий</label>
+      <input
+        id="repoUrl"
+        type="url"
+        pInputText
+        formControlName="repoUrl"
+        placeholder="https://github.com/username/repository"
+        [class.ng-invalid]="repoUrl?.invalid && repoUrl?.touched"
+        class="repo-input"
+      />
+      <small
+        class="error-message"
+        *ngIf="repoUrl?.invalid && repoUrl?.touched"
+      >
+        Введите корректную ссылку на GitHub репозиторий
+      </small>
+    </div>
+
+    <div class="action-buttons">
+      <p-button
+        label="Анализировать репозиторий"
+        icon="pi pi-github"
+        [loading]="isAnalyzing"
+        [disabled]="analyzeForm.invalid"
+        (onClick)="onSubmit()"
+        styleClass="analyze-button"
+      ></p-button>
+
+      <p-button
+        label="Очистить"
+        icon="pi pi-refresh"
+        severity="secondary"
+        (onClick)="reset()"
+        styleClass="reset-button"
+      ></p-button>
+    </div>
+  </div>
+
+  <div class="result-section" *ngIf="showResult && analysisResult">
+    <div class="result-header">
+      <h3>Результат анализа</h3>
+      <div class="repo-info">
+        <i class="pi pi-github"></i>
+        <span>{{ analysisResult.repoInfo.owner }}/{{ analysisResult.repoInfo.name }}</span>
+      </div>
+    </div>
+
+    <div class="generated-content">
+      <div class="content-display">
+        <pre>{{ analysisResult.content }}</pre>
+      </div>
+
+      <div class="content-actions">
+        <p-button
+          label="Добавить в профиль"
+          icon="pi pi-plus"
+          severity="success"
+          (onClick)="addToProfile()"
+          styleClass="action-button"
+        ></p-button>
+
+        <p-button
+          label="Создать полное резюме"
+          icon="pi pi-file"
+          severity="info"
+          (onClick)="createFullResume()"
+          styleClass="action-button"
+        ></p-button>
+
+        <p-button
+          label="Сгенерировать заново"
+          icon="pi pi-refresh"
+          severity="secondary"
+          (onClick)="regenerate()"
+          styleClass="action-button"
+        ></p-button>
+      </div>
+    </div>
+  </div>
+
+  <div class="usage-info" *ngIf="!showResult">
+    <div class="info-card">
+      <h4>Как это работает?</h4>
+      <ul>
+        <li><i class="pi pi-check"></i> Анализируем README.md и конфигурационные файлы</li>
+        <li><i class="pi pi-check"></i> Определяем используемые технологии</li>
+        <li><i class="pi pi-check"></i> Генерируем профессиональное описание с достижениями</li>
+        <li><i class="pi pi-check"></i> Преобразуем технические детали в бизнес-ценность</li>
+      </ul>
+    </div>
+
+    <div class="info-card">
+      <h4>Примеры использования</h4>
+      <div class="examples">
+        <div class="example">
+          <strong>Веб-приложение:</strong><br>
+          "Разработал полнофункциональное веб-приложение с использованием React и Node.js"
+        </div>
+        <div class="example">
+          <strong>API сервис:</strong><br>
+          "Спроектировал и реализовал REST API для обработки 10k+ запросов в минуту"
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
