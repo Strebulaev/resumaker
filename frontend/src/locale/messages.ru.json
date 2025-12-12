@@ -732,7 +732,10 @@
   },
   "BILLING": {
     "TITLE": "Биллинг",
-    "SUBSCRIPTION": "Подписка", 
+    "PRICING_TITLE": "Выберите свой тариф",
+    "PRICING_SUBTITLE": "Выберите тариф, который лучше всего соответствует вашим потребностям",
+    "POPULAR_CHOICE": "Популярный выбор",
+    "SUBSCRIPTION": "Подписка",
     "TARIFS": "Тарифы",
     "CURRENT_PLAN": "Текущий тариф",
     "UPGRADE_PLAN": "Обновить тариф",

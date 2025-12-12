@@ -144,7 +144,7 @@ async function generateResumeContent(repoData: GitHubRepoData, apiKey: string): 
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
       prompt: prompt,
       max_tokens: 1000,
       temperature: 0.7,
