@@ -1,7 +1,5 @@
 import { Injectable } from '@angular/core';
 import { ConfigService } from '../../config/config.service';
-import { environment } from '../../../../environments/environment';
-import { ErrorToastComponent } from '../../../components/Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../../error-handler.service';
 
 type HHTokenResponse = {

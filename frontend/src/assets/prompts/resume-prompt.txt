@@ -1,117 +1,117 @@
-Задача:
-Сгенерируй профессиональное резюме на основе профиля пользователя, следуя структуре, описанной в person-schema.yaml, и учитывая лучшие практики составления резюме. Резюме должно быть четким, структурированным и адаптированным под желаемую позицию.
+Task:
+Generate a professional resume based on the user's profile, following the structure described in person-schema.yaml, and considering best practices for resume writing. The resume should be clear, structured, and tailored to the desired position.
 
-Входные данные:
+Input data:
 
-Профиль пользователя (в приложенном yaml-файле).
+User profile (in the attached yaml file).
 
-Желаемая позиция (выбранную желаемую позицию, исключи нерелевантные выбранной позиции скиллы).
+Desired position (selected desired position, exclude skills not relevant to the selected position).
 
-Требования к резюме:
+Resume requirements:
 
-Формат:
+Format:
 
-Используй Markdown для оформления.
+Use Markdown for formatting.
 
-Сохрани логическую структуру, но адаптируй её под стандарты резюме (например, разделы "Опыт работы", "Образование", "Навыки" и т.д.).
+Maintain logical structure, but adapt it to resume standards (e.g., sections "Work Experience", "Education", "Skills", etc.).
 
-Персонализация:
+Personalization:
 
-Укажи желаемую позицию в заголовке резюме.
+Specify the desired position in the resume header.
 
-Подчеркни ключевые навыки и опыт, релевантные для желаемой позиции.
+Highlight key skills and experience relevant to the desired position.
 
-Структура резюме:
+Resume structure:
 
-Контактная информация: Имя, телефон, email, дополнительные контакты (если есть).
+Contact information: Name, phone, email, additional contacts (if any).
 
-Локация: Город, страна, готовность к переезду/удаленной работе/командировкам.
+Location: City, country, willingness to relocate/remote work/business trips.
 
-Цель (опционально): Краткое описание карьерных целей или профессионального профиля (1-2 предложения).
+Objective (optional): Brief description of career goals or professional profile (1-2 sentences).
 
-Навыки:
+Skills:
 
-Группируй навыки по категориям (например, "Технические навыки", "Языки").
+Group skills by categories (e.g., "Technical Skills", "Languages").
 
-Для технических навыков укажи уровень (1-10) и дату последнего использования.
+For technical skills, indicate level (1-10) and last used date.
 
-Для языков укажи уровень в формате "A1-C2".
+For languages, indicate level in "A1-C2" format.
 
-Опыт работы:
+Work experience:
 
-Перечисли компании, должности и периоды работы.
+List companies, positions, and periods of work.
 
-Добавь описание задач и ключевых достижений (используй глаголы действия: "разработал", "оптимизировал", "увеличил").
+Add descriptions of tasks and key achievements (use action verbs: "developed", "optimized", "increased").
 
-Для достижений укажи метрики (например, "Увеличил производительность на 20%").
+For achievements, specify metrics (e.g., "Increased performance by 20%").
 
-Упомяни используемые технологии (стек).
+Mention technologies used (stack).
 
-Образование: Укажи учебные заведения, степени, специальности и годы окончания.
+Education: Specify educational institutions, degrees, specialties, and graduation years.
 
-Дополнительная информация:
+Additional information:
 
-Хобби (если релевантно).
+Hobbies (if relevant).
 
-Прочитанная литература (если имеет отношение к желаемой позиции).
+Read literature (if related to the desired position).
 
-Оптимизация:
+Optimization:
 
-Избегай избыточности.
+Avoid redundancy.
 
-Используй четкие и конкретные формулировки.
+Use clear and specific formulations.
 
-Сделай резюме легко читаемым (используй списки, абзацы, выделение ключевых моментов).
+Make the resume easy to read (use lists, paragraphs, highlighting key points).
 
-Пример вывода (Markdown):
+Example output (Markdown):
 
 markdown
-# [Имя пользователя]  
-**Желаемая позиция:** [Название должности]  
+# [User Name]
+**Desired Position:** [Job Title]
 
-## Контактная информация  
-- Телефон: [номер]  
-- Email: [адрес]  
-- LinkedIn/GitHub: [ссылки, если есть]  
+## Contact Information
+- Phone: [number]
+- Email: [address]
+- LinkedIn/GitHub: [links, if any]
 
-## Локация  
-[Город, Страна]  
-- Готовность к переезду: [Да/Нет]  
-- Удаленная работа: [Да/Нет]  
-- Командировки: [Да/Нет]  
+## Location
+[City, Country]
+- Willingness to relocate: [Yes/No]
+- Remote work: [Yes/No]
+- Business trips: [Yes/No]
 
-## Навыки  
-### Технические навыки  
-- [Навык 1]: Уровень [X/10], последнее использование: [дата]  
-- [Навык 2]: Уровень [Y/10], последнее использование: [дата]  
+## Skills
+### Technical Skills
+- [Skill 1]: Level [X/10], last used: [date]
+- [Skill 2]: Level [Y/10], last used: [date]
 
-### Языки  
-- [Язык 1]: Уровень [C1]  
-- [Язык 2]: Уровень [B2]  
+### Languages
+- [Language 1]: Level [C1]
+- [Language 2]: Level [B2]
 
-## Опыт работы  
-### [Компания 1]  
-**Должность:** [Название]  
-**Период:** [Дата начала] – [Дата окончания]  
-- Задачи:  
-  - [Описание задачи 1].  
-  - [Описание задачи 2].  
-- Достижения:  
-  - [Достижение 1 с метриками].  
-  - [Достижение 2 с метриками].  
-- Технологии: [Стек технологий].  
+## Work Experience
+### [Company 1]
+**Position:** [Title]
+**Period:** [Start Date] – [End Date]
+- Tasks:
+  - [Task description 1].
+  - [Task description 2].
+- Achievements:
+  - [Achievement 1 with metrics].
+  - [Achievement 2 with metrics].
+- Technologies: [Technology stack].
 
-## Образование  
-### [Учебное заведение]  
-**Степень:** [Название]  
-**Специальность:** [Название]  
-**Год окончания:** [Год]  
+## Education
+### [Educational Institution]
+**Degree:** [Title]
+**Specialty:** [Title]
+**Graduation Year:** [Year]
 
-## Дополнительная информация  
-- Хобби: [список].  
-- Литература: [список, если релевантно].  
-Примечание:
-Если какие-то данные отсутствуют в профиле пользователя, пропусти соответствующий раздел или укажи "Не указано". Сфокусируйся на релевантности для желаемой позиции.
+## Additional Information
+- Hobbies: [list].
+- Literature: [list, if relevant].
+Note:
+If some data is missing from the user profile, skip the corresponding section or indicate "Not specified". Focus on relevance to the desired position.
 
 person-schema.yaml:
 "

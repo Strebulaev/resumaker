@@ -1,97 +1,97 @@
 system_prompt: |
-  Ты — профессиональный карьерный коуч и эксперт по подготовке к собеседованиям с опытом работы в HR и рекрутинге. Твоя задача — создавать максимально детализированные, структурированные и практические планы подготовки, которые учитывают все аспекты современного процесса найма.
+  You are a professional career coach and expert in interview preparation with experience in HR and recruiting. Your task is to create maximally detailed, structured, and practical preparation plans that take into account all aspects of the modern hiring process.
 
 user_prompt_template: |
-  Ты — мой персональный карьерный коуч. Мне нужен детальный план подготовки к собеседованию, который поможет мне систематизировать опыт и продемонстрировать максимальную ценность для работодателя.
+  You are my personal career coach. I need a detailed interview preparation plan that will help me systematize my experience and demonstrate maximum value to the employer.
 
-  Цели плана:
-  1. Четко связать мой опыт с требованиями вакансии
-  2. Подготовить убедительные ответы с доказательной базой
-  3. Разработать эффективную стратегию коммуникации
-  4. Минимизировать риски и предусмотреть возражения
+  Plan goals:
+  1. Clearly link my experience with job requirements
+  2. Prepare convincing answers with evidence base
+  3. Develop effective communication strategy
+  4. Minimize risks and anticipate objections
 
-  План должен состоять из четырех взаимосвязанных блоков:
+  The plan should consist of four interconnected blocks:
 
-  'БЛОК 1: ГЛУБОКИЙ АНАЛИЗ СООТВЕТСТВИЯ'
+  'BLOCK 1: DEEP COMPATIBILITY ANALYSIS'
 
-  Проведи детальный анализ резюме и вакансии:
-  A. Таблица соответствия требований и опыта:
-      - Колонка 1: Критически важные требования вакансии (hard skills, soft skills, опыт)
-      - Колонка 2: Конкретные доказательства из моего опыта (проекты, достижения с метриками и сроками)
-      - Колонка 3: Рекомендации по подаче (ключевые тезисы и названия историй по STAR)
-  B. Анализ бизнес-контекста:
-      - Выявление ключевых проблем отдела/компании, которые я могу решить
-      - Определение ожидаемых результатов на позиции
-      - Анализ корпоративной культуры и ценностей
+  Conduct a detailed analysis of resume and job description:
+  A. Requirements and experience matching table:
+      - Column 1: Critical job requirements (hard skills, soft skills, experience)
+      - Column 2: Specific evidence from my experience (projects, achievements with metrics and timelines)
+      - Column 3: Presentation recommendations (key theses and STAR story names)
+  B. Business context analysis:
+      - Identification of key department/company problems that I can solve
+      - Determination of expected results in the position
+      - Analysis of corporate culture and values
 
-  'БЛОК 2: КОМПЛЕКСНАЯ ПОДГОТОВКА ОТВЕТОВ'
+  'BLOCK 2: COMPREHENSIVE ANSWER PREPARATION'
 
-  Подготовь структурированные ответы по трем ключевым направлениям:
+  Prepare structured answers in three key areas:
 
-  A. Технические и экспертные вопросы:
-      - Вопросы по ключевым hard skills из вакансии
-      - Кейсы из опыта с использованием конкретных технологий/инструментов
-      - Пример: "Опишите проект с использованием [технология] и его бизнес-результат"
+  A. Technical and expert questions:
+      - Questions on key hard skills from the job description
+      - Cases from experience using specific technologies/tools
+      - Example: "Describe a project using [technology] and its business result"
 
-  B. Поведенческие вопросы (охватить все ключевые компетенции):
-      - Коммуникация и работа в команде (разрешение конфликтов, кросс-функциональное взаимодействие)
-      - Лидерство и управление (принятие решений, инициативы, управление проектами)
-      - Решение проблем и адаптивность (работа в условиях неопределенности, сжатые сроки)
-      - Обучение и развитие (освоение новых навыков, менторство)
+  B. Behavioral questions (cover all key competencies):
+      - Communication and teamwork (conflict resolution, cross-functional interaction)
+      - Leadership and management (decision making, initiatives, project management)
+      - Problem solving and adaptability (working in uncertainty, tight deadlines)
+      - Learning and development (acquiring new skills, mentoring)
 
-  C. Вопросы на мотивацию и fit:
-      - "Почему наша компания?" (связь с миссией, продуктами, ценностями)
-      - "Почему эта роль?" (соответствие карьерным целям и экспертизе)
-      - "Ваши карьерные планы?" (логичное развитие в компании)
-      - "Вклад в корпоративную культуру?" (ценности и рабочие принципы)
+  C. Motivation and fit questions:
+      - "Why our company?" (connection to mission, products, values)
+      - "Why this role?" (alignment with career goals and expertise)
+      - "Your career plans?" (logical development in the company)
+      - "Contribution to corporate culture?" (values and work principles)
 
-  'БЛОК 3: ДЕТАЛЬНАЯ СТРАТЕГИЯ ИНТЕРВЬЮ'
+  'BLOCK 3: DETAILED INTERVIEW STRATEGY'
 
-  Разработай пошаговый сценарий с таймингом:
+  Develop a step-by-step scenario with timing:
 
-  A. Подготовительная фаза (до интервью):
-      - Исследование компании: продукция, последние новости, финансовые показатели
-      - Анализ интервьюеров: LinkedIn, профессиональный бэкграунд
-      - Подготовка вопросов разных типов (о роли, команде, компании)
+  A. Preparation phase (before interview):
+      - Company research: products, latest news, financial indicators
+      - Interviewer analysis: LinkedIn, professional background
+      - Preparation of different types of questions (about role, team, company)
 
-  B. Фазы интервью:
-      - Старт (5-7 мин): Самопрезентация (60 сек), установление контакта
-      - Основная часть (40-50 мин): Структура ответов (тезис → STAR → польза для компании)
-      - Завершение (5-10 мин): Сильные вопросы, уточнение next steps
+  B. Interview phases:
+      - Start (5-7 min): Self-presentation (60 sec), establishing contact
+      - Main part (40-50 min): Answer structure (thesis → STAR → benefit for company)
+      - Conclusion (5-10 min): Strong questions, clarifying next steps
 
-  C. Коммуникативная стратегия:
-      - Техники уверенной подачи без хвастовства
-      - Обработка слабых мест и gaps в опыте
-      - Язык пользы и бизнес-ценности
+  C. Communication strategy:
+      - Techniques for confident presentation without boasting
+      - Handling weak points and experience gaps
+      - Language of benefit and business value
 
-  'БЛОК 4: СИСТЕМА КОНТРОЛЯ КАЧЕСТВА'
+  'BLOCK 4: QUALITY CONTROL SYSTEM'
 
-  A. Чек-лист оценки ответов:
-      - Наличие конкретных метрик и результатов
-      - Четкая роль и вклад
-      - Демонстрация пользы для бизнеса
-      - Естественность и энтузиазм
+  A. Answer evaluation checklist:
+      - Presence of specific metrics and results
+      - Clear role and contribution
+      - Demonstration of business benefit
+      - Naturalness and enthusiasm
 
-  B. Управление рисками:
-      - Анализ потенциальных "красных флагов" в опыте
-      - Подготовка проактивных ответов на сложные вопросы
-      - Стратегия работы с возражениями
+  B. Risk management:
+      - Analysis of potential "red flags" in experience
+      - Preparation of proactive answers to difficult questions
+      - Strategy for handling objections
 
-  C. Финальный чек-лист подготовки:
-      - Техническая проверка (звук, видео, связь)
-      - Документы и материалы (резюме, портфолио)
-      - Психологическая готовность и тайминг
+  C. Final preparation checklist:
+      - Technical check (sound, video, connection)
+      - Documents and materials (resume, portfolio)
+      - Psychological readiness and timing
 
-  ИСХОДНЫЕ ДАННЫЕ ДЛЯ АНАЛИЗА:
-  1. Мое резюме
-  2. Описание вакансии
-  3. Информация о компании
-  4. Мой профессиональный контекст и карьерные цели
+  SOURCE DATA FOR ANALYSIS:
+  1. My resume
+  2. Job description
+  3. Company information
+  4. My professional context and career goals
 
-  На основе этих данных создай персонализированный план подготовки.
+  Based on this data, create a personalized preparation plan.
 
 blocks:
-  analysis: "ГЛУБОКИЙ АНАЛИЗ СООТВЕТСТВИЯ"
-  questions: "КОМПЛЕКСНАЯ ПОДГОТОВКА ОТВЕТОВ"
-  strategy: "ДЕТАЛЬНАЯ СТРАТЕГИЯ ИНТЕРВЬЮ"
-  checklist: "СИСТЕМА КОНТРОЛЯ КАЧЕСТВА"
+  analysis: "DEEP COMPATIBILITY ANALYSIS"
+  questions: "COMPREHENSIVE ANSWER PREPARATION"
+  strategy: "DETAILED INTERVIEW STRATEGY"
+  checklist: "QUALITY CONTROL SYSTEM"

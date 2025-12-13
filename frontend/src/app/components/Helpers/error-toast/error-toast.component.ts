@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription, interval } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 
 interface ErrorInfo {
   id: number;
@@ -33,6 +34,8 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
 
   private errorCache = new Map<string, number>();
   private readonly DUPLICATE_TIMEOUT = 5000;
+
+  constructor(private translate: TranslateService) {}
 
   ngOnInit() {
     this.setupErrorHandling();
@@ -284,19 +287,19 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
   private enhanceAIMessage(message: string, type: 'error' | 'warning' | 'ai-error'): string {
     if (type !== 'ai-error') return message;
 
-    // Улучшаем сообщения AI ошибок для пользователя
+    // Enhance AI error messages for user
     if (message.includes('429') || message.includes('too many requests') || message.includes('превышен лимит')) {
-      return '🔄 Превышен лимит запросов к AI. Подождите немного и попробуйте снова.';
+      return this.translate.instant('ERROR.AI_RATE_LIMIT');
     }
-    
+
     if (message.includes('400') || message.includes('bad request')) {
-      return '❌ Ошибка в запросе к AI. Мы уже работаем над исправлением.';
+      return this.translate.instant('ERROR.AI_BAD_REQUEST');
     }
-    
+
     if (message.includes('ai') || message.includes('together')) {
-      return '🤖 Временные проблемы с AI сервисом. Попробуйте позже.';
+      return this.translate.instant('ERROR.AI_SERVICE_TEMPORARY');
     }
-    
+
     return message;
   }
 
@@ -334,16 +337,15 @@ export class ErrorToastComponent implements OnInit, OnDestroy {
     this.addError(message, source, 'warning');
   }
 
-  // Метод для обработки HTTP ошибок от API
   handleApiError(error: any, context: string = 'API') {
     if (error.status === 429) {
-      this.showAIError('Слишком много запросов', context);
+      this.showAIError(this.translate.instant('ERROR.AI_RATE_LIMIT'), context);
     } else if (error.status === 400) {
-      this.showAIError('Неверный запрос', context);
+      this.showAIError(this.translate.instant('ERROR.AI_BAD_REQUEST'), context);
     } else if (error.status >= 500) {
-      this.showError('Ошибка сервера', context);
+      this.showError(this.translate.instant('ERROR.SERVER'), context);
     } else {
-      const message = error.message || 'Произошла ошибка';
+      const message = error.message || this.translate.instant('ERROR.GENERIC');
       this.showError(message, context);
     }
   }

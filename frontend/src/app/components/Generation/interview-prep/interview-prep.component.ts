@@ -394,7 +394,7 @@ export class InterviewPrepComponent implements OnInit {
   Задание: ${promptText}`;
   
     const request = {
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
       prompt: prompt,
       max_tokens: 4000,
       temperature: 0.7,

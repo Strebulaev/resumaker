@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError, from, forkJoin } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { HHAuthService } from '../job-platforms/hh/hh-auth.service';
 import { ProfileService } from '../profile/profile.service';
-import { ConfigService } from '../config/config.service';
 import { AIService } from '../ai/ai.service';
 import { VacancyService } from '../vacancy/vacancy.service';
 import { SuperJobAuthService } from '../job-platforms/super-job/superjob-auth.service';
@@ -46,6 +44,7 @@ export class CoverLetterService {
 
   constructor(
     private hhAuthService: HHAuthService,
+    private superjobAuthService: SuperJobAuthService,
     private profileService: ProfileService,
     private aiService: AIService,
     private vacancyService: VacancyService,
@@ -89,7 +88,7 @@ export class CoverLetterService {
             const promptText = this.buildPrompt(vacancy, profile, request.style || 'formal', request.tone || 'professional');
             
             const aiRequest = {
-              model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+              model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
               prompt: promptText,
               max_tokens: 1500, // Увеличил для более детальных писем
               temperature: 0.4, // Снизил для большей консистентности
@@ -534,6 +533,15 @@ export class CoverLetterService {
       catchError(error => {
         this.errorHandler.showError('Ошибка отправки на HH.ru', 'CoverLetterService');
         return throwError(() => new Error('Ошибка отправки на HH.ru: ' + error.message));
+      })
+    );
+  }
+
+  sendToSuperJob(coverLetterContent: string, vacancyId: string, resumeId: string): Observable<any> {
+    return from(this.superjobAuthService.sendApplication(parseInt(vacancyId), parseInt(resumeId), coverLetterContent)).pipe(
+      catchError(error => {
+        this.errorHandler.showError('Ошибка отправки на SuperJob', 'CoverLetterService');
+        return throwError(() => new Error('Ошибка отправки на SuperJob: ' + error.message));
       })
     );
   }

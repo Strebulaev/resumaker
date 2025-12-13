@@ -9,7 +9,8 @@
     },
     "RESUME": {
       "name": "Resume",
-      "GENERATE_RESUME": "Generate Resume"
+      "GENERATE_RESUME": "Generate Resume",
+      "GITHUB_TO_RESUME": "GitHub to Resume"
     },
     "ABOUT": {
       "name": "About Service"
@@ -277,7 +278,14 @@
     "VACANCY_INFO": "Vacancy Information",
     "UPLOAD_COVER_LETTER": "Upload Cover Letter",
     "UPLOAD_VACANCY": "Upload Vacancy Description",
-    "REMOVE_FILE": "Remove File"
+    "REMOVE_FILE": "Remove File",
+    "ATTACHMENTS": "File Attachments",
+    "ATTACHMENTS_HINT": "Attach additional files to your resume (portfolio, certificates, etc.)",
+    "ATTACHED_FILES": "Attached Files",
+    "FILE_TYPE_RESUME": "Resume",
+    "FILE_TYPE_PORTFOLIO": "Portfolio",
+    "FILE_TYPE_CERTIFICATE": "Certificate",
+    "FILE_TYPE_OTHER": "Other"
   },
   "JOB_PLATFORMS": {
     "TITLE": "Platform Integration",
@@ -404,7 +412,28 @@
     "INVALID_URL": "Invalid link format",
     "NO_TOKEN": "Authorization required",
     "API_ERROR": "API error",
-    "PAGE_NOT_EXIST": "The page you are looking for does not exist."
+    "PAGE_NOT_EXIST": "The page you are looking for does not exist.",
+    "LOAD_VACANCY": "Error loading vacancy",
+    "LOAD_PROFILE": "Error loading profile",
+    "SAVE_PROFILE": "Error saving profile",
+    "GENERATE_RESUME": "Error generating resume",
+    "GENERATE_COVER_LETTER": "Error generating cover letter",
+    "GENERATE_INTERVIEW_PLAN": "Error generating interview plan",
+    "SEND_APPLICATION": "Error sending application",
+    "UPLOAD_FILE": "Error uploading file",
+    "PARSE_FILE": "Error parsing file",
+    "AI_INIT": "Error initializing AI providers",
+    "AI_CONFIG": "Error configuring AI",
+    "TOKEN_REFRESH": "Error refreshing token",
+    "LOAD_NOTIFICATIONS": "Error loading notifications",
+    "CREATE_NOTIFICATION": "Error creating notification",
+    "UPDATE_NOTIFICATION": "Error updating notification",
+    "DELETE_NOTIFICATION": "Error deleting notification",
+    "LOAD_CONFIG": "Error loading configuration",
+    "PUBLISH_RESUME": "Error publishing resume",
+    "AI_RATE_LIMIT": "🔄 AI request limit exceeded. Please wait a moment and try again.",
+    "AI_BAD_REQUEST": "❌ Error in AI request. We are already working on fixing it.",
+    "AI_SERVICE_TEMPORARY": "🤖 Temporary AI service issues. Please try again later."
   },
   "SUCCESS": {
     "OPERATION_COMPLETED": "Operation completed successfully",
@@ -858,5 +887,6 @@
   "SEND_TO_PLATFORM": "Send to platform",
   "LAST_GENERATED": "Last generated",
   "RESUME_FOR_SENDING": "Resume for sending",
-  "SELECT_RESUME": "Select resume"
+  "SELECT_RESUME": "Select resume",
+  "REMOVE": "Remove"
 }

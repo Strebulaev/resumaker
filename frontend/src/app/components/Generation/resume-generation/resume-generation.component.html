@@ -66,6 +66,51 @@
     <small>{{ 'RESUME_GENERATION.COVER_LETTER_HINT' | translate }}</small>
   </div>
 
+  <!-- File Attachments Section -->
+  <div class="attachments-section">
+    <h3>{{ 'RESUME_GENERATION.ATTACHMENTS' | translate }}</h3>
+    <div class="attachments-info">
+      <small>{{ 'RESUME_GENERATION.ATTACHMENTS_HINT' | translate }}</small>
+    </div>
+
+    <div class="file-upload-field">
+      <app-translated-file-input
+        [accept]="'.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png'"
+        [fieldName]="'resume-attachments'"
+        [multiple]="true"
+        (filesSelected)="onAttachmentsSelected($event)"
+        [showFileTypes]="true">
+      </app-translated-file-input>
+    </div>
+
+    <!-- Attached Files List -->
+    <div class="attached-files" *ngIf="attachedFiles.length > 0">
+      <h4>{{ 'RESUME_GENERATION.ATTACHED_FILES' | translate }} ({{ attachedFiles.length }})</h4>
+      <div class="files-list">
+        <div class="file-item" *ngFor="let file of attachedFiles; let i = index; trackBy: trackByFile">
+          <div class="file-info">
+            <i [class]="getFileIcon(file.type)"></i>
+            <div class="file-details">
+              <span class="file-name">{{ file.name }}</span>
+              <span class="file-size">{{ getFileSize(file.size) }}</span>
+              <span class="file-type">{{ getFileTypeLabel(file.type) }}</span>
+            </div>
+          </div>
+          <div class="file-actions">
+            <button pButton icon="pi pi-eye" class="p-button-text p-button-sm"
+                    (click)="previewFile(file)"
+                    [pTooltip]="'PREVIEW' | translate">
+            </button>
+            <button pButton icon="pi pi-times" class="p-button-text p-button-danger p-button-sm"
+                    (click)="removeAttachment(i)"
+                    [pTooltip]="'REMOVE' | translate">
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Кнопка генерации -->
   <div class="generate-button-container">
     <button pButton 

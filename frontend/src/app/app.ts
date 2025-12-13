@@ -83,7 +83,6 @@ export class App implements OnInit {
 
   private async initializeApp(): Promise<void> {
     try {
-      // Загружаем конфиг и инициализируем Supabase
       const config = await this.configService.loadConfig();
       await this.supabase.initialize(config);
     } catch (error) {
@@ -113,7 +112,6 @@ export class App implements OnInit {
     this.initializeLanguages();
     this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
     
-    // Подписываемся на изменения текущего AI провайдера
     this.aiGuard.getCurrentProviderNameObservable().subscribe(provider => {
       this.currentAIProvider = provider;
     });
@@ -168,7 +166,6 @@ export class App implements OnInit {
     return this.aiGuard.checkAIConfigured() ? 'var(--green-500)' : 'var(--red-500)';
   }
 
-  // Остальные методы без изменений...
   private initializeLanguages(): void {
     this.availableLanguages = [
       {
@@ -276,12 +273,16 @@ export class App implements OnInit {
       {
         label: this.translate.instant('MAIN_MENU.RESUME.name'),
         items: [
-          { 
-            label: this.translate.instant('MAIN_MENU.RESUME.GENERATE_RESUME'), 
+          {
+            label: this.translate.instant('MAIN_MENU.RESUME.GENERATE_RESUME'),
             routerLink: '/resume-generation'
           },
-          { 
-            label: this.translate.instant('MAIN_MENU.PROFILE.GENERATE_COVER_LETTER'), 
+          {
+            label: this.translate.instant('MAIN_MENU.RESUME.GITHUB_TO_RESUME'),
+            routerLink: '/github/analyze'
+          },
+          {
+            label: this.translate.instant('MAIN_MENU.PROFILE.GENERATE_COVER_LETTER'),
             routerLink: '/cover-letter/generate'
           }
         ]
@@ -305,13 +306,7 @@ export class App implements OnInit {
       {
         label: this.translate.instant('BILLING.TARIFS'),
         routerLink: '/billing/pricing',
-      },
-      // {
-      //   label: 'Избранное',
-      //   icon: 'pi pi-heart',
-      //   routerLink: '/vacancy-search',
-      //   queryParams: { section: 'favorites' }
-      // }
+      }
     ];
   }
 
@@ -330,7 +325,6 @@ export class App implements OnInit {
   }
 
   ngAfterViewInit() {
-    console.log('Registering ErrorToastComponent...');
     this.errorHandler.registerErrorToast(this.errorToast);
   }
 }

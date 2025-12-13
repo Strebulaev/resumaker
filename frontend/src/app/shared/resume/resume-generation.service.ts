@@ -7,6 +7,7 @@ import { HHVacancyService } from '../job-platforms/hh/hh-vacancy.service';
 import { ErrorHandlerService } from '../error-handler.service';
 import { UsageService } from '../billing/usage.service';
 import { MessageService } from 'primeng/api';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({ providedIn: 'root' })
 export class ResumeGenerationService {
@@ -20,22 +21,22 @@ export class ResumeGenerationService {
     private vacancyService: HHVacancyService,
     private errorHandler: ErrorHandlerService,
     private usageService: UsageService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private translate: TranslateService
   ) {}
 
   setCurrentVacancy(vacancy: any): void {
     this.currentVacancy = vacancy;
-    console.log('Current vacancy set for resume generation:', vacancy?.name);
   }
   
   generateResume(coverLetterContent?: string): Observable<string> {
     return from(this.usageService.checkLimit('resumeGenerations')).pipe(
       switchMap(limitCheck => {
         if (!limitCheck.allowed) {
-          const errorMsg = `Достигнут дневной лимит генерации резюме. Доступно: ${limitCheck.remaining} из ${limitCheck.limit}. Обновите тариф для увеличения лимитов.`;
+          const errorMsg = `Resume generation daily limit reached. Available: ${limitCheck.remaining} out of ${limitCheck.limit}. Upgrade your plan to increase limits.`;
           this.messageService.add({
             severity: 'warn',
-            summary: 'Лимит исчерпан',
+            summary: 'Limit exceeded',
             detail: errorMsg,
             life: 5000
           });
@@ -48,7 +49,6 @@ export class ResumeGenerationService {
               return of('Ошибка: Профиль пользователя не найден. Пожалуйста, заполните профиль сначала.');
             }
   
-            // Валидация критически важных данных
             const validationErrors = this.validateProfileForResume(profile);
             if (validationErrors.length > 0) {
               const errorMsg = `Для генерации качественного резюме необходимо заполнить: ${validationErrors.join(', ')}`;
@@ -63,19 +63,13 @@ export class ResumeGenerationService {
   
             const prompt = this.buildResumePrompt(profile, coverLetterContent);
             
-            console.log('🚀 Generating resume with prompt length:', prompt.length);
-            console.log('📊 Profile data used:', {
-              name: profile.name,
-              experience: profile.experience?.length,
-              skills: profile.skills?.length,
-              education: profile.education?.length
-            });
+            console.log('Generating resume with prompt length:', prompt.length);
   
             const request = {
-              model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+              model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
               prompt: prompt,
-              max_tokens: 3000, // Увеличил для более детальных резюме
-              temperature: 0.6, // Баланс между креативностью и консистентностью
+              max_tokens: 3000,
+              temperature: 0.6,
               top_p: 0.8,
               top_k: 50,
               repetition_penalty: 1.1,
@@ -86,23 +80,21 @@ export class ResumeGenerationService {
             return this.aiService.generateText(request).pipe(
               map(resume => this.cleanResumeContent(resume)),
               switchMap(resume => {
-                // Логируем успешную генерацию
-                console.log('✅ Resume generated successfully, length:', resume.length);
                 return from(this.usageService.incrementUsage('resumeGenerations')).pipe(
                   map(() => resume)
                 );
               }),
               catchError(error => {
-                console.error('❌ Resume generation error:', error);
-                this.errorHandler.showError('Ошибка генерации резюме', 'ResumeGenerationService');
+                console.error('Resume generation error:', error);
+                this.errorHandler.showError(this.translate.instant('ERROR.GENERATE_RESUME'), 'ResumeGenerationService');
                 return of(this.createFallbackResume(profile));
               })
             );
           }),
           catchError(error => {
-            console.error('❌ Profile loading error:', error);
-            this.errorHandler.showError('Ошибка загрузки профиля', 'ResumeGenerationService');
-            return of('Ошибка загрузки профиля. Пожалуйста, проверьте заполнение профиля.');
+            console.error('Profile loading error:', error);
+            this.errorHandler.showError(this.translate.instant('ERROR.LOAD_PROFILE'), 'ResumeGenerationService');
+            return of('Profile loading error. Please check your profile completion.');
           })
         );
       }),
@@ -173,12 +165,10 @@ export class ResumeGenerationService {
   **Год окончания:** ${edu.year || 'Не указан'}`
     ).join('\n\n') || 'Образование не указано';
   
-    // Языки с уровнями
-    const languagesText = profile.languages?.map(lang => 
+    const languagesText = profile.languages?.map(lang =>
       `- ${lang.language}: ${this.getLanguageLevel(lang.level)}`
     ).join('\n') || 'Языки не указаны';
   
-    // Контекст вакансии
     const vacancyContext = this.currentVacancy ? `
   ## 🎯 КОНТЕКСТ ВАКАНСИИ
   
@@ -193,7 +183,6 @@ export class ResumeGenerationService {
   ${this.currentVacancy.description?.substring(0, 800) || 'Описание не указано'}...
   ` : '';
   
-    // Анализ соответствия вакансии
     const vacancyMatchAnalysis = this.currentVacancy ? this.analyzeVacancyMatch(profile, this.currentVacancy) : '';
   
     const promptText = `# ЗАДАЧА: Сгенерировать профессиональное резюме мирового уровня
@@ -292,7 +281,6 @@ export class ResumeGenerationService {
     return promptText;
   }
   
-  // Исправление 3: Добавьте метод pluralize в класс
   private pluralize(count: number, forms: string[]): string {
     const cases = [2, 0, 1, 1, 1, 2];
     return forms[
@@ -340,14 +328,12 @@ export class ResumeGenerationService {
         acc[area] = [];
       }
       
-      // Сортируем навыки внутри группы по уровню
       acc[area].push(skill);
       acc[area].sort((a, b) => (b.level || 0) - (a.level || 0));
       
       return acc;
     }, {});
   
-    // Сортируем группы по приоритету
     return Object.keys(groups)
       .sort((a, b) => (areaPriority[a] || 10) - (areaPriority[b] || 10))
       .reduce((acc, key) => {
@@ -515,7 +501,7 @@ ${profile.education?.map(edu =>
 Задание: ${promptText}`;
 
     const request = {
-      model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      model: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
       prompt: prompt,
       max_tokens: 800,
       temperature: 0.7,

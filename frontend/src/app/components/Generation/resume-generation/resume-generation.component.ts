@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TooltipModule } from 'primeng/tooltip';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -33,9 +34,10 @@ import { AnalyticsService } from '../../../shared/analytics.service';
     ProgressSpinnerModule,
     FormsModule,
     InputTextModule,
+    TooltipModule,
     TranslatedFileInputComponent,
     VacancySelectorComponent
-],
+  ],
   templateUrl: './resume-generation.component.html',
   styleUrls: ['./resume-generation.component.scss']
 })
@@ -58,6 +60,7 @@ export class ResumeGenerationComponent {
   hhResumeUrl: string | null = null;
   showAIConfigModal = false;
   showVacancySelector = false;
+  attachedFiles: File[] = [];
   
   constructor(
     private resumeService: ResumeGenerationService,
@@ -402,7 +405,7 @@ export class ResumeGenerationComponent {
   async onCoverLetterFileSelect(file: File | File[]): Promise<void> {
     try {
       const selectedFile = file instanceof File ? file : (Array.isArray(file) ? file[0] : null);
-      
+
       if (selectedFile) {
         this.coverLetterFile = selectedFile;
         const content = await this.fileProcessor.extractTextFromFile(selectedFile);
@@ -418,5 +421,78 @@ export class ResumeGenerationComponent {
         summary: 'Ошибка загрузки файла'
       });
     }
+  }
+
+  onAttachmentsSelected(files: File[]): void {
+    // Add new files to existing attachments, avoiding duplicates
+    const newFiles = files.filter(file =>
+      !this.attachedFiles.some(existing => existing.name === file.name && existing.size === file.size)
+    );
+
+    this.attachedFiles.push(...newFiles);
+
+    if (newFiles.length > 0) {
+      this.messageService.add({
+        severity: 'success',
+        summary: `${newFiles.length} файл(ов) прикреплено`
+      });
+    }
+  }
+
+  removeAttachment(index: number): void {
+    const removedFile = this.attachedFiles[index];
+    this.attachedFiles.splice(index, 1);
+    this.messageService.add({
+      severity: 'info',
+      summary: `Файл "${removedFile.name}" удален`
+    });
+  }
+
+  previewFile(file: File): void {
+    // Create a temporary URL for preview
+    const url = URL.createObjectURL(file);
+    window.open(url, '_blank');
+    // Clean up the URL after a delay
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  trackByFile(index: number, file: File): string {
+    return `${file.name}-${file.size}-${file.lastModified}`;
+  }
+
+  getFileIcon(mimeType: string): string {
+    if (mimeType.startsWith('image/')) {
+      return 'pi pi-image';
+    } else if (mimeType === 'application/pdf') {
+      return 'pi pi-file-pdf';
+    } else if (mimeType.includes('word') || mimeType.includes('document')) {
+      return 'pi pi-file-word';
+    } else if (mimeType.startsWith('text/')) {
+      return 'pi pi-file-text';
+    }
+    return 'pi pi-file';
+  }
+
+  getFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  getFileTypeLabel(mimeType: string): string {
+    if (mimeType.startsWith('image/')) {
+      return 'Изображение';
+    } else if (mimeType === 'application/pdf') {
+      return 'PDF';
+    } else if (mimeType.includes('word') || mimeType.includes('document')) {
+      return 'Документ';
+    } else if (mimeType.startsWith('text/')) {
+      return 'Текст';
+    }
+    return 'Файл';
   }
 }
