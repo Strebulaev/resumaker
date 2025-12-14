@@ -288,6 +288,90 @@ export class NotificationService {
     );
   }
 
+  // Обработка webhook уведомлений от HH.ru
+  async handleWebhookNotification(webhookData: any): Promise<void> {
+    try {
+      const userId = this.supabase.currentUser?.id;
+      if (!userId) return;
+
+      let title = 'Новое уведомление';
+      let message = 'Получено уведомление от HH.ru';
+      let type = NotificationType.SYSTEM;
+
+      // Определяем тип уведомления на основе webhook данных
+      if (webhookData.action) {
+        switch (webhookData.action) {
+          case 'new_negotiation_vacancy':
+            title = 'Новый отклик на вакансию';
+            message = `Получен новый отклик на вакансию ${webhookData.vacancy?.name || ''}`;
+            type = NotificationType.FEATURE;
+            break;
+          case 'new_response_or_invitation_vacancy':
+            title = 'Новое приглашение';
+            message = `Получено новое приглашение на вакансию ${webhookData.vacancy?.name || ''}`;
+            type = NotificationType.FEATURE;
+            break;
+          case 'vacancy_change':
+            title = 'Изменение вакансии';
+            message = `Вакансия ${webhookData.vacancy?.name || ''} была изменена`;
+            type = NotificationType.SYSTEM;
+            break;
+          case 'vacancy_archivation':
+            title = 'Вакансия архивирована';
+            message = `Вакансия ${webhookData.vacancy?.name || ''} была архивирована`;
+            type = NotificationType.SECURITY;
+            break;
+          case 'vacancy_publication_for_vacancy_manager':
+            title = 'Вакансия опубликована';
+            message = `Вакансия ${webhookData.vacancy?.name || ''} была опубликована`;
+            type = NotificationType.FEATURE;
+            break;
+          case 'negotiation_employer_state_change':
+            title = 'Изменение статуса отклика';
+            message = `Статус отклика на вакансию ${webhookData.vacancy?.name || ''} был изменен`;
+            type = NotificationType.SYSTEM;
+            break;
+          default:
+            title = 'Уведомление от HH.ru';
+            message = `Получено уведомление: ${webhookData.action}`;
+        }
+      }
+
+      await this.createNotification({
+        userId,
+        type,
+        title,
+        message,
+        data: webhookData,
+        read: false,
+        important: true
+      });
+
+    } catch (error) {
+      console.error('Error handling webhook notification:', error);
+      this.errorHandler.showError('Ошибка обработки webhook уведомления', 'NotificationService');
+    }
+  }
+
+  // Метод для обработки входящих webhook запросов
+  async processWebhookPayload(payload: any): Promise<void> {
+    try {
+      // Валидация webhook данных
+      if (!payload || typeof payload !== 'object') {
+        throw new Error('Invalid webhook payload');
+      }
+
+      // Обработка в зависимости от типа webhook
+      if (payload.action && payload.vacancy) {
+        await this.handleWebhookNotification(payload);
+      } else {
+        console.warn('Unknown webhook payload format:', payload);
+      }
+    } catch (error) {
+      console.error('Error processing webhook payload:', error);
+    }
+  }
+
   private mapDbNotificationToModel(dbData: any): AppNotification {
     return {
       id: dbData.id,

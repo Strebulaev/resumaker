@@ -1,0 +1,67 @@
+<div class="notifications-page">
+  <div class="page-header">
+    <h1>Уведомления</h1>
+    <div class="header-actions">
+      <p-button
+        *ngIf="unreadCount > 0"
+        icon="pi pi-check"
+        label="Отметить все как прочитанные"
+        styleClass="p-button-outlined"
+        (onClick)="markAllAsRead()">
+      </p-button>
+    </div>
+  </div>
+
+  <div class="notifications-content">
+    <div *ngIf="isLoading" class="loading-container">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <div *ngIf="!isLoading && notifications.length === 0" class="empty-notifications">
+      <i class="pi pi-bell-slash"></i>
+      <h3>Нет уведомлений</h3>
+      <p>Здесь будут появляться важные уведомления от системы и платформ</p>
+    </div>
+
+    <div *ngIf="!isLoading && notifications.length > 0" class="notifications-list">
+      <div *ngFor="let notification of notifications"
+           class="notification-card"
+           [class.unread]="!notification.read"
+           [class.important]="notification.important"
+           [ngClass]="getNotificationClass(notification.type)">
+
+        <div class="notification-icon">
+          <i [class]="getNotificationIcon(notification.type)"></i>
+        </div>
+
+        <div class="notification-content" (click)="markAsRead(notification)">
+          <div class="notification-header">
+            <h4 class="notification-title">{{ notification.title }}</h4>
+            <span class="notification-type">{{ notification.type }}</span>
+          </div>
+          <p class="notification-message">{{ notification.message }}</p>
+          <div class="notification-meta">
+            <span class="notification-date">{{ notification.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
+            <span *ngIf="!notification.read" class="unread-indicator">Непрочитано</span>
+          </div>
+        </div>
+
+        <div class="notification-actions">
+          <p-button
+            *ngIf="!notification.read"
+            icon="pi pi-check"
+            styleClass="p-button-text p-button-sm p-button-success"
+            (onClick)="markAsRead(notification)"
+            pTooltip="Отметить как прочитанное">
+          </p-button>
+          <p-button
+            icon="pi pi-times"
+            styleClass="p-button-text p-button-sm p-button-danger"
+            (onClick)="deleteNotification(notification, $event)"
+            pTooltip="Удалить">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

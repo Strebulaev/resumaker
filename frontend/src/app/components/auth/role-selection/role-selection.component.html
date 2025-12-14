@@ -1,0 +1,68 @@
+<p-dialog
+  [(visible)]="showDialog"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  header="Выберите вашу роль"
+  styleClass="role-selection-dialog">
+
+  <div class="role-selection-container">
+    <p class="role-selection-description">
+      Пожалуйста, выберите вашу роль в системе, чтобы мы могли настроить интерфейс под ваши нужды.
+    </p>
+
+    <div class="role-cards">
+      <!-- Карточка соискателя -->
+      <p-card class="role-card" (click)="selectRole(UserRole.APPLICANT)">
+        <ng-template pTemplate="header">
+          <div class="role-icon applicant-icon">
+            <i class="pi pi-user"></i>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="title">
+          Соискатель
+        </ng-template>
+
+        <ng-template pTemplate="content">
+          <ul class="role-features">
+            <li>Создание и управление резюме</li>
+            <li>Поиск вакансий</li>
+            <li>Отклики на вакансии</li>
+            <li>Управление откликами</li>
+            <li>Сохраненные поиски</li>
+          </ul>
+        </ng-template>
+      </p-card>
+
+      <!-- Карточка работодателя -->
+      <p-card class="role-card" (click)="selectRole(UserRole.EMPLOYER)">
+        <ng-template pTemplate="header">
+          <div class="role-icon employer-icon">
+            <i class="pi pi-building"></i>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="title">
+          Работодатель
+        </ng-template>
+
+        <ng-template pTemplate="content">
+          <ul class="role-features">
+            <li>Создание и управление вакансиями</li>
+            <li>Поиск резюме</li>
+            <li>Управление откликами</li>
+            <li>Статистика и аналитика</li>
+            <li>Управление командой</li>
+          </ul>
+        </ng-template>
+      </p-card>
+    </div>
+
+    <div class="loading-indicator" *ngIf="isLoading">
+      <p-progressSpinner></p-progressSpinner>
+      <p>Сохраняем ваш выбор...</p>
+    </div>
+  </div>
+</p-dialog>

@@ -70,8 +70,8 @@
           </div>
   
           <div class="notification-popover-footer">
-            <p-button 
-              label="Все уведомления" 
+            <p-button
+              label="Все уведомления"
               styleClass="p-button-text p-button-sm"
               (onClick)="openAllNotifications()">
             </p-button>
@@ -79,77 +79,4 @@
         </div>
       </ng-template>
     </p-popover>
-  
-    <!-- Диалог всех уведомлений -->
-    <p-dialog 
-      header="Все уведомления"
-      [(visible)]="showAllNotificationsDialog"
-      [modal]="true"
-      [style]="{ width: '600px' }"
-      (onHide)="closeAllNotifications()">
-      
-      <div class="all-notifications">
-        <div class="notifications-header-actions">
-          <p-button 
-            *ngIf="unreadCount > 0"
-            icon="pi pi-check" 
-            label="Отметить все как прочитанные"
-            styleClass="p-button-outlined p-button-sm"
-            (onClick)="markAllAsRead()">
-          </p-button>
-        </div>
-  
-        <div class="notifications-list">
-          <div *ngIf="notifications.length === 0" class="empty-notifications">
-            <i class="pi pi-bell-slash"></i>
-            <h4>Нет уведомлений</h4>
-            <p>Здесь будут появляться важные уведомления от системы</p>
-          </div>
-  
-          <div *ngFor="let notification of notifications" 
-               class="notification-item detailed"
-               [class.unread]="!notification.read"
-               [class.important]="notification.important"
-               [ngClass]="getNotificationClass(notification.type)">
-            
-            <div class="notification-icon">
-              <i [class]="getNotificationIcon(notification.type)"></i>
-            </div>
-            
-            <div class="notification-content" (click)="markAsRead(notification)">
-              <div class="notification-header">
-                <span class="notification-title">{{ notification.title }}</span>
-                <span class="notification-type">{{ notification.type }}</span>
-              </div>
-              <div class="notification-message">{{ notification.message }}</div>
-              <div class="notification-time">{{ notification.createdAt | date:'dd.MM.yyyy HH:mm' }}</div>
-            </div>
-  
-            <div class="notification-actions">
-              <p-button 
-                *ngIf="!notification.read"
-                icon="pi pi-check" 
-                styleClass="p-button-text p-button-sm p-button-success"
-                (onClick)="markAsRead(notification)"
-                pTooltip="Отметить как прочитанное">
-              </p-button>
-              <p-button 
-                icon="pi pi-times" 
-                styleClass="p-button-text p-button-sm p-button-danger"
-                (onClick)="deleteNotification(notification, $event)"
-                pTooltip="Удалить">
-              </p-button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <ng-template pTemplate="footer">
-        <p-button 
-          label="Закрыть" 
-          styleClass="p-button-text"
-          (onClick)="closeAllNotifications()">
-        </p-button>
-      </ng-template>
-    </p-dialog>
   </div>

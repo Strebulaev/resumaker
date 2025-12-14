@@ -18,6 +18,7 @@ import { TermsOfServiceComponent } from './components/Pages/terms-of-service/ter
 import { PrivacyPolicyComponent } from './components/Pages/privacy-policy/privacy-policy.component';
 import { PublicOfferComponent } from './components/Pages/public-offer/public-offer.component';
 import { NotificationSettingsComponent } from './components/Notifications/notification-settings/notification-settings.component';
+import { NotificationsPageComponent } from './components/Notifications/notifications-page/notifications-page.component';
 
 export const routes: Routes = [
   {
@@ -110,6 +111,11 @@ export const routes: Routes = [
   {
     path: 'public-offer',
     component: PublicOfferComponent
+  },
+  {
+    path: 'notifications',
+    component: NotificationsPageComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'notifications/settings',

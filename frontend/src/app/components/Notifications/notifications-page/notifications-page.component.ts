@@ -1,53 +1,44 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { BadgeModule } from 'primeng/badge';
-import { PopoverModule } from 'primeng/popover';
-import { MenuModule } from 'primeng/menu';
+import { CardModule } from 'primeng/card';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslatePipe } from '@ngx-translate/core';
 import { MessageService } from 'primeng/api';
 import { SupabaseService } from '../../../shared/db/supabase.service';
 import { AppNotification } from '../../../shared/notifications/notification.models';
 import { NotificationService } from '../../../shared/notifications/notification.service';
 
 @Component({
-  selector: 'app-notification-bell',
-  templateUrl: './notification-bell.component.html',
-  styleUrls: ['./notification-bell.component.scss'],
+  selector: 'app-notifications-page',
+  templateUrl: './notifications-page.component.html',
+  styleUrls: ['./notifications-page.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     ButtonModule,
-    BadgeModule,
-    PopoverModule,
-    MenuModule,
+    CardModule,
     ProgressSpinnerModule,
     TooltipModule,
   ]
 })
-export class NotificationBellComponent implements OnInit, OnDestroy {
-  @ViewChild('popover') popover: any;
-  
+export class NotificationsPageComponent implements OnInit, OnDestroy {
   notifications: AppNotification[] = [];
   unreadCount = 0;
-  showNotificationsPopover = false;
   isLoading = false;
   private refreshInterval: any;
 
   constructor(
     public notificationService: NotificationService,
     public supabase: SupabaseService,
-    private messageService: MessageService,
-    private router: Router
+    private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
     this.loadNotifications();
-    
+
     // Подписываемся на изменения уведомлений
     this.notificationService.notifications$.subscribe(notifications => {
       this.notifications = notifications;
@@ -69,14 +60,9 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
     }
   }
 
-  togglePopover(event: Event): void {
-    this.popover.toggle(event);
-    this.loadNotifications();
-  }
-
   async loadNotifications(): Promise<void> {
     if (!this.supabase.currentUser) return;
-    
+
     this.isLoading = true;
     try {
       await this.notificationService.loadNotifications();
@@ -159,33 +145,5 @@ export class NotificationBellComponent implements OnInit, OnDestroy {
       'promotional': 'notification-promotional'
     };
     return classes[type] || '';
-  }
-
-  formatNotificationDate(date: Date): string {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'только что';
-    if (diffMins < 60) return `${diffMins} мин. назад`;
-    if (diffHours < 24) return `${diffHours} ч. назад`;
-    if (diffDays < 7) return `${diffDays} дн. назад`;
-    
-    return date.toLocaleDateString('ru-RU');
-  }
-
-  openAllNotifications(): void {
-    this.router.navigate(['/notifications']);
-    this.popover.hide();
-  }
-
-  onPopoverShow(): void {
-    this.showNotificationsPopover = true;
-  }
-
-  onPopoverHide(): void {
-    this.showNotificationsPopover = false;
   }
 }
