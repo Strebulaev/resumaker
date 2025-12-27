@@ -4,6 +4,32 @@ import { FormBuilder, Validators, FormArray, FormGroup, AbstractControl, Validat
 import { format } from 'date-fns';
 import { Router } from '@angular/router';
 import { Person, Skill, Education, Language } from '../../../../person-schema';
+
+// Simplified Person interface for compatibility
+interface SimplifiedPerson {
+  name: string;
+  gender: 'male' | 'female' | 'unknown';
+  desiredPositions?: string[];
+  contact: {
+    phone?: string;
+    email: string;
+    linkedin?: string;
+    github?: string;
+  };
+  location: {
+    country?: string;
+    city: string;
+    relocation: boolean;
+    remote: boolean;
+    business_trips: boolean;
+  };
+  languages?: Language[];
+  skills?: Skill[];
+  education?: Education[];
+  experience?: any[];
+  hobby?: string[];
+  literature?: string[];
+}
 import { ProfileService } from '../../../../shared/profile/profile.service';
 import { TranslateService } from '@ngx-translate/core';
 import { SupabaseService } from '../../../../shared/db/supabase.service';
@@ -23,6 +49,15 @@ export class ProfileEditComponent implements OnInit {
     name: ['', [Validators.required, Validators.maxLength(100)]],
     gender: ['unknown' as 'unknown' | 'male' | 'female'],
     desiredPositions: this.fb.array([]),
+    salary_expectations: this.fb.group({
+      min: [0, [Validators.min(0)]],
+      max: [0, [Validators.min(0)]],
+      currency: ['RUB']
+    }),
+    employment_types: this.fb.array([]),
+    work_formats: this.fb.array([]),
+    notice_period: [14, [Validators.min(0), Validators.max(90)]],
+    career_level: ['middle'],
     contact: this.fb.group({
       phone: ['', [Validators.pattern(/^\+[0-9]{11}$/)]],
       email: ['', [Validators.required, Validators.email, Validators.maxLength(100)]],
@@ -82,7 +117,7 @@ export class ProfileEditComponent implements OnInit {
     });
   }
 
-  private patchFormValues(profile: Person): void {
+  private patchFormValues(profile: SimplifiedPerson): void {
     this.clearAllArrays();
   
     this.profileForm.patchValue({
@@ -118,9 +153,9 @@ export class ProfileEditComponent implements OnInit {
     profile.experience?.forEach(exp => {
       const expForForm = {
         ...exp,
-        startDate: exp.startDate ? new Date(exp.startDate) : null,
-        endDate: exp.endDate ? new Date(exp.endDate) : null,
-        current: !exp.endDate // Если нет endDate, значит текущая работа
+        startDate: exp.start_date ? new Date(exp.start_date) : null,
+        endDate: exp.end_date ? new Date(exp.end_date) : null,
+        current: !exp.end_date // Если нет end_date, значит текущая работа
       };
       this.addExperience(expForForm);
     });
@@ -272,13 +307,10 @@ export class ProfileEditComponent implements OnInit {
   }
 
   addSkill(skill?: Skill): void {
-    const defaultDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    
     this.skills.push(this.fb.group({
       area: [skill?.area || '', [Validators.required, Validators.maxLength(50)]],
       name: [skill?.name || '', [Validators.required, Validators.maxLength(50)]],
-      level: [skill?.level || 5, [Validators.required, Validators.min(1), Validators.max(10)]],
-      date: [skill?.date || defaultDate, [Validators.required]] // string, не Date!
+      level: [skill?.level || 5, [Validators.required, Validators.min(1), Validators.max(10)]]
     }));
   }
 
@@ -291,7 +323,7 @@ export class ProfileEditComponent implements OnInit {
       institution: [edu?.institution || '', [Validators.required, Validators.maxLength(100)]],
       degree: [edu?.degree || '', [Validators.required, Validators.maxLength(50)]],
       specialty: [edu?.specialty || '', [Validators.required, Validators.maxLength(100)]],
-      year: [edu?.year || null, [Validators.required, Validators.min(1900), Validators.max(new Date().getFullYear())]]
+      start_year: [edu?.start_year || null, [Validators.required, Validators.min(1900), Validators.max(new Date().getFullYear())]]
     }));
   }
 
@@ -498,17 +530,26 @@ export class ProfileEditComponent implements OnInit {
     const experience = this.experience.value.map((exp: any) => ({
       company: exp.company || '',
       position: exp.position || '',
-      startDate: this.formatDateToYYYYMMDD(exp.startDate), // string YYYY-MM-DD
-      endDate: exp.current ? null : this.formatDateToYYYYMMDD(exp.endDate), // string YYYY-MM-DD или null
+      start_date: this.formatDateToYYYYMMDD(exp.startDate), // string YYYY-MM-DD
+      end_date: exp.current ? null : this.formatDateToYYYYMMDD(exp.endDate), // string YYYY-MM-DD или null
       tasks: exp.tasks || [],
       stack: exp.stack || [],
       achievements: exp.achievements || []
     }));
-  
+
     return {
       name: formValue.name || '',
       gender: (formValue.gender || 'unknown') as 'male' | 'female' | 'unknown',
       desiredPositions: this.desiredPositions.value || [],
+      salary_expectations: {
+        min: formValue.salary_expectations?.min || 0,
+        max: formValue.salary_expectations?.max || 0,
+        currency: (formValue.salary_expectations?.currency || 'RUB') as 'RUB' | 'USD' | 'EUR' | 'KZT'
+      },
+      employment_types: (formValue.employment_types || []) as ('full-time' | 'part-time' | 'contract' | 'freelance' | 'internship')[],
+      work_formats: (formValue.work_formats || []) as ('office' | 'remote' | 'hybrid')[],
+      notice_period: formValue.notice_period || 14,
+      career_level: (formValue.career_level || 'middle') as 'trainee' | 'junior' | 'middle' | 'senior' | 'lead' | 'head',
       contact: {
         phone: formValue.contact?.phone || '',
         email: formValue.contact?.email || '',
@@ -531,7 +572,7 @@ export class ProfileEditComponent implements OnInit {
         institution: e.institution || '',
         degree: e.degree || '',
         specialty: e.specialty || '',
-        year: Number(e.year) || new Date().getFullYear()
+        start_year: Number(e.start_year) || new Date().getFullYear()
       })),
       experience: experience,
       hobby: this.hobby.value || [],

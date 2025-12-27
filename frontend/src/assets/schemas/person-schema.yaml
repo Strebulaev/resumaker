@@ -1,143 +1,985 @@
-$schema: http://json-schema.org/draft-07/schema#
-type: object
-properties:
-  person:
-    type: object
-    properties:
-      name:
-        type: string
-      gender:
-        type: string
-        enum: [male, female, unknown]
-      desiredPositions:
-        type: array
-        items: string
-      contact:
-        type: object
-        properties:
-          phone:
-            type: string
-            pattern: '^\+[0-9]{11}$'
-          email:
-            type: string
-            format: email
-        additionalProperties:
-          type: string
-          format: uri
-        required: [phone, email]
-      location:
-        type: object
-        properties:
-          country:
-            type: string
-          city:
-            type: string
-          relocation:
-            type: boolean
-          remote:
-            type: boolean
-          business_trips:
-            type: boolean
-        required: [city, relocation, remote, business_trips]
-      languages:
-        type: array
-        items:
-          type: object
-          properties:
-            language:
-              type: string
-            level:
-              type: string
-              pattern: "^[A-C][1-2]$"
-          required: [language, level]
-      skills:
-        type: array
-        items:
-          type: object
-          properties:
-            area:
-              type: string
-            name:
-              type: string
-            level:
-              type: integer
-              minimum: 1
-              maximum: 10
-            date:
-              type: string
-              format: date
-          required: [area, name, level, date]
-      education:
-        type: array
-        items:
-          type: object
-          properties:
-            institution:
-              type: string
-            degree:
-              type: string
-            specialty:
-              type: string
-            year:
-              type: integer
-          required: [institution, degree, specialty, year]
-      hobby:
-        type: array
-        items:
-          type: string
-      literature:
-        type: array
-        items:
-          type: string
-      experience:
-        type: array
-        items:
-          type: object
-          properties:
-            company:
-              type: string
-            position:
-              type: string
-            from-date:
-              type: date
-            to-date:
-              type: date
-            tasks:
-              type: array
-              items:
-                type: string
-            stack:
-              type: array
-              items:
-                type: string
-            achievements:
-              type: array
-              items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  initial_value:
-                    type: number
-                  final_value:
-                    type: number
-                  uom:
-                    type: string
-                    enum: [day, percent]
-                  type:
-                    type: string
-                    enum: [increased, decreased]
-                required: [name, initial_value, final_value]
-          required: [company, position, from-date, tasks, stack, achievements]
-    required:
-      [
-        name,
-        gender,
-        contact,
-        location,
-        languages,
-        skills,
-        education,
-        experience,
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "person": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Полное имя пользователя"
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["male", "female", "unknown"],
+          "description": "Пол пользователя"
+        },
+        "avatar": {
+          "type": "string",
+          "format": "uri",
+          "description": "Ссылка на аватар пользователя",
+          "optional": true
+        },
+        "birth_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Дата рождения в формате YYYY-MM-DD",
+          "optional": true
+        },
+        "desiredPositions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Желаемые должности"
+        },
+        "salary_expectations": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Минимальная ожидаемая зарплата"
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Максимальная ожидаемая зарплата"
+            },
+            "currency": {
+              "type": "string",
+              "default": "RUB",
+              "enum": ["RUB", "USD", "EUR", "KZT"]
+            }
+          },
+          "description": "Ожидания по зарплате",
+          "optional": true
+        },
+        "employment_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["full-time", "part-time", "contract", "freelance", "internship"]
+          },
+          "description": "Предпочтительные типы занятости"
+        },
+        "work_formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["office", "remote", "hybrid"]
+          },
+          "description": "Предпочтительные форматы работы"
+        },
+        "notice_period": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 90,
+          "description": "Срок уведомления в днях",
+          "default": 14
+        },
+        "career_level": {
+          "type": "string",
+          "enum": ["trainee", "junior", "middle", "senior", "lead", "head"],
+          "description": "Текущий карьерный уровень"
+        },
+        "contact": {
+          "type": "object",
+          "properties": {
+            "phone": {
+              "type": "string",
+              "pattern": "^\\+[0-9]{11}$",
+              "description": "Номер телефона"
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Email адрес"
+            },
+            "linkedin": {
+              "type": "string",
+              "format": "uri",
+              "description": "Ссылка на LinkedIn профиль",
+              "optional": true
+            },
+            "github": {
+              "type": "string",
+              "format": "uri",
+              "description": "Ссылка на GitHub профиль",
+              "optional": true
+            },
+            "telegram": {
+              "type": "string",
+              "description": "Telegram username",
+              "optional": true
+            },
+            "website": {
+              "type": "string",
+              "format": "uri",
+              "description": "Персональный сайт или портфолио",
+              "optional": true
+            },
+            "other_contacts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["whatsapp", "skype", "discord", "other"]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": ["type", "value"]
+              },
+              "description": "Другие контакты",
+              "optional": true
+            }
+          },
+          "required": ["phone", "email"]
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "country": {
+              "type": "string",
+              "description": "Страна"
+            },
+            "city": {
+              "type": "string",
+              "description": "Город"
+            },
+            "timezone": {
+              "type": "string",
+              "description": "Часовой пояс",
+              "optional": true
+            },
+            "relocation": {
+              "type": "boolean",
+              "description": "Готовность к переезду"
+            },
+            "relocation_countries": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Страны для релокации",
+              "optional": true
+            },
+            "remote": {
+              "type": "boolean",
+              "description": "Готовность работать удаленно"
+            },
+            "business_trips": {
+              "type": "boolean",
+              "description": "Готовность к командировкам"
+            },
+            "preferred_locations": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Предпочтительные города для работы",
+              "optional": true
+            }
+          },
+          "required": ["country", "city", "relocation", "remote", "business_trips"]
+        },
+        "summary": {
+          "type": "string",
+          "description": "Краткое самопрезентация",
+          "maxLength": 500,
+          "optional": true
+        },
+        "about": {
+          "type": "string",
+          "description": "Подробное описание о себе",
+          "maxLength": 2000,
+          "optional": true
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "language": {
+                "type": "string",
+                "description": "Язык"
+              },
+              "level": {
+                "type": "string",
+                "pattern": "^[A-C][1-2]$",
+                "description": "Уровень владения (C2, B1, etc)"
+              },
+              "certificate": {
+                "type": "string",
+                "description": "Название сертификата",
+                "optional": true
+              },
+              "certificate_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Ссылка на сертификат",
+                "optional": true
+              }
+            },
+            "required": ["language", "level"]
+          },
+          "description": "Языки и уровень владения"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "area": {
+                "type": "string",
+                "description": "Область навыка"
+              },
+              "name": {
+                "type": "string",
+                "description": "Название навыка"
+              },
+              "level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "description": "Уровень владения от 1 до 10"
+              },
+              "years_of_experience": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Лет опыта",
+                "optional": true
+              },
+              "last_used": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата последнего использования",
+                "optional": true
+              },
+              "projects_count": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Количество проектов с этим навыком",
+                "optional": true
+              }
+            },
+            "required": ["area", "name", "level"]
+          },
+          "description": "Навыки пользователя"
+        },
+        "soft_skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Мягкие навыки",
+          "optional": true
+        },
+        "education": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "institution": {
+                "type": "string",
+                "description": "Учебное заведение"
+              },
+              "degree": {
+                "type": "string",
+                "description": "Степень"
+              },
+              "specialty": {
+                "type": "string",
+                "description": "Специальность"
+              },
+              "start_year": {
+                "type": "integer",
+                "minimum": 1900,
+                "maximum": 2100,
+                "description": "Год начала"
+              },
+              "end_year": {
+                "type": "integer",
+                "minimum": 1900,
+                "maximum": 2100,
+                "description": "Год окончания"
+              },
+              "gpa": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 5,
+                "description": "Средний балл",
+                "optional": true
+              },
+              "diploma_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Ссылка на диплом",
+                "optional": true
+              },
+              "description": {
+                "type": "string",
+                "description": "Описание учебы",
+                "maxLength": 500,
+                "optional": true
+              }
+            },
+            "required": ["institution", "degree", "specialty", "start_year"]
+          },
+          "description": "Образование"
+        },
+        "certifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Название сертификата"
+              },
+              "organization": {
+                "type": "string",
+                "description": "Организация"
+              },
+              "issue_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата выдачи"
+              },
+              "expiry_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата окончания действия",
+                "optional": true
+              },
+              "certificate_id": {
+                "type": "string",
+                "description": "ID сертификата",
+                "optional": true
+              },
+              "certificate_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Ссылка на сертификат",
+                "optional": true
+              },
+              "skills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Навыки подтвержденные сертификатом",
+                "optional": true
+              }
+            },
+            "required": ["name", "organization", "issue_date"]
+          },
+          "description": "Сертификаты",
+          "optional": true
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Уникальный идентификатор проекта"
+              },
+              "name": {
+                "type": "string",
+                "description": "Название проекта"
+              },
+              "description": {
+                "type": "string",
+                "description": "Описание проекта"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["commercial", "pet", "open_source", "hackathon", "learning"],
+                "description": "Тип проекта"
+              },
+              "role": {
+                "type": "string",
+                "description": "Роль в проекте"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата начала"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата окончания",
+                "optional": true
+              },
+              "technologies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Использованные технологии"
+              },
+              "achievements": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Название достижения"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание достижения"
+                    },
+                    "impact": {
+                      "type": "string",
+                      "description": "Влияние/результат",
+                      "optional": true
+                    }
+                  },
+                  "required": ["name", "description"]
+                },
+                "description": "Достижения в проекте"
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "github": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Ссылка на GitHub",
+                    "optional": true
+                  },
+                  "demo": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Ссылка на демо",
+                    "optional": true
+                  },
+                  "website": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Ссылка на сайт",
+                    "optional": true
+                  }
+                },
+                "description": "Ссылки на проект"
+              },
+              "visibility": {
+                "type": "string",
+                "enum": ["public", "employers_only", "private", "ai_only"],
+                "default": "public",
+                "description": "Видимость проекта"
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Имя файла"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "Тип файла"
+                    },
+                    "size": {
+                      "type": "integer",
+                      "description": "Размер в байтах"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Ссылка на файл"
+                    }
+                  },
+                  "required": ["name", "type", "size", "url"]
+                },
+                "description": "Файлы проекта",
+                "optional": true
+              },
+              "import_source": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["github", "gitlab", "local"],
+                    "description": "Источник импорта"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Ссылка на источник",
+                    "optional": true
+                  },
+                  "imported_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Время импорта"
+                  }
+                },
+                "description": "Информация об импорте",
+                "optional": true
+              }
+            },
+            "required": ["id", "name", "description", "type", "role", "start_date", "technologies"]
+          },
+          "description": "Проекты пользователя",
+          "optional": true
+        },
+        "experience": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Уникальный идентификатор опыта"
+              },
+              "company": {
+                "type": "string",
+                "description": "Название компании"
+              },
+              "position": {
+                "type": "string",
+                "description": "Должность"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата начала работы"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата окончания",
+                "optional": true
+              },
+              "current": {
+                "type": "boolean",
+                "default": false,
+                "description": "Текущее место работы"
+              },
+              "employment_type": {
+                "type": "string",
+                "enum": ["full-time", "part-time", "contract", "freelance"],
+                "description": "Тип занятости"
+              },
+              "location": {
+                "type": "string",
+                "description": "Местоположение работы",
+                "optional": true
+              },
+              "remote": {
+                "type": "boolean",
+                "description": "Удаленная работа",
+                "optional": true
+              },
+              "description": {
+                "type": "string",
+                "description": "Описание компании",
+                "maxLength": 500,
+                "optional": true
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Обязанности и задачи"
+              },
+              "stack": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Использованные технологии"
+              },
+              "achievements": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Название достижения"
+                    },
+                    "initial_value": {
+                      "type": "number",
+                      "description": "Начальное значение метрики"
+                    },
+                    "final_value": {
+                      "type": "number",
+                      "description": "Конечное значение метрики"
+                    },
+                    "uom": {
+                      "type": "string",
+                      "enum": ["day", "percent", "users", "revenue", "other"],
+                      "description": "Единица измерения"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["increased", "decreased", "implemented", "optimized"],
+                      "description": "Тип достижения"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Описание достижения",
+                      "optional": true
+                    }
+                  },
+                  "required": ["name", "initial_value", "final_value"]
+                },
+                "description": "Достижения на позиции"
+              },
+              "projects": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "Связанные проекты",
+                "optional": true
+              }
+            },
+            "required": ["company", "position", "start_date", "tasks", "stack", "achievements"]
+          },
+          "description": "Опыт работы"
+        },
+        "hobby": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Хобби и интересы",
+          "optional": true
+        },
+        "literature": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Прочитанная литература",
+          "optional": true
+        },
+        "volunteering": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "organization": {
+                "type": "string",
+                "description": "Организация"
+              },
+              "role": {
+                "type": "string",
+                "description": "Роль"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата начала"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата окончания",
+                "optional": true
+              },
+              "description": {
+                "type": "string",
+                "description": "Описание деятельности"
+              }
+            },
+            "required": ["organization", "role", "start_date", "description"]
+          },
+          "description": "Волонтерская деятельность",
+          "optional": true
+        },
+        "publications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Название публикации"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["article", "conference", "book", "blog"],
+                "description": "Тип публикации"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата публикации"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Ссылка на публикацию",
+                "optional": true
+              },
+              "description": {
+                "type": "string",
+                "description": "Описание публикации",
+                "optional": true
+              }
+            },
+            "required": ["title", "type", "date"]
+          },
+          "description": "Публикации",
+          "optional": true
+        },
+        "learning_plan": {
+          "type": "object",
+          "properties": {
+            "current_level": {
+              "type": "string",
+              "description": "Текущий уровень"
+            },
+            "target_level": {
+              "type": "string",
+              "description": "Целевой уровень"
+            },
+            "target_date": {
+              "type": "string",
+              "format": "date",
+              "description": "Целевая дата достижения"
+            },
+            "skills_to_improve": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "skill_id": {
+                    "type": "string",
+                    "description": "ID навыка"
+                  },
+                  "current_level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  "target_level": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  },
+                  "resources": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Ресурсы для изучения"
+                  },
+                  "projects": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Проекты для практики"
+                  }
+                },
+                "required": ["skill_id", "current_level", "target_level"]
+              },
+              "description": "Навыки для улучшения"
+            },
+            "courses": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Название курса"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "description": "Провайдер курса"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["planned", "in_progress", "completed"]
+                  },
+                  "completion_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Дата завершения",
+                    "optional": true
+                  }
+                },
+                "required": ["name", "provider", "status"]
+              },
+              "description": "Курсы для прохождения"
+            },
+            "milestones": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Название этапа"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Описание этапа"
+                  },
+                  "target_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Целевая дата"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "in_progress", "completed", "delayed"]
+                  }
+                },
+                "required": ["name", "description", "target_date", "status"]
+              },
+              "description": "Этапы плана"
+            }
+          },
+          "description": "План обучения и развития",
+          "optional": true
+        },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "job_alerts": {
+              "type": "boolean",
+              "default": true,
+              "description": "Получать уведомления о вакансиях"
+            },
+            "profile_views": {
+              "type": "boolean",
+              "default": true,
+              "description": "Получать уведомления о просмотрах профиля"
+            },
+            "messages": {
+              "type": "boolean",
+              "default": true,
+              "description": "Получать уведомления о сообщениях"
+            },
+            "learning_recommendations": {
+              "type": "boolean",
+              "default": true,
+              "description": "Получать рекомендации по обучению"
+            },
+            "visibility": {
+              "type": "string",
+              "enum": ["public", "recruiters_only", "private"],
+              "default": "recruiters_only",
+              "description": "Видимость профиля"
+            },
+            "show_salary": {
+              "type": "boolean",
+              "default": false,
+              "description": "Показывать зарплатные ожидания"
+            },
+            "available_for_work": {
+              "type": "boolean",
+              "default": true,
+              "description": "Открыт для предложений"
+            }
+          },
+          "description": "Настройки пользователя",
+          "optional": true
+        },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "profile_views": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Количество просмотров профиля"
+            },
+            "job_applications": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Количество откликов"
+            },
+            "messages_received": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Количество полученных сообщений"
+            },
+            "interview_invitations": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Количество приглашений на собеседования"
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Дата последнего обновления профиля"
+            },
+            "completeness_score": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Оценка полноты профиля"
+            }
+          },
+          "description": "Аналитика профиля",
+          "optional": true
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "created_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Дата создания профиля"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Дата последнего обновления"
+            },
+            "profile_type": {
+              "type": "string",
+              "enum": ["main", "specialized", "anonymous", "export"],
+              "default": "main",
+              "description": "Тип профиля"
+            },
+            "version": {
+              "type": "integer",
+              "description": "Версия схемы"
+            },
+            "ai_enhanced": {
+              "type": "boolean",
+              "default": false,
+              "description": "Профиль улучшен AI"
+            }
+          },
+          "description": "Метаданные профиля",
+          "optional": true
+        }
+      },
+      "required": [
+        "name",
+        "gender",
+        "contact",
+        "location",
+        "languages",
+        "skills",
+        "education",
+        "experience"
       ]
-required: [person]
+    }
+  },
+  "required": ["person"]
+}

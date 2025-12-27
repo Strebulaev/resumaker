@@ -19,7 +19,8 @@
     "src/api-client/**/*",
     "src/app/shared/pipes/vacancy-id.pipe.ts",
     "src/app/shared/utils/supabase-error-handler.ts",
-    "src/app/vacancy-schema.ts"
+    "src/app/vacancy-schema.ts",
+    "src/app/components/automation-dashboard/**/*"
   ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
