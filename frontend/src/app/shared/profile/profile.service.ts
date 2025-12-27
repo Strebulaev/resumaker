@@ -9,6 +9,36 @@ import { environment } from '../../../environments/environment.prod';
 import { ErrorToastComponent } from '../../components/Helpers/error-toast/error-toast.component';
 import { ErrorHandlerService } from '../error-handler.service';
 
+// Simplified Person interface for profile service compatibility
+interface SimplifiedPerson {
+  name: string;
+  gender: 'male' | 'female' | 'unknown';
+  desiredPositions: string[];
+  contact: {
+    phone?: string;
+    email: string;
+    linkedin?: string;
+    github?: string;
+  };
+  location: {
+    country?: string;
+    city: string;
+    relocation: boolean;
+    remote: boolean;
+    business_trips: boolean;
+  };
+  languages?: Language[];
+  skills?: Skill[];
+  education?: Education[];
+  experience?: Experience[];
+  hobby?: string[];
+  literature?: string[];
+  employment_types?: string[];
+  work_formats?: string[];
+  notice_period?: number;
+  career_level?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   constructor(
@@ -17,7 +47,7 @@ export class ProfileService {
     private errorHandler: ErrorHandlerService
   ) {}
   
-  private createEmptyProfile(): Person {
+  private createEmptyProfile(): SimplifiedPerson {
     return {
       name: '',
       gender: 'unknown',
@@ -40,7 +70,11 @@ export class ProfileService {
       education: [],
       experience: [],
       hobby: [],
-      literature: []
+      literature: [],
+      employment_types: [],
+      work_formats: [],
+      notice_period: 14,
+      career_level: 'junior'
     };
   }
   exportToYaml(person: Person): string {
@@ -85,7 +119,7 @@ export class ProfileService {
     if (person.education?.length) {
       txt += `=== Education ===\n`;
       person.education.forEach(edu => {
-        txt += `- ${edu.institution} (${edu.year}): ${edu.degree} in ${edu.specialty}\n`;
+        txt += `- ${edu.institution} (${edu.end_year || 'Не указано'}): ${edu.degree} in ${edu.specialty}\n`;
       });
       txt += `\n`;
     }
@@ -93,12 +127,14 @@ export class ProfileService {
     if (person.experience?.length) {
       txt += `=== Work Experience ===\n`;
       person.experience.forEach(exp => {
-        txt += `- ${exp.company} (${format(parseISO(exp.startDate), 'MMM yyyy')} - ${exp.endDate ? format(parseISO(exp.endDate), 'MMM yyyy') : 'Present'}\n`;
+        const startDate = exp.start_date ? format(parseISO(exp.start_date), 'MMM yyyy') : 'Не указано';
+        const endDate = exp.end_date ? format(parseISO(exp.end_date), 'MMM yyyy') : 'Present';
+        txt += `- ${exp.company} (${startDate} - ${endDate})\n`;
         txt += `  Position: ${exp.position}\n`;
         txt += `  Technologies: ${exp.stack.join(', ')}\n`;
         txt += `  Responsibilities:\n`;
         exp.tasks.forEach(task => txt += `    - ${task}\n`);
-        
+
         if (exp.achievements?.length) {
           txt += `  Achievements:\n`;
           exp.achievements.forEach(ach => {
@@ -121,7 +157,7 @@ export class ProfileService {
     return txt;
   }
 
-  importFromYaml(yamlStr: string): Observable<Person | null> {
+  importFromYaml(yamlStr: string): Observable<SimplifiedPerson | null> {
     try {
       console.log('Starting YAML import...');
       
@@ -151,7 +187,7 @@ export class ProfileService {
     }
   }
   
-  private createPartialProfile(partialData: any): Person {
+  private createPartialProfile(partialData: any): SimplifiedPerson {
     return {
       name: partialData.name || '',
       gender: (partialData.gender || 'unknown') as 'unknown' | 'male' | 'female',
@@ -174,7 +210,11 @@ export class ProfileService {
       education: Array.isArray(partialData.education) ? partialData.education : [],
       experience: Array.isArray(partialData.experience) ? partialData.experience : [],
       hobby: Array.isArray(partialData.hobby) ? partialData.hobby : [],
-      literature: Array.isArray(partialData.literature) ? partialData.literature : []
+      literature: Array.isArray(partialData.literature) ? partialData.literature : [],
+      employment_types: Array.isArray(partialData.employment_types) ? partialData.employment_types : [],
+      work_formats: Array.isArray(partialData.work_formats) ? partialData.work_formats : [],
+      notice_period: partialData.notice_period || 14,
+      career_level: partialData.career_level || 'junior'
     };
   }
 
@@ -230,7 +270,7 @@ export class ProfileService {
     }
   }
 
-  transformSupabaseProfileToPerson(profileData: any): Person {
+  transformSupabaseProfileToPerson(profileData: any): SimplifiedPerson {
     if (!profileData) {
       return this.createEmptyProfile();
     }
@@ -257,11 +297,15 @@ export class ProfileService {
       education: profileData.profile_data?.education || [],
       experience: profileData.profile_data?.experience || [],
       hobby: profileData.profile_data?.hobby || [],
-      literature: profileData.profile_data?.literature || []
+      literature: profileData.profile_data?.literature || [],
+      employment_types: profileData.profile_data?.employment_types || [],
+      work_formats: profileData.profile_data?.work_formats || [],
+      notice_period: profileData.profile_data?.notice_period || 14,
+      career_level: profileData.profile_data?.career_level || 'junior'
     };
   }
 
-  loadProfile(): Observable<Person | null> {
+  loadProfile(): Observable<SimplifiedPerson | null> {
     return from(this.supabase.getFullProfile()).pipe(
       map((profileData: any) => {
         if (!profileData) {

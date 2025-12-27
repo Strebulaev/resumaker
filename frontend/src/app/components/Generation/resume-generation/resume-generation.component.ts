@@ -287,8 +287,8 @@ export class ResumeGenerationComponent {
     const requiredFields = [
       { field: profile.name, error: 'Укажите имя' },
       { field: profile.contact.email, error: 'Укажите email' },
-      { field: profile.experience?.length > 0, error: 'Добавьте опыт работы' },
-      { field: profile.education?.length > 0, error: 'Добавьте образование' }
+      { field: (profile.experience?.length ?? 0) > 0, error: 'Добавьте опыт работы' },
+      { field: (profile.education?.length ?? 0) > 0, error: 'Добавьте образование' }
     ];
 
     const missingField = requiredFields.find(f => !f.field);
@@ -305,27 +305,27 @@ export class ResumeGenerationComponent {
 
     const aboutText = await this.generateResumeSection(`
       Напиши профессиональное описание для раздела "О себе" используя:
-      Навыки: ${profile.skills.map(s => s.name).join(', ')}
-      Опыт: ${profile.experience.length} ${this.pluralize(profile.experience.length, ['год', 'года', 'лет'])}
-      Образование: ${profile.education.map(e => e.specialty).join(', ')}
+      Навыки: ${(profile.skills || []).map((s: any) => s.name).join(', ')}
+      Опыт: ${(profile.experience || []).length} ${this.pluralize((profile.experience || []).length, ['год', 'года', 'лет'])}
+      Образование: ${(profile.education || []).map((e: any) => e.specialty).join(', ')}
     `);
 
     const experienceTexts = await Promise.all(
-      profile.experience.map((exp: any) => 
+      (profile.experience || []).map((exp: any) =>
         this.generateResumeSection(`
           Опиши профессиональный опыт для резюме:
           Должность: ${exp.position}
           Компания: ${exp.company}
           Период: ${exp.startDate} - ${exp.endDate || 'по настоящее время'}
-          Обязанности: ${exp.tasks.join('; ')}
-          Достижения: ${exp.achievements.map((a: any) => a.name).join('; ')}
-          Технологии: ${exp.stack.join(', ')}
+          Обязанности: ${(exp.tasks || []).join('; ')}
+          Достижения: ${(exp.achievements || []).map((a: any) => a.name).join('; ')}
+          Технологии: ${(exp.stack || []).join(', ')}
         `)
       )
     );
 
     return {
-      title: `${profile.desiredPositions?.[0] || 'Специалист'} ${profile.name}`,
+      title: `${(profile.desiredPositions || [])[0] || 'Специалист'} ${profile.name}`,
       first_name: profile.name.split(' ')[0],
       last_name: profile.name.split(' ')[1] || '',
       middle_name: profile.name.split(' ')[2] || '',
@@ -334,26 +334,26 @@ export class ResumeGenerationComponent {
         amount: 200000,
         currency: 'RUR'
       },
-      experience: profile.experience.map((exp: any, i: number) => ({
+      experience: (profile.experience || []).map((exp: any, i: number) => ({
         position: exp.position,
         company: exp.company,
         start: exp.startDate,
         end: exp.endDate || null,
         description: experienceTexts[i],
-        achievements: exp.achievements.map((a: any) => a.name)
+        achievements: (exp.achievements || []).map((a: any) => a.name)
       })),
-      education: profile.education.map((edu: any) => ({
-        year: edu.year,
+      education: (profile.education || []).map((edu: any) => ({
+        year: edu.end_year || edu.start_year,
         name: edu.institution,
         result: `${edu.degree}, ${edu.specialty}`,
         type: 'higher'
       })),
       skill_set: [
-        ...profile.skills.map((s: any) => s.name),
-        ...profile.languages.map((l: any) => `${l.language} (${l.level})`)
+        ...(profile.skills || []).map((s: any) => s.name),
+        ...(profile.languages || []).map((l: any) => `${l.language} (${l.level})`)
       ],
       about: aboutText,
-      skills: this.formatSkills(profile.skills),
+      skills: this.formatSkills(profile.skills || []),
       hidden_fields: ['resume_access'],
       resume_locale: 'RU'
     };

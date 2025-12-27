@@ -1,0 +1,246 @@
+<div class="automation-dashboard">
+  <div class="header">
+    <h1>Панель автоматизации карьеры</h1>
+    <p class="subtitle">Управление автоматическим поиском работы и аналитика эффективности</p>
+  </div>
+
+  <p-tabs [(value)]="currentTab">
+    <p-panel header="Обзор">
+      <div class="overview-grid">
+        <div class="status-card">
+          <h3>Статус автоматизации</h3>
+          <div class="status-indicator" [class.active]="automationEnabled">
+            <i class="pi" [class]="automationEnabled ? 'pi-play-circle' : 'pi-pause-circle'"></i>
+            <span>{{ automationEnabled ? 'Активна' : 'Остановлена' }}</span>
+          </div>
+
+          <div class="automation-controls" *ngIf="automationStats">
+            <div class="stat-item">
+              <span class="label">Последний запуск:</span>
+              <span class="value">{{ formatDate(automationStats.lastRun) }} {{ formatTime(automationStats.lastRun) }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">Следующий запуск:</span>
+              <span class="value">{{ formatDate(automationStats.nextRun) }} {{ formatTime(automationStats.nextRun) }}</span>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <p-button
+              label="Включить/Выключить"
+              [icon]="automationEnabled ? 'pi pi-pause' : 'pi pi-play'"
+              [loading]="loading"
+              (onClick)="onAutomationToggle()">
+            </p-button>
+            <p-button
+              label="Запустить сейчас"
+              icon="pi pi-refresh"
+              [loading]="runningAutomation"
+              (onClick)="onRunAutomation()"
+              styleClass="p-button-secondary">
+            </p-button>
+          </div>
+        </div>
+
+        <!-- Quick Stats Card -->
+        <div class="stats-card" *ngIf="analyticsData">
+          <h3>Ключевые метрики</h3>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-value">{{ analyticsData.jobApplications }}</div>
+              <div class="stat-label">Откликов</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">{{ analyticsData.interviews }}</div>
+              <div class="stat-label">Собеседований</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">{{ analyticsData.offers }}</div>
+              <div class="stat-label">Офферов</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-value">{{ getConversionRate() }}%</div>
+              <div class="stat-label">Конверсия</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Platform Performance -->
+        <div class="platform-card" *ngIf="analyticsData">
+          <h3>Эффективность платформ</h3>
+          <div class="platform-stats">
+            <div class="platform-item">
+              <div class="platform-name">HH.ru</div>
+              <div class="platform-metrics">
+                <span>Отклики: {{ analyticsData.platformStats.hh.applications }}</span>
+                <span>Ответы: {{ analyticsData.platformStats.hh.responses }}</span>
+                <span>Rate: {{ analyticsData.platformStats.hh.responseRate.toFixed(1) }}%</span>
+              </div>
+            </div>
+            <div class="platform-item">
+              <div class="platform-name">SuperJob</div>
+              <div class="platform-metrics">
+                <span>Отклики: {{ analyticsData.platformStats.superjob.applications }}</span>
+                <span>Ответы: {{ analyticsData.platformStats.superjob.responses }}</span>
+                <span>Rate: {{ analyticsData.platformStats.superjob.responseRate.toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Analytics Tab -->
+    <p-panel header="Аналитика">
+      <div class="analytics-section">
+        <div class="charts-container">
+          <!-- Application Funnel Chart -->
+          <div class="chart-card" *ngIf="applicationChartData">
+            <h3>Воронка откликов</h3>
+            <p-chart type="bar" [data]="applicationChartData" [options]="chartOptions"></p-chart>
+          </div>
+
+          <!-- Platform Comparison Chart -->
+          <div class="chart-card" *ngIf="platformChartData">
+            <h3>Сравнение платформ</h3>
+            <p-chart type="bar" [data]="platformChartData" [options]="chartOptions"></p-chart>
+          </div>
+        </div>
+
+        <!-- Insights and Recommendations -->
+        <div class="insights-card" *ngIf="analyticsData">
+          <h3>Рекомендации по улучшению</h3>
+          <div class="insights-list">
+            <div class="insight-item" *ngFor="let skill of analyticsData.skillsDemand.slice(0, 5)">
+              <i class="pi pi-chart-line"></i>
+              <span>Изучите {{ skill.skill }} (спрос: {{ skill.demand }}/10)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- Settings Tab -->
+    <p-panel header="Настройки">
+      <div class="settings-section">
+        <!-- Automation Settings -->
+        <div class="settings-card">
+          <h3>Настройки автоматизации</h3>
+          <form [formGroup]="automationForm" (ngSubmit)="onSaveAutomationSettings()">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Автоматизация активна</label>
+                <p-inputSwitch formControlName="enabled"></p-inputSwitch>
+              </div>
+
+              <div class="form-field">
+                <label>Дневной лимит откликов</label>
+                <p-inputNumber formControlName="dailyLimit" [min]="1" [max]="50"></p-inputNumber>
+              </div>
+
+              <div class="form-field">
+                <label>Платформы</label>
+                <div class="platform-checkboxes">
+                  <p-checkbox formControlName="hh" label="HH.ru"></p-checkbox>
+                  <p-checkbox formControlName="superjob" label="SuperJob"></p-checkbox>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label>Критерии поиска</label>
+                <div class="search-criteria">
+                  <input pInputText formControlName="text" placeholder="Ключевые слова">
+                  <p-select formControlName="experience" [options]="experienceOptions" placeholder="Опыт"></p-select>
+                  <p-select formControlName="employment" [options]="employmentOptions" placeholder="Тип занятости"></p-select>                </div>
+              </div>
+
+              <div class="form-field">
+                <label>Автоматическая отправка</label>
+                <p-inputSwitch formControlName="autoApply"></p-inputSwitch>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <p-button type="submit" label="Сохранить настройки" icon="pi pi-save"></p-button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-card">
+          <h3>Настройки уведомлений</h3>
+          <form [formGroup]="notificationForm" (ngSubmit)="onSaveNotificationSettings()">
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Email уведомления</label>
+                <p-inputSwitch formControlName="email"></p-inputSwitch>
+              </div>
+
+              <div class="form-field" *ngIf="notificationForm.value.email">
+                <label>Email адрес</label>
+                <input pInputText formControlName="emailAddress" type="email">
+              </div>
+
+              <div class="form-field">
+                <label>Telegram уведомления</label>
+                <p-inputSwitch formControlName="telegram"></p-inputSwitch>
+              </div>
+
+              <div class="form-field" *ngIf="notificationForm.value.telegram">
+                <label>Telegram Chat ID</label>
+                <input pInputText formControlName="telegramChatId">
+              </div>
+
+              <div class="form-field">
+                <label>Внутрисистемные уведомления</label>
+                <p-inputSwitch formControlName="inApp"></p-inputSwitch>
+              </div>
+
+              <div class="form-field">
+                <label>Ежедневные отчеты</label>
+                <p-inputSwitch formControlName="dailyReports"></p-inputSwitch>
+              </div>
+
+              <div class="form-field">
+                <label>Мгновенные оповещения</label>
+                <p-inputSwitch formControlName="instantAlerts"></p-inputSwitch>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <p-button type="submit" label="Сохранить" icon="pi pi-save"></p-button>
+              <p-button type="button" label="Тест" icon="pi pi-send" (onClick)="onTestNotifications()" styleClass="p-button-secondary"></p-button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </p-panel>
+
+    <!-- History Tab -->
+    <p-panel header="История">
+      <div class="history-section">
+        <div class="history-header">
+          <h3>История автоматизации</h3>
+          <p-button label="Обновить" icon="pi pi-refresh" (onClick)="onRefreshAnalytics()"></p-button>
+        </div>
+
+        <div class="reports-list">
+          <div class="report-item" *ngFor="let report of dailyReports">
+            <div class="report-date">{{ formatDate(report.date) }}</div>
+            <div class="report-stats">
+              <span>Вакансий: {{ report.stats.jobsFound }}</span>
+              <span>Откликов: {{ report.stats.applicationsSent }}</span>
+              <span>Успех: {{ report.stats.successRate.toFixed(1) }}%</span>
+            </div>
+            <div class="report-recommendations" *ngIf="report.recommendations.length > 0">
+              <strong>Рекомендации:</strong>
+              <ul>
+                <li *ngFor="let rec of report.recommendations">{{ rec }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-panel>
+  </p-tabs>
+</div>

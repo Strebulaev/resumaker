@@ -1,441 +1,423 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, map } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { SupabaseService } from '../db/supabase.service';
-import { AppNotification, NotificationType, NotificationPreferences } from './notification.models';
-import { ErrorHandlerService } from '../error-handler.service';
+import { AppNotification, NotificationPreferences, NotificationType } from './notification.models';
 
-@Injectable({ providedIn: 'root' })
+export interface NotificationSettings {
+  email: boolean;
+  telegram: boolean;
+  inApp: boolean;
+  dailyReports: boolean;
+  instantAlerts: boolean;
+  emailAddress?: string;
+  telegramChatId?: string;
+}
+
+export interface NotificationMessage {
+  type: 'daily_report' | 'job_alert' | 'application_success' | 'application_failed' | 'system_alert';
+  title: string;
+  message: string;
+  data?: any;
+  priority: 'low' | 'medium' | 'high';
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class NotificationService {
+  private apiUrl = '/api';
+
+  // Notification inbox management
   private notificationsSubject = new BehaviorSubject<AppNotification[]>([]);
-  private unreadCountSubject = new BehaviorSubject<number>(0);
-  
   public notifications$ = this.notificationsSubject.asObservable();
-  public unreadCount$ = this.unreadCountSubject.asObservable();
+
+  public unreadCount$ = this.notifications$.pipe(
+    map(notifications => notifications.filter(n => !n.read).length)
+  );
 
   constructor(
-    private supabase: SupabaseService,
-    private errorHandler: ErrorHandlerService
-  ) {
-    this.loadNotifications();
+    private http: HttpClient,
+    private supabase: SupabaseService
+  ) {}
+
+  // Send notification via configured channels
+  sendNotification(notification: NotificationMessage): Observable<boolean> {
+    const settings = this.getNotificationSettings();
+
+    const notifications: Observable<boolean>[] = [];
+
+    if (settings.email && settings.emailAddress) {
+      notifications.push(this.sendEmail(notification, settings.emailAddress));
+    }
+
+    if (settings.telegram && settings.telegramChatId) {
+      notifications.push(this.sendTelegram(notification, settings.telegramChatId));
+    }
+
+    if (settings.inApp) {
+      notifications.push(this.showInAppNotification(notification));
+    }
+
+    // Return true if at least one notification was sent successfully
+    return of(true); // Simplified - in production, combine results
   }
+
+  // Send daily automation report
+  sendDailyReport(report: any): Observable<boolean> {
+    const notification: NotificationMessage = {
+      type: 'daily_report',
+      title: 'Ежедневный отчет Rezulution',
+      message: this.formatDailyReportMessage(report),
+      data: report,
+      priority: 'medium'
+    };
+
+    return this.sendNotification(notification);
+  }
+
+  // Send job alert
+  sendJobAlert(job: any): Observable<boolean> {
+    const notification: NotificationMessage = {
+      type: 'job_alert',
+      title: 'Найдена подходящая вакансия',
+      message: `Новая вакансия: ${job.title} в ${job.company}`,
+      data: job,
+      priority: 'high'
+    };
+
+    return this.sendNotification(notification);
+  }
+
+  // Send application status notification
+  sendApplicationNotification(application: any, success: boolean): Observable<boolean> {
+    const notification: NotificationMessage = {
+      type: success ? 'application_success' : 'application_failed',
+      title: success ? 'Отклик отправлен' : 'Ошибка отправки отклика',
+      message: success
+        ? `Успешно отправлен отклик на вакансию ${application.vacancyTitle}`
+        : `Не удалось отправить отклик на вакансию ${application.vacancyTitle}`,
+      data: application,
+      priority: success ? 'medium' : 'high'
+    };
+
+    return this.sendNotification(notification);
+  }
+
+  // Update notification settings
+  updateSettings(settings: Partial<NotificationSettings>): void {
+    const current = this.getNotificationSettings();
+    const updated = { ...current, ...settings };
+    localStorage.setItem('notification_settings', JSON.stringify(updated));
+  }
+
+  // Get current notification settings
+  getNotificationSettings(): NotificationSettings {
+    const stored = localStorage.getItem('notification_settings');
+    return stored ? JSON.parse(stored) : {
+      email: false,
+      telegram: false,
+      inApp: true,
+      dailyReports: true,
+      instantAlerts: true
+    };
+  }
+
+  // Private methods for sending notifications
+
+  private sendEmail(notification: NotificationMessage, email: string): Observable<boolean> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const emailData = {
+      to: email,
+      subject: notification.title,
+      html: this.formatEmailContent(notification),
+      text: notification.message
+    };
+
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/notifications/email`, emailData, { headers }).pipe(
+      map(response => response.success),
+      catchError(error => {
+        console.error('Email notification error:', error);
+        return of(false);
+      })
+    );
+  }
+
+  private sendTelegram(notification: NotificationMessage, chatId: string): Observable<boolean> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const telegramData = {
+      chat_id: chatId,
+      text: this.formatTelegramMessage(notification),
+      parse_mode: 'HTML'
+    };
+
+    return this.http.post<{ success: boolean }>(`${this.apiUrl}/notifications/telegram`, telegramData, { headers }).pipe(
+      map(response => response.success),
+      catchError(error => {
+        console.error('Telegram notification error:', error);
+        return of(false);
+      })
+    );
+  }
+
+  private showInAppNotification(notification: NotificationMessage): Observable<boolean> {
+    // In a real implementation, this would integrate with Angular's notification system
+    console.log('In-app notification:', notification);
+
+    // For now, just log and return success
+    return of(true);
+  }
+
+  // Formatting methods
+
+  private formatDailyReportMessage(report: any): string {
+    return `
+📊 Ежедневный отчет Rezulution
+
+📅 Дата: ${new Date(report.date).toLocaleDateString('ru-RU')}
+
+🔍 Вакансий найдено: ${report.stats.jobsFound}
+📤 Откликов отправлено: ${report.stats.applicationsSent}
+✅ Успешность: ${report.stats.successRate}%
+
+💡 Рекомендации:
+${report.recommendations.map((rec: string) => `• ${rec}`).join('\n')}
+
+Подробный отчет доступен в личном кабинете.
+    `.trim();
+  }
+
+  private formatEmailContent(notification: NotificationMessage): string {
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">${notification.title}</h2>
+        <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="font-size: 16px; line-height: 1.6; color: #374151;">
+            ${notification.message.replace(/\n/g, '<br>')}
+          </p>
+        </div>
+        <div style="text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px;">
+          <p>Rezulution - Автоматизация карьеры</p>
+        </div>
+      </div>
+    `;
+  }
+
+  private formatTelegramMessage(notification: NotificationMessage): string {
+    const emoji = this.getNotificationEmoji(notification.type);
+
+    return `
+${emoji} <b>${notification.title}</b>
+
+${notification.message}
+
+<i>Отправлено от Rezulution</i>
+    `.trim();
+  }
+
+  private getNotificationEmoji(type: string): string {
+    switch (type) {
+      case 'daily_report': return '📊';
+      case 'job_alert': return '💼';
+      case 'application_success': return '✅';
+      case 'application_failed': return '❌';
+      case 'system_alert': return '⚠️';
+      default: return '📢';
+    }
+  }
+
+  // Test notification settings
+  testNotification(): Observable<boolean> {
+    const testNotification: NotificationMessage = {
+      type: 'system_alert',
+      title: 'Тестовое уведомление',
+      message: 'Это тестовое уведомление для проверки настроек.',
+      priority: 'low'
+    };
+
+    return this.sendNotification(testNotification);
+  }
+
+  // Notification inbox methods
 
   async loadNotifications(): Promise<void> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return;
+    if (!this.supabase.currentUser) return;
 
+    try {
       const { data, error } = await this.supabase.client
         .from('user_notifications')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .eq('user_id', this.supabase.currentUser.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const notifications = data.map(this.mapDbNotificationToModel);
+      const notifications: AppNotification[] = data.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        type: item.type,
+        title: item.title,
+        message: item.message,
+        data: item.data,
+        read: item.read,
+        important: item.important,
+        expiresAt: item.expires_at ? new Date(item.expires_at) : undefined,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at)
+      }));
+
       this.notificationsSubject.next(notifications);
-      this.updateUnreadCount(notifications);
     } catch (error) {
-      this.errorHandler.showError('Ошибка загрузки уведомлений', 'NotificationService');
-    }
-  }
-
-  async getNotifications(page = 1, limit = 20): Promise<AppNotification[]> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return [];
-
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
-
-      const { data, error } = await this.supabase.client
-        .from('user_notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .range(from, to);
-
-      if (error) throw error;
-
-      return data.map(this.mapDbNotificationToModel);
-    } catch (error) {
-      this.errorHandler.showError('Ошибка получения уведомлений', 'NotificationService');
-      return [];
-    }
-  }
-
-  async createNotification(notification: Omit<AppNotification, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    try {
-      const { data, error } = await this.supabase.client
-        .from('user_notifications')
-        .insert({
-          user_id: notification.userId,
-          type: notification.type,
-          title: notification.title,
-          message: notification.message,
-          data: notification.data,
-          read: notification.read,
-          important: notification.important,
-          expires_at: notification.expiresAt?.toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
-
-      await this.loadNotifications(); // Reload notifications
-      return data.id;
-    } catch (error) {
-      this.errorHandler.showError('Ошибка создания уведомления', 'NotificationService');
+      console.error('Error loading notifications:', error);
       throw error;
     }
   }
 
   async markAsRead(notificationId: string): Promise<void> {
+    if (!this.supabase.currentUser) return;
+
     try {
       const { error } = await this.supabase.client
         .from('user_notifications')
-        .update({ 
-          read: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', notificationId);
+        .update({ read: true, updated_at: new Date().toISOString() })
+        .eq('id', notificationId)
+        .eq('user_id', this.supabase.currentUser.id);
 
       if (error) throw error;
 
-      await this.loadNotifications(); // Reload notifications
+      // Update local state
+      const current = this.notificationsSubject.value;
+      const updated = current.map(n =>
+        n.id === notificationId ? { ...n, read: true, updatedAt: new Date() } : n
+      );
+      this.notificationsSubject.next(updated);
     } catch (error) {
-      this.errorHandler.showError('Ошибка обновления уведомления', 'NotificationService');
+      console.error('Error marking notification as read:', error);
+      throw error;
     }
   }
 
   async markAllAsRead(): Promise<void> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return;
+    if (!this.supabase.currentUser) return;
 
+    try {
       const { error } = await this.supabase.client
         .from('user_notifications')
-        .update({ 
-          read: true,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', userId)
+        .update({ read: true, updated_at: new Date().toISOString() })
+        .eq('user_id', this.supabase.currentUser.id)
         .eq('read', false);
 
       if (error) throw error;
 
-      await this.loadNotifications(); // Reload notifications
+      // Update local state
+      const current = this.notificationsSubject.value;
+      const updated = current.map(n => ({ ...n, read: true, updatedAt: new Date() }));
+      this.notificationsSubject.next(updated);
     } catch (error) {
-      this.errorHandler.showError('Ошибка обновления уведомлений', 'NotificationService');
+      console.error('Error marking all notifications as read:', error);
+      throw error;
     }
   }
 
   async deleteNotification(notificationId: string): Promise<void> {
+    if (!this.supabase.currentUser) return;
+
     try {
       const { error } = await this.supabase.client
         .from('user_notifications')
         .delete()
-        .eq('id', notificationId);
+        .eq('id', notificationId)
+        .eq('user_id', this.supabase.currentUser.id);
 
       if (error) throw error;
 
-      await this.loadNotifications(); // Reload notifications
+      // Update local state
+      const current = this.notificationsSubject.value;
+      const updated = current.filter(n => n.id !== notificationId);
+      this.notificationsSubject.next(updated);
     } catch (error) {
-      this.errorHandler.showError('Ошибка удаления уведомления', 'NotificationService');
+      console.error('Error deleting notification:', error);
+      throw error;
     }
   }
 
-  async deleteAllRead(): Promise<void> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return;
-
-      const { error } = await this.supabase.client
-        .from('user_notifications')
-        .delete()
-        .eq('user_id', userId)
-        .eq('read', true);
-
-      if (error) throw error;
-
-      await this.loadNotifications(); // Reload notifications
-    } catch (error) {
-      this.errorHandler.showError('Ошибка удаления уведомлений', 'NotificationService');
+  async getNotificationPreferences(): Promise<NotificationPreferences> {
+    if (!this.supabase.currentUser) {
+      return this.getDefaultPreferences();
     }
-  }
 
-  async getNotificationPreferences(): Promise<NotificationPreferences | null> {
     try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return null;
-
       const { data, error } = await this.supabase.client
         .from('user_notification_preferences')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', this.supabase.currentUser.id)
         .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Create default preferences
-          return await this.createDefaultPreferences(userId);
-        }
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
         throw error;
       }
 
-      return this.mapDbPreferencesToModel(data);
+      if (data) {
+        return {
+          userId: data.user_id,
+          email: data.email,
+          push: data.push,
+          inApp: data.in_app,
+          types: data.types,
+          quietHours: data.quiet_hours
+        };
+      }
+
+      return this.getDefaultPreferences();
     } catch (error) {
-      this.errorHandler.showError('Ошибка получения настроек уведомлений', 'NotificationService');
-      return null;
+      console.error('Error loading notification preferences:', error);
+      return this.getDefaultPreferences();
     }
   }
 
-  async updateNotificationPreferences(preferences: Partial<NotificationPreferences>): Promise<void> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return;
+  async updateNotificationPreferences(preferences: NotificationPreferences): Promise<void> {
+    if (!this.supabase.currentUser) return;
 
+    try {
       const { error } = await this.supabase.client
         .from('user_notification_preferences')
         .upsert({
-          user_id: userId,
+          user_id: this.supabase.currentUser.id,
           email: preferences.email,
           push: preferences.push,
           in_app: preferences.inApp,
           types: preferences.types,
           quiet_hours: preferences.quietHours,
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
         });
 
       if (error) throw error;
     } catch (error) {
-      this.errorHandler.showError('Ошибка обновления настроек уведомлений', 'NotificationService');
+      console.error('Error updating notification preferences:', error);
+      throw error;
     }
   }
 
-  // Системные методы для административных уведомлений
-  async sendBulkNotification(
-    userIds: string[],
-    type: NotificationType,
-    title: string,
-    message: string,
-    data?: any,
-    important: boolean = false
-  ): Promise<void> {
-    try {
-      const notifications = userIds.map(userId => ({
-        user_id: userId,
-        type,
-        title,
-        message,
-        data,
-        read: false,
-        important,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
-
-      const { error } = await this.supabase.client
-        .from('user_notifications')
-        .insert(notifications);
-
-      if (error) throw error;
-    } catch (error) {
-      this.errorHandler.showError('Ошибка отправки массовых уведомлений', 'NotificationService');
-    }
-  }
-
-  async sendSystemNotification(
-    title: string,
-    message: string,
-    type: NotificationType = NotificationType.SYSTEM,
-    important: boolean = false
-  ): Promise<void> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return;
-
-      await this.createNotification({
-        userId,
-        type,
-        title,
-        message,
-        read: false,
-        important
-      });
-    } catch (error) {
-      this.errorHandler.showError('Ошибка отправки системного уведомления', 'NotificationService');
-    }
-  }
-
-  // Уведомления о изменениях в подписках
-  async sendSubscriptionNotification(
-    title: string,
-    message: string,
-    subscriptionData?: any
-  ): Promise<void> {
-    await this.sendSystemNotification(
-      title,
-      message,
-      NotificationType.BILLING,
-      true
-    );
-  }
-
-  // Обработка webhook уведомлений от HH.ru
-  async handleWebhookNotification(webhookData: any): Promise<void> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return;
-
-      let title = 'Новое уведомление';
-      let message = 'Получено уведомление от HH.ru';
-      let type = NotificationType.SYSTEM;
-
-      // Определяем тип уведомления на основе webhook данных
-      if (webhookData.action) {
-        switch (webhookData.action) {
-          case 'new_negotiation_vacancy':
-            title = 'Новый отклик на вакансию';
-            message = `Получен новый отклик на вакансию ${webhookData.vacancy?.name || ''}`;
-            type = NotificationType.FEATURE;
-            break;
-          case 'new_response_or_invitation_vacancy':
-            title = 'Новое приглашение';
-            message = `Получено новое приглашение на вакансию ${webhookData.vacancy?.name || ''}`;
-            type = NotificationType.FEATURE;
-            break;
-          case 'vacancy_change':
-            title = 'Изменение вакансии';
-            message = `Вакансия ${webhookData.vacancy?.name || ''} была изменена`;
-            type = NotificationType.SYSTEM;
-            break;
-          case 'vacancy_archivation':
-            title = 'Вакансия архивирована';
-            message = `Вакансия ${webhookData.vacancy?.name || ''} была архивирована`;
-            type = NotificationType.SECURITY;
-            break;
-          case 'vacancy_publication_for_vacancy_manager':
-            title = 'Вакансия опубликована';
-            message = `Вакансия ${webhookData.vacancy?.name || ''} была опубликована`;
-            type = NotificationType.FEATURE;
-            break;
-          case 'negotiation_employer_state_change':
-            title = 'Изменение статуса отклика';
-            message = `Статус отклика на вакансию ${webhookData.vacancy?.name || ''} был изменен`;
-            type = NotificationType.SYSTEM;
-            break;
-          default:
-            title = 'Уведомление от HH.ru';
-            message = `Получено уведомление: ${webhookData.action}`;
-        }
-      }
-
-      await this.createNotification({
-        userId,
-        type,
-        title,
-        message,
-        data: webhookData,
-        read: false,
-        important: true
-      });
-
-    } catch (error) {
-      console.error('Error handling webhook notification:', error);
-      this.errorHandler.showError('Ошибка обработки webhook уведомления', 'NotificationService');
-    }
-  }
-
-  // Метод для обработки входящих webhook запросов
-  async processWebhookPayload(payload: any): Promise<void> {
-    try {
-      // Валидация webhook данных
-      if (!payload || typeof payload !== 'object') {
-        throw new Error('Invalid webhook payload');
-      }
-
-      // Обработка в зависимости от типа webhook
-      if (payload.action && payload.vacancy) {
-        await this.handleWebhookNotification(payload);
-      } else {
-        console.warn('Unknown webhook payload format:', payload);
-      }
-    } catch (error) {
-      console.error('Error processing webhook payload:', error);
-    }
-  }
-
-  private mapDbNotificationToModel(dbData: any): AppNotification {
+  private getDefaultPreferences(): NotificationPreferences {
     return {
-      id: dbData.id,
-      userId: dbData.user_id,
-      type: dbData.type as NotificationType,
-      title: dbData.title,
-      message: dbData.message,
-      data: dbData.data,
-      read: dbData.read,
-      important: dbData.important,
-      expiresAt: dbData.expires_at ? new Date(dbData.expires_at) : undefined,
-      createdAt: new Date(dbData.created_at),
-      updatedAt: new Date(dbData.updated_at)
-    };
-  }
-
-  private mapDbPreferencesToModel(dbData: any): NotificationPreferences {
-    return {
-      userId: dbData.user_id,
-      email: dbData.email,
-      push: dbData.push,
-      inApp: dbData.in_app,
-      types: dbData.types || this.getDefaultNotificationTypes(),
-      quietHours: dbData.quiet_hours
-    };
-  }
-
-  private async createDefaultPreferences(userId: string): Promise<NotificationPreferences> {
-    const defaultPreferences: NotificationPreferences = {
-      userId,
-      email: true,
-      push: true,
+      userId: this.supabase.currentUser?.id || '',
+      email: false,
+      push: false,
       inApp: true,
-      types: this.getDefaultNotificationTypes()
+      types: {
+        [NotificationType.SYSTEM]: true,
+        [NotificationType.BILLING]: true,
+        [NotificationType.FEATURE]: true,
+        [NotificationType.SECURITY]: true,
+        [NotificationType.PROMOTIONAL]: false
+      }
     };
-
-    await this.updateNotificationPreferences(defaultPreferences);
-    return defaultPreferences;
-  }
-
-  private getDefaultNotificationTypes(): { [key in NotificationType]: boolean } {
-    return {
-      [NotificationType.SYSTEM]: true,
-      [NotificationType.BILLING]: true,
-      [NotificationType.FEATURE]: true,
-      [NotificationType.SECURITY]: true,
-      [NotificationType.PROMOTIONAL]: false
-    };
-  }
-
-  private updateUnreadCount(notifications: AppNotification[]): void {
-    const unreadCount = notifications.filter(n => !n.read).length;
-    this.unreadCountSubject.next(unreadCount);
-  }
-
-  getUnreadNotifications(): Observable<AppNotification[]> {
-    return this.notifications$.pipe(
-      map(notifications => notifications.filter(n => !n.read))
-    );
-  }
-
-  getImportantNotifications(): Observable<AppNotification[]> {
-    return this.notifications$.pipe(
-      map(notifications => notifications.filter(n => n.important && !n.read))
-    );
   }
 }

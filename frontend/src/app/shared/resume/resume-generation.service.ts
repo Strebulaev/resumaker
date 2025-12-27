@@ -104,7 +104,7 @@ export class ResumeGenerationService {
     );
   }
   
-  private validateProfileForResume(profile: Person): string[] {
+  private validateProfileForResume(profile: any): string[] {
     const errors: string[] = [];
     
     if (!profile.name || profile.name.trim().length < 2) {
@@ -130,7 +130,7 @@ export class ResumeGenerationService {
     return errors;
   }
 
-  private buildResumePrompt(profile: Person, coverLetter?: string): string {
+  private buildResumePrompt(profile: any, coverLetter?: string): string {
     const userName = profile.name || 'Кандидат';
     const userEmail = profile.contact.email;
     const userPhone = profile.contact.phone || '';
@@ -141,15 +141,15 @@ export class ResumeGenerationService {
     const desiredPositions = profile.desiredPositions?.join(', ') || 'Не указаны';
     const desiredSalary = 'Не указана'; 
     
-    const experienceText = profile.experience?.map((exp, index) => {
-      const duration = this.calculateExperienceDuration(exp.startDate, exp.endDate || undefined);
-      const achievements = exp.achievements?.map(ach => 
+    const experienceText = profile.experience?.map((exp: any, index: number) => {
+      const duration = this.calculateExperienceDuration(exp.start_date || '', exp.end_date);
+      const achievements = exp.achievements?.map((ach: any) =>
         `✓ ${ach.name}${ach.initial_value ? `: ${ach.initial_value} → ${ach.final_value}${ach.uom ? ` ${ach.uom}` : ''}` : ''}`
       ).join('\n       ') || 'Достижения не указаны'
       
       return `### ${exp.position}
   **Компания:** ${exp.company}
-  **Период:** ${exp.startDate} - ${exp.endDate || 'по настоящее время'} (${duration})
+  **Период:** ${exp.start_date} - ${exp.end_date || 'по настоящее время'} (${duration})
   **Обязанности:** ${exp.tasks?.join('; ') || 'Не указаны'}
   **Технологии:** ${exp.stack?.join(', ') || 'Не указаны'}
   **Достижения:**
@@ -158,14 +158,14 @@ export class ResumeGenerationService {
   
     const skillsByArea = this.groupSkillsByPriority(profile.skills || []);
 
-    const educationText = profile.education?.map(edu => 
+    const educationText = profile.education?.map((edu: any) =>
       `### ${edu.institution}
-  **Специальность:** ${edu.specialty}
-  **Степень:** ${edu.degree || 'Не указана'}
-  **Год окончания:** ${edu.year || 'Не указан'}`
+   **Специальность:** ${edu.specialty}
+   **Степень:** ${edu.degree || 'Не указана'}
+   **Год окончания:** ${edu.end_year || 'Не указан'}`
     ).join('\n\n') || 'Образование не указано';
-  
-    const languagesText = profile.languages?.map(lang =>
+
+    const languagesText = profile.languages?.map((lang: any) =>
       `- ${lang.language}: ${this.getLanguageLevel(lang.level)}`
     ).join('\n') || 'Языки не указаны';
   
@@ -441,7 +441,7 @@ export class ResumeGenerationService {
     return cleaned;
   }
 
-  private createFallbackResume(profile: Person | null): string {
+  private createFallbackResume(profile: any): string {
     if (!profile) {
       return `# Резюме
 
@@ -477,15 +477,15 @@ export class ResumeGenerationService {
 Профессионал с опытом работы в ${profile.experience?.length || 0} компаниях.
 
 ## Навыки
-${profile.skills?.slice(0, 5).map(s => `- ${s.name}`).join('\n') || '- Навыки не указаны'}
+${(profile.skills || []).slice(0, 5).map((s: any) => `- ${s.name}`).join('\n') || '- Навыки не указаны'}
 
 ## Опыт работы
-${profile.experience?.slice(0, 3).map(exp => 
+${(profile.experience || []).slice(0, 3).map((exp: any) =>
   `- ${exp.company}: ${exp.position}`
 ).join('\n') || '- Опыт не указан'}
 
 ## Образование
-${profile.education?.map(edu => 
+${(profile.education || []).map((edu: any) =>
   `- ${edu.institution}: ${edu.specialty}`
 ).join('\n') || '- Образование не указано'}`;
   }

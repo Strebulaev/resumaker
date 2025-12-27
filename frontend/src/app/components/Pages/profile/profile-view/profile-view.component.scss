@@ -314,6 +314,16 @@
   }
 }
 
+.integration-buttons {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+
+  button {
+    min-width: 200px;
+  }
+}
+
 @media (max-width: 480px) {
   .profile-container {
     padding: 10px;

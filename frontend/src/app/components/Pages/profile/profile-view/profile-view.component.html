@@ -55,6 +55,25 @@
           <p><strong>LinkedIn:</strong> {{ userProfile.contact['linkedin'] || ('PROFILE.CONTACT_INFO.NOT_SPECIFIED' | translate) }}</p>
           <p><strong>GitHub:</strong> {{ userProfile.contact['github'] || ('PROFILE.CONTACT_INFO.NOT_SPECIFIED' | translate) }}</p>
         </div>
+
+        <!-- Интеграции с job-порталами -->
+        <div class="profile-section">
+          <h3>Интеграции с job-порталами</h3>
+          <div class="integration-buttons">
+            <button pButton
+                    [label]="isHHAuthorized() ? 'HH.ru подключен' : 'Подключить HH.ru'"
+                    [icon]="isHHAuthorized() ? 'pi pi-check' : 'pi pi-external-link'"
+                    [class]="isHHAuthorized() ? 'p-button-success' : 'p-button-primary'"
+                    (click)="authorizeHH()"
+                    [disabled]="isHHAuthorized()"></button>
+            <button pButton
+                    [label]="isSJAuthorized() ? 'SuperJob подключен' : 'Подключить SuperJob'"
+                    [icon]="isSJAuthorized() ? 'pi pi-check' : 'pi pi-external-link'"
+                    [class]="isSJAuthorized() ? 'p-button-success' : 'p-button-primary'"
+                    (click)="authorizeSJ()"
+                    [disabled]="isSJAuthorized()"></button>
+          </div>
+        </div>
   
         <!-- Языки -->
         <div class="profile-section" *ngIf="userProfile.languages && userProfile.languages.length">
@@ -76,7 +95,7 @@
         <div class="profile-section" *ngIf="userProfile.education && userProfile.education.length">
           <h3>{{ 'PROFILE.EDUCATION.TITLE' | translate }}</h3>
           <div *ngFor="let edu of userProfile.education">
-            <p>{{ edu.institution }} - {{ edu.degree }}, {{ edu.specialty }} ({{ edu.year }})</p>
+            <p>{{ edu.institution }} - {{ edu.degree }}, {{ edu.specialty }} ({{ edu.end_year || 'Не указано' }})</p>
           </div>
         </div>
   
@@ -85,7 +104,7 @@
           <h3>{{ 'PROFILE.EXPERIENCE.TITLE' | translate }}</h3>
           <div *ngFor="let exp of userProfile.experience" class="experience-item">
             <h4>{{ exp.company }} - {{ exp.position }}</h4>
-            <p>{{ exp.startDate }} - {{ exp.endDate || ('PROFILE.EXPERIENCE.CURRENT' | translate) }}</p>
+            <p>{{ exp.start_date }} - {{ exp.end_date || ('PROFILE.EXPERIENCE.CURRENT' | translate) }}</p>
             <p><strong>{{ 'PROFILE.EXPERIENCE.STACK' | translate }}:</strong> {{ exp.stack.join(', ') }}</p>
             <div *ngIf="exp.tasks && exp.tasks.length">
               <strong>{{ 'PROFILE.EXPERIENCE.TASKS' | translate }}:</strong>
