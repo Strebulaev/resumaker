@@ -43,7 +43,7 @@
               {
                 "glob": "**/*.json",
                 "input": "src/locale",
-                "output": "locale"
+                "output": "i18n"
               },
               {
                 "glob": "**/*",

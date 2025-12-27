@@ -1,12 +1,12 @@
-<div class="resume-container">
-  <h2>{{ 'RESUME_GENERATION.HEADER' | translate }}</h2>
+<div class="resume-generation-container">
+  <h2 class="resume-header">{{ 'RESUME_GENERATION.HEADER' | translate }}</h2>
 
   <!-- Выбор вакансии -->
-  <div class="vacancy-section">
-    <h3>{{ 'VACANCY.VACANCY_INFO' | translate }}</h3>
-    
+  <div class="section-card">
+    <h3 class="section-title">{{ 'VACANCY.VACANCY_INFO' | translate }}</h3>
+
     <div class="vacancy-selection">
-      <button pButton 
+      <button pButton
               type="button"
               [label]="'VACANCY_SELECTOR.TITLE' | translate"
               icon="pi pi-briefcase"
@@ -15,15 +15,15 @@
       </button>
 
       <!-- Информация о выбранной вакансии -->
-      <div *ngIf="selectedVacancy" class="selected-vacancy-info">
-        <div class="vacancy-details">
-          <i [class]="getPlatformIcon(selectedVacancy.platform)"></i>
-          <span class="vacancy-title">{{ selectedVacancy.name }}</span>
-          <span class="vacancy-platform">({{ getPlatformLabel(selectedVacancy.platform) }})</span>
-          <span class="vacancy-company">{{ selectedVacancy.employer?.name }}</span>
+      <div *ngIf="selectedVacancy" class="selected-vacancy">
+        <div class="vacancy-info">
+          <i [class]="getPlatformIcon(selectedVacancy.platform)" class="platform-icon"></i>
+          <span class="vacancy-name">{{ selectedVacancy.name }}</span>
+          <span class="platform-label">({{ getPlatformLabel(selectedVacancy.platform) }})</span>
+          <span class="employer-name">{{ selectedVacancy.employer?.name }}</span>
         </div>
-        <button pButton 
-                icon="pi pi-times" 
+        <button pButton
+                icon="pi pi-times"
                 class="p-button-text p-button-danger"
                 (click)="clearSelectedVacancy()">
         </button>
@@ -32,48 +32,48 @@
   </div>
 
   <!-- Поле для сопроводительного письма -->
-  <div class="cover-letter-section">
-    <h3>{{ 'RESUME_GENERATION.COVER_LETTER_OPTIONAL' | translate }}</h3>
-    <div class="input-field">
-      <label>{{ 'RESUME_GENERATION.COVER_LETTER' | translate }}</label>
-      <textarea 
-        pInputTextarea 
-        [(ngModel)]="coverLetterContent" 
+  <div class="section-card">
+    <h3 class="section-title">{{ 'RESUME_GENERATION.COVER_LETTER_OPTIONAL' | translate }}</h3>
+    <div class="file-upload-section">
+      <label class="cover-letter-label">{{ 'RESUME_GENERATION.COVER_LETTER' | translate }}</label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="coverLetterContent"
         [ngModelOptions]="{standalone: true}"
-        [rows]="5" 
+        [rows]="5"
         [placeholder]="'RESUME_GENERATION.COVER_LETTER_PLACEHOLDER' | translate"
-        style="width: 100%">
+        class="cover-letter-textarea">
       </textarea>
     </div>
-    
-    <div class="file-upload-field">
+
+    <div class="file-upload-section">
       <app-translated-file-input
         [accept]="'.txt,.pdf,.doc,.docx,.rtf'"
         [fieldName]="'resume-generation-cover-letter'"
         (fileSelected)="onCoverLetterFileSelect($event)"
         [showFileTypes]="true">
       </app-translated-file-input>
-      
+
       @if (coverLetterFile) {
-        <div class="file-info">
-          <span>{{ coverLetterFile.name }}</span>
-          <button pButton icon="pi pi-times" class="p-button-text p-button-danger" 
+        <div class="uploaded-file">
+          <span class="file-name">{{ coverLetterFile.name }}</span>
+          <button pButton icon="pi pi-times" class="p-button-text p-button-danger"
                   (click)="removeCoverLetterFile()">
           </button>
         </div>
       }
     </div>
-    <small>{{ 'RESUME_GENERATION.COVER_LETTER_HINT' | translate }}</small>
+    <small class="hint-text">{{ 'RESUME_GENERATION.COVER_LETTER_HINT' | translate }}</small>
   </div>
 
   <!-- File Attachments Section -->
-  <div class="attachments-section">
-    <h3>{{ 'RESUME_GENERATION.ATTACHMENTS' | translate }}</h3>
-    <div class="attachments-info">
-      <small>{{ 'RESUME_GENERATION.ATTACHMENTS_HINT' | translate }}</small>
+  <div class="section-card">
+    <h3 class="section-title">{{ 'RESUME_GENERATION.ATTACHMENTS' | translate }}</h3>
+    <div>
+      <small class="attachments-hint">{{ 'RESUME_GENERATION.ATTACHMENTS_HINT' | translate }}</small>
     </div>
 
-    <div class="file-upload-field">
+    <div class="file-input-wrapper">
       <app-translated-file-input
         [accept]="'.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png'"
         [fieldName]="'resume-attachments'"
@@ -84,16 +84,15 @@
     </div>
 
     <!-- Attached Files List -->
-    <div class="attached-files" *ngIf="attachedFiles.length > 0">
-      <h4>{{ 'RESUME_GENERATION.ATTACHED_FILES' | translate }} ({{ attachedFiles.length }})</h4>
-      <div class="files-list">
+    <div *ngIf="attachedFiles.length > 0" class="attached-files-list">
+      <h4 class="files-title">{{ 'RESUME_GENERATION.ATTACHED_FILES' | translate }} ({{ attachedFiles.length }})</h4>
+      <div class="files-container">
         <div class="file-item" *ngFor="let file of attachedFiles; let i = index; trackBy: trackByFile">
           <div class="file-info">
-            <i [class]="getFileIcon(file.type)"></i>
+            <i [class]="getFileIcon(file.type)" class="file-icon"></i>
             <div class="file-details">
               <span class="file-name">{{ file.name }}</span>
-              <span class="file-size">{{ getFileSize(file.size) }}</span>
-              <span class="file-type">{{ getFileTypeLabel(file.type) }}</span>
+              <span class="file-meta">{{ getFileSize(file.size) }} • {{ getFileTypeLabel(file.type) }}</span>
             </div>
           </div>
           <div class="file-actions">
@@ -112,11 +111,11 @@
   </div>
 
   <!-- Кнопка генерации -->
-  <div class="generate-button-container">
-    <button pButton 
-            (click)="generateResume()" 
-            [disabled]="isLoading" 
-            class="generate-btn"
+  <div class="generate-button-section">
+    <button pButton
+            (click)="generateResume()"
+            [disabled]="isLoading"
+            class="generate-button"
             icon="pi pi-file">
       @if (isLoading) {
         {{ 'BUTTON.RESUME_GENERATION_IN_PROCESS' | translate }}
@@ -128,27 +127,27 @@
 
   <!-- Действия с результатом -->
   @if (generatedResume) {
-    <div class="result-actions">
-      <button pButton 
-              (click)="saveResume()" 
-              [disabled]="isLoading" 
-              class="save-btn"
+    <div class="actions-section">
+      <button pButton
+              (click)="saveResume()"
+              [disabled]="isLoading"
+              class="action-button save-button"
               icon="pi pi-save">
         {{ 'BUTTON.SAVE' | translate }}
       </button>
 
-      <button pButton 
-              (click)="deleteResume()" 
-              [disabled]="isLoading" 
-              class="delete-btn"
+      <button pButton
+              (click)="deleteResume()"
+              [disabled]="isLoading"
+              class="action-button delete-button"
               icon="pi pi-trash">
         {{ 'BUTTON.DELETE' | translate }}
       </button>
 
-      <button pButton 
-              (click)="openHHAuthModal()" 
-              [disabled]="isLoading" 
-              class="publish-btn"
+      <button pButton
+              (click)="openHHAuthModal()"
+              [disabled]="isLoading"
+              class="action-button publish-button"
               icon="pi pi-send">
         {{ 'BUTTON.PUBLISH_TO_JOB_PLATFORMS' | translate }}
       </button>
@@ -156,53 +155,53 @@
   }
 
   @if (error) {
-    <div class="error">{{ error }}</div>
+    <div class="error-message">{{ error }}</div>
   }
 
   @if (generatedResume) {
-    <div class="resume-content">
-      <markdown [data]="generatedResume"></markdown>
+    <div class="generated-resume">
+      <markdown [data]="generatedResume" class="prose"></markdown>
     </div>
   }
 
-  <p-dialog 
-    header="Публикация на HH.ru" 
-    [(visible)]="hhAuthModalVisible" 
+  <p-dialog
+    header="Публикация на HH.ru"
+    [(visible)]="hhAuthModalVisible"
     [modal]="true"
     [style]="{ width: '50vw' }"
     [closable]="!isPublishing">
-    
+
     @if (isPublishing) {
-      <div class="publishing-status">
+      <div class="publishing-section">
         <p-progressSpinner></p-progressSpinner>
-        <p>{{ 'RESUME_GENERATION.PUBLISHING' | translate }}</p>
+        <p class="publishing-text">{{ 'RESUME_GENERATION.PUBLISHING' | translate }}</p>
       </div>
     }
-    
+
     @if (publishStatus === 'success' && hhResumeUrl) {
-      <div class="publish-success">
+      <div class="success-section">
         <p>{{ 'RESUME_GENERATION.PUBLISH_SUCCESS' | translate }}</p>
         <a [href]="hhResumeUrl" target="_blank">{{ 'RESUME_GENERATION.VIEW_ON_PLATFORMS' | translate }}</a>
       </div>
     }
-    
+
     @if (publishStatus === 'error') {
-      <div class="publish-error">
+      <div class="error-section">
         <p>{{ 'RESUME_GENERATION.PUBLISH_ERROR' | translate }}</p>
         <p>{{ 'RESUME_GENERATION.PUBLISH_ERROR_DETAIL' | translate }}</p>
       </div>
     }
-    
-    <ng-template pTemplate="footer">
+
+    <ng-template pTemplate="footer" class="dialog-footer">
       @if (publishStatus === 'idle') {
-        <button pButton 
-          label="Опубликовать" 
+        <button pButton
+          label="Опубликовать"
           (click)="publishToHH()"
           [disabled]="isPublishing"></button>
       }
-      <button pButton 
-        label="Закрыть" 
-        class="p-button-secondary" 
+      <button pButton
+        label="Закрыть"
+        class="close-button"
         (click)="hhAuthModalVisible = false"
         [disabled]="isPublishing"></button>
     </ng-template>

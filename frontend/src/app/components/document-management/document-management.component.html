@@ -1,0 +1,97 @@
+<div class="document-management">
+  <div class="header">
+    <h2>Управление документами</h2>
+    <div class="actions">
+      <button class="btn-primary" (click)="showUploadDialog = true">
+        Загрузить файл
+      </button>
+      <button class="btn-secondary" (click)="createBackup()">
+        Создать резервную копию
+      </button>
+    </div>
+  </div>
+
+  <div class="storage-info" *ngIf="quota$ | async as quota">
+    <div class="quota-bar">
+      <div class="quota-used" [style.width.%]="(quota.used / quota.limit) * 100"></div>
+    </div>
+    <div class="quota-text">
+      Использовано: {{ formatFileSize(quota.used) }} из {{ formatFileSize(quota.limit) }}
+      ({{ quota.filesCount }} файлов)
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="category-filter">
+      <label>Категория:</label>
+      <select [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+        <option *ngFor="let category of categories" [value]="category.value">
+          {{ category.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <div class="upload-zone"
+       [class.drag-over]="isDragOver"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)">
+    <div class="upload-content">
+      <div class="upload-icon">📁</div>
+      <p>Перетащите файлы сюда или <button class="link-btn" (click)="showUploadDialog = true">выберите файлы</button></p>
+    </div>
+  </div>
+
+  <div class="files-grid">
+    <div class="file-card" *ngFor="let file of files">
+      <div class="file-header">
+        <span class="file-icon">{{ getFileIcon(file.category) }}</span>
+        <div class="file-info">
+          <h4 class="file-name">{{ file.name }}</h4>
+          <span class="file-category">{{ getCategoryLabel(file.category) }}</span>
+        </div>
+      </div>
+
+      <div class="file-details">
+        <div class="file-meta">
+          <span class="file-size">{{ formatFileSize(file.size) }}</span>
+          <span class="file-date">{{ formatDate(file.createdAt) }}</span>
+        </div>
+        <div class="file-stats">
+          <span class="downloads">Скачиваний: {{ file.permissions.downloadsCount }}</span>
+        </div>
+      </div>
+
+      <div class="file-actions">
+        <button class="btn-small" (click)="downloadFile(file)">
+          Скачать
+        </button>
+        <button class="btn-small" (click)="createShareLink(file)">
+          Поделиться
+        </button>
+        <button class="btn-danger-small" (click)="deleteFile(file)">
+          Удалить
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="upload-dialog" *ngIf="showUploadDialog">
+    <div class="dialog-overlay" (click)="showUploadDialog = false"></div>
+    <div class="dialog-content">
+      <h3>Загрузить файлы</h3>
+      <div class="upload-form">
+        <input type="file" multiple (change)="onFileSelect($event)" style="display: none" #fileInput>
+        <div class="upload-area" (click)="fileInput.click()">
+          <div class="upload-icon-large">📤</div>
+          <p>Нажмите для выбора файлов или перетащите их сюда</p>
+          <small>Поддерживаются: PDF, DOC, DOCX, TXT, JPG, PNG, ZIP</small>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-secondary" (click)="showUploadDialog = false">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>

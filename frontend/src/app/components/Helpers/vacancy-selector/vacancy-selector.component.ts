@@ -11,7 +11,7 @@ import { VacancyService } from '../../../shared/vacancy/vacancy.service';
 import { TranslatedFileInputComponent } from '../translated-file-input/translated-file-input.component';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { FileProcessorService } from '../../../shared/utils/file-processor.service';
-import { Vacancy } from '../../../vacancy-schema';
+import { Vacancy } from '../../../shared/profile/profile.models';
 
 // Убираем дублирующий интерфейс Vacancy и используем импортированный
 
@@ -200,31 +200,20 @@ export class VacancySelectorComponent implements OnInit {
 
     return {
       id: data.id || `vacancy-${Date.now()}`,
-      name: data.name || data.title || data.profession || 'Вакансия из файла',
+      title: data.name || data.title || data.profession || 'Вакансия из файла',
       description: data.description || data.vacancyRichText || '',
-      key_skills: Array.isArray(data.key_skills) 
-        ? data.key_skills.map((skill: any) => ({ 
-            name: skill.name || skill || 'Не указано' 
-          }))
-        : [],
-      employer: {
-        id: data.employer?.id || undefined,
-        name: data.employer?.name || data.firm_name || data.company || 'Не указано',
-        url: data.employer?.url || undefined,
-        logo_urls: data.employer?.logo_urls || undefined
-      },
+      requirements: [],
+      responsibilities: [],
+      location: { country: '', city: '', remoteWork: false, relocation: false },
       salary: normalizedSalary,
-      address: normalizedAddress,
-      area: data.area || undefined,
-      experience: data.experience || undefined,
-      employment: data.employment || undefined,
-      schedule: data.schedule || undefined,
-      professional_roles: data.professional_roles || undefined,
-      published_at: data.published_at || undefined,
-      alternate_url: data.alternate_url || data.link || undefined,
-      snippet: data.snippet || undefined,
+      employmentType: data.employment?.name || 'full_time',
+      level: data.experience?.name || 'middle',
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: '',
       platform: data.platform || 'file'
-    };
+    } as Vacancy;
   }
 
   // Выбор из избранного

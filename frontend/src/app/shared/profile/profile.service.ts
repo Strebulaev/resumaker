@@ -1,296 +1,322 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from '../db/supabase.service';
-import { HttpClient } from '@angular/common/http';
-import { Observable, from, switchMap, of, forkJoin, catchError, map } from 'rxjs';
-import * as yaml from 'js-yaml';
-import { personSchema, type Person, type Experience, type Education, type Skill, type Language } from '../../person-schema';
-import { format, parseISO } from 'date-fns';
-import { environment } from '../../../environments/environment.prod';
-import { ErrorToastComponent } from '../../components/Helpers/error-toast/error-toast.component';
-import { ErrorHandlerService } from '../error-handler.service';
+import { Profile, ProfileType, ApplicantProfile, EmployerProfile } from './profile.models';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { Person } from '../../person-schema';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class ProfileService {
-  constructor(
-    private supabase: SupabaseService,
-    private http: HttpClient,
-    private errorHandler: ErrorHandlerService
-  ) {}
-  
-  private createEmptyProfile(): Person {
+  private currentProfileSubject = new BehaviorSubject<Profile | null>(null);
+  public currentProfile$ = this.currentProfileSubject.asObservable();
+
+  constructor(private supabaseService: SupabaseService) {}
+
+  async createProfile(type: ProfileType, name: string, data: any): Promise<Profile> {
+    const user = this.supabaseService.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const profile: Partial<Profile> = {
+      userId: user.id,
+      type,
+      name,
+      data,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const { data: createdProfile, error } = await this.supabaseService.client
+      .from('user_profiles')
+      .insert(profile)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return createdProfile;
+  }
+
+  async getProfiles(): Promise<Profile[]> {
+    const user = this.supabaseService.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await this.supabaseService.client
+      .from('user_profiles')
+      .select('*')
+      .eq('userId', user.id);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async getProfile(id: string): Promise<Profile> {
+    const { data, error } = await this.supabaseService.client
+      .from('user_profiles')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async updateProfile(id: string, updates: Partial<Profile>): Promise<Profile> {
+    const { data, error } = await this.supabaseService.client
+      .from('user_profiles')
+      .update({ ...updates, updatedAt: new Date() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async deleteProfile(id: string): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('user_profiles')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  async switchProfile(profile: Profile): Promise<void> {
+    await this.updateProfile(profile.id, { isActive: true });
+    await this.deactivateOtherProfiles(profile.id);
+    this.currentProfileSubject.next(profile);
+  }
+
+  private async deactivateOtherProfiles(activeProfileId: string): Promise<void> {
+    const user = this.supabaseService.currentUser;
+    if (!user) return;
+
+    await this.supabaseService.client
+      .from('user_profiles')
+      .update({ isActive: false })
+      .eq('userId', user.id)
+      .neq('id', activeProfileId);
+  }
+
+  async getCurrentProfile(): Promise<Profile | null> {
+    const user = this.supabaseService.currentUser;
+    if (!user) return null;
+
+    const { data, error } = await this.supabaseService.client
+      .from('user_profiles')
+      .select('*')
+      .eq('userId', user.id)
+      .eq('isActive', true)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data || null;
+  }
+
+  async initializeCurrentProfile(): Promise<void> {
+    const profile = await this.getCurrentProfile();
+    this.currentProfileSubject.next(profile);
+  }
+
+  getApplicantData(profile: Profile): ApplicantProfile {
+    return profile.data as ApplicantProfile;
+  }
+
+  getEmployerData(profile: Profile): EmployerProfile {
+    return profile.data as EmployerProfile;
+  }
+
+  async updateApplicantData(profileId: string, data: Partial<ApplicantProfile>): Promise<void> {
+    const profile = await this.getProfile(profileId);
+    const updatedData = { ...profile.data, ...data };
+    await this.updateProfile(profileId, { data: updatedData });
+  }
+
+  async updateEmployerData(profileId: string, data: Partial<EmployerProfile>): Promise<void> {
+    const profile = await this.getProfile(profileId);
+    const updatedData = { ...profile.data, ...data };
+    await this.updateProfile(profileId, { data: updatedData });
+  }
+
+  loadProfile(): Observable<Person> {
+    return of(this.getDefaultProfile());
+  }
+
+  saveProfile(profileData: Person): Observable<any> {
+    return new Observable(observer => {
+      (async () => {
+        try {
+          const user = this.supabaseService.currentUser;
+          if (!user) throw new Error('User not authenticated');
+
+          const profile = await this.getCurrentProfile();
+          if (profile) {
+            await this.updateProfile(profile.id, { data: profileData });
+          } else {
+            await this.createProfile(ProfileType.APPLICANT, 'Основной профиль', profileData);
+          }
+
+          observer.next({ success: true });
+          observer.complete();
+        } catch (error) {
+          observer.error(error);
+        }
+      })();
+    });
+  }
+
+  exportToYaml(profileData: Person): string {
+    return `name: ${profileData.name}
+email: ${profileData.contact?.email}
+phone: ${profileData.contact?.phone}
+
+experience:
+${profileData.experience?.map(exp => `  - company: ${exp.company}
+    position: ${exp.position}
+    startDate: ${exp.startDate}
+    endDate: ${exp.endDate || ''}
+    tasks: ${exp.tasks?.join(', ')}`).join('\n') || ''}
+
+skills:
+${profileData.skills?.map(skill => `  - area: ${skill.area}
+    name: ${skill.name}
+    level: ${skill.level}`).join('\n') || ''}
+
+education:
+${profileData.education?.map(edu => `  - institution: ${edu.institution}
+    degree: ${edu.degree}
+    specialty: ${edu.specialty}
+    year: ${edu.year}`).join('\n') || ''}
+`;
+  }
+
+  exportToTxt(profileData: Person): string {
+    let text = `${profileData.name}\n`;
+    text += `Email: ${profileData.contact?.email}\n`;
+    text += `Phone: ${profileData.contact?.phone}\n\n`;
+
+    if (profileData.experience?.length) {
+      text += 'ОПЫТ РАБОТЫ:\n';
+      profileData.experience.forEach(exp => {
+        text += `${exp.position} в ${exp.company}\n`;
+        text += `${exp.startDate} - ${exp.endDate || 'настоящее время'}\n`;
+        text += `Задачи: ${exp.tasks?.join(', ')}\n`;
+        text += `Стек: ${exp.stack?.join(', ')}\n\n`;
+      });
+    }
+
+    if (profileData.skills?.length) {
+      text += 'НАВЫКИ:\n';
+      profileData.skills.forEach(skill => {
+        text += `${skill.name} (${skill.level}/10) - ${skill.area}\n`;
+      });
+      text += '\n';
+    }
+
+    if (profileData.education?.length) {
+      text += 'ОБРАЗОВАНИЕ:\n';
+      profileData.education.forEach(edu => {
+        text += `${edu.degree} ${edu.specialty}\n`;
+        text += `${edu.institution}, ${edu.year}\n\n`;
+      });
+    }
+
+    return text;
+  }
+
+  importFromYaml(yamlContent: string): Observable<Person> {
+    try {
+      const profile = this.parseYamlToProfile(yamlContent);
+      return of(profile);
+    } catch (error) {
+      throw new Error('Invalid YAML format');
+    }
+  }
+
+  getUserProfiles(): Promise<Profile[]> {
+    return this.getProfiles();
+  }
+
+  private getDefaultProfile(): Person {
     return {
       name: '',
       gender: 'unknown',
       desiredPositions: [],
-      contact: {
-        phone: '',
-        email: '',
-        linkedin: '',
-        github: ''
-      },
-      location: {
-        country: '',
-        city: '',
-        relocation: false,
-        remote: false,
-        business_trips: false
-      },
+      contact: { email: '', phone: '', linkedin: '', github: '', telegram: '' },
+      location: { country: '', city: '', relocation: false, remote: false, business_trips: false },
       languages: [],
       skills: [],
       education: [],
-      experience: [],
       hobby: [],
-      literature: []
+      literature: [],
+      experience: []
     };
   }
-  exportToYaml(person: Person): string {
-    return yaml.dump({ person }, { skipInvalid: true });
-  }
 
-  exportToTxt(person: Person): string {
-    let txt = `=== Personal Information ===\n`;
-    txt += `Name: ${person.name}\n`;
-    txt += `Gender: ${person.gender}\n`;
-    txt += `Desired Positions: ${person.desiredPositions?.join(', ') || 'Not specified'}\n\n`;
+  private parseYamlToProfile(yamlContent: string): Person {
+    const lines = yamlContent.split('\n');
+    const profile: Person = this.getDefaultProfile();
 
-    txt += `=== Contact Information ===\n`;
-    txt += `Email: ${person.contact.email}\n`;
-    txt += `Phone: ${person.contact.phone || 'Not specified'}\n`;
-    txt += `LinkedIn: ${person.contact['linkedin'] || 'Not specified'}\n`;
-    txt += `GitHub: ${person.contact['github'] || 'Not specified'}\n\n`;
+    let currentSection = '';
+    let currentItem: any = null;
 
-    txt += `=== Location ===\n`;
-    txt += `Country: ${person.location.country || 'Not specified'}\n`;
-    txt += `City: ${person.location.city}\n`;
-    txt += `Relocation: ${person.location.relocation ? 'Yes' : 'No'}\n`;
-    txt += `Remote work: ${person.location.remote ? 'Yes' : 'No'}\n`;
-    txt += `Business trips: ${person.location.business_trips ? 'Yes' : 'No'}\n\n`;
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
 
-    if (person.languages?.length) {
-      txt += `=== Languages ===\n`;
-      person.languages.forEach(lang => {
-        txt += `- ${lang.language}: ${lang.level}\n`;
-      });
-      txt += `\n`;
-    }
+      if (trimmed.includes(':')) {
+        const [key, value] = trimmed.split(':').map(s => s.trim());
 
-    if (person.skills?.length) {
-      txt += `=== Skills ===\n`;
-      person.skills.forEach(skill => {
-        txt += `- ${skill.area}: ${skill.name} (${skill.level}/10)\n`;
-      });
-      txt += `\n`;
-    }
-
-    if (person.education?.length) {
-      txt += `=== Education ===\n`;
-      person.education.forEach(edu => {
-        txt += `- ${edu.institution} (${edu.year}): ${edu.degree} in ${edu.specialty}\n`;
-      });
-      txt += `\n`;
-    }
-
-    if (person.experience?.length) {
-      txt += `=== Work Experience ===\n`;
-      person.experience.forEach(exp => {
-        txt += `- ${exp.company} (${format(parseISO(exp.startDate), 'MMM yyyy')} - ${exp.endDate ? format(parseISO(exp.endDate), 'MMM yyyy') : 'Present'}\n`;
-        txt += `  Position: ${exp.position}\n`;
-        txt += `  Technologies: ${exp.stack.join(', ')}\n`;
-        txt += `  Responsibilities:\n`;
-        exp.tasks.forEach(task => txt += `    - ${task}\n`);
-        
-        if (exp.achievements?.length) {
-          txt += `  Achievements:\n`;
-          exp.achievements.forEach(ach => {
-            txt += `    - ${ach.name}: ${ach.initial_value} → ${ach.final_value} ${ach.uom || ''} (${ach.type})\n`;
-          });
+        switch (key) {
+          case 'name':
+            profile.name = value;
+            break;
+          case 'email':
+            profile.contact = { ...profile.contact, email: value };
+            break;
+          case 'phone':
+            profile.contact = { ...profile.contact, phone: value };
+            break;
+          case 'experience':
+            currentSection = 'experience';
+            break;
+          case 'skills':
+            currentSection = 'skills';
+            break;
+          case 'education':
+            currentSection = 'education';
+            break;
+          case 'company':
+            if (currentSection === 'experience') {
+              currentItem = { company: value, tasks: [], stack: [], achievements: [] };
+              profile.experience!.push(currentItem);
+            }
+            break;
+          case 'position':
+            if (currentSection === 'experience' && currentItem) {
+              currentItem.position = value;
+            }
+            break;
+          case 'startDate':
+            if (currentSection === 'experience' && currentItem) {
+              currentItem.startDate = value;
+            }
+            break;
+          case 'endDate':
+            if (currentSection === 'experience' && currentItem) {
+              currentItem.endDate = value || null;
+            }
+            break;
+          case 'tasks':
+            if (currentSection === 'experience' && currentItem) {
+              currentItem.tasks = value.split(',').map((s: string) => s.trim());
+            }
+            break;
         }
-      });
-    }
-
-    if (person.hobby?.length) {
-      txt += `\n=== Hobbies ===\n`;
-      txt += person.hobby.map(h => `- ${h}`).join('\n');
-    }
-
-    if (person.literature?.length) {
-      txt += `\n=== Favorite Literature ===\n`;
-      txt += person.literature.map(l => `- ${l}`).join('\n');
-    }
-
-    return txt;
-  }
-
-  importFromYaml(yamlStr: string): Observable<Person | null> {
-    try {
-      console.log('Starting YAML import...');
-      
-      const cleanYamlStr = yamlStr.trim();
-      
-      const data = yaml.load(cleanYamlStr) as { person: Person };
-      console.log('Parsed YAML data:', data);
-      
-      if (!data || !data.person) {
-        throw new Error('Invalid YAML structure: missing "person" root element');
       }
-  
-      const validation = personSchema.safeParse(data);
-      
-      if (validation.success) {
-        console.log('YAML validation successful');
-        return of(validation.data.person);
-      } else {
-        console.error('YAML validation error:', validation.error);
-        
-        const fallbackProfile = this.createPartialProfile(data.person);
-        return of(fallbackProfile);
-      }
-    } catch (e) {
-      this.errorHandler.showError('Ошибка парсинга YAML', 'ProfileService');
-      return of(null);
-    }
-  }
-  
-  private createPartialProfile(partialData: any): Person {
-    return {
-      name: partialData.name || '',
-      gender: (partialData.gender || 'unknown') as 'unknown' | 'male' | 'female',
-      desiredPositions: Array.isArray(partialData.desiredPositions) ? partialData.desiredPositions : [],
-      contact: {
-        phone: partialData.contact?.phone || '',
-        email: partialData.contact?.email || '',
-        linkedin: partialData.contact?.['linkedin'] || '',
-        github: partialData.contact?.['github'] || ''
-      },
-      location: {
-        country: partialData.location?.country || '',
-        city: partialData.location?.city || '',
-        relocation: Boolean(partialData.location?.relocation),
-        remote: Boolean(partialData.location?.remote),
-        business_trips: Boolean(partialData.location?.business_trips)
-      },
-      languages: Array.isArray(partialData.languages) ? partialData.languages : [],
-      skills: Array.isArray(partialData.skills) ? partialData.skills : [],
-      education: Array.isArray(partialData.education) ? partialData.education : [],
-      experience: Array.isArray(partialData.experience) ? partialData.experience : [],
-      hobby: Array.isArray(partialData.hobby) ? partialData.hobby : [],
-      literature: Array.isArray(partialData.literature) ? partialData.literature : []
-    };
-  }
-
-  private async saveProfileToSupabase(person: Person): Promise<boolean> {
-    try {
-      const userId = this.supabase.currentUser?.id;
-      if (!userId) return false;
-  
-      const profileData = {
-        id: userId,
-        email: person.contact.email,
-        full_name: person.name,
-        phone: person.contact.phone,
-        gender: person.gender,
-        profile_data: {
-          desiredPositions: person.desiredPositions,
-          contact: {
-            linkedin: person.contact['linkedin'],
-            github: person.contact['github']
-          },
-          location: person.location,
-          languages: person.languages,
-          skills: person.skills,
-          education: person.education,
-          experience: person.experience,
-          hobby: person.hobby,
-          literature: person.literature
-        },
-        updated_at: new Date().toISOString()
-      };
-  
-      if (!environment.production) {
-        localStorage.setItem('sb-local-profile', JSON.stringify(profileData));
-        return true;
-      }
-  
-      const { error } = await this.supabase.client
-        .from('user_profiles')
-        .upsert(profileData, { 
-          onConflict: 'id',
-        });
-  
-      if (error) {
-        console.error('Supabase error:', error);
-        localStorage.setItem('sb-local-profile', JSON.stringify(profileData));
-      }
-  
-      return true;
-      
-    } catch (error) {
-      this.errorHandler.showError('Ошибка сохранения профиля', 'ProfileService');
-      return false;
-    }
-  }
-
-  transformSupabaseProfileToPerson(profileData: any): Person {
-    if (!profileData) {
-      return this.createEmptyProfile();
     }
 
-    return {
-      name: profileData.full_name || '',
-      gender: profileData.gender || 'unknown',
-      desiredPositions: profileData.profile_data?.desiredPositions || [],
-      contact: {
-        phone: profileData.phone || '',
-        email: profileData.email || '',
-        linkedin: profileData.profile_data?.contact?.['linkedin'] || '',
-        github: profileData.profile_data?.contact?.['github'] || ''
-      },
-      location: {
-        country: profileData.profile_data?.location?.country || '',
-        city: profileData.profile_data?.location?.city || '',
-        relocation: profileData.profile_data?.location?.relocation || false,
-        remote: profileData.profile_data?.location?.remote || false,
-        business_trips: profileData.profile_data?.location?.business_trips || false
-      },
-      languages: profileData.profile_data?.languages || [],
-      skills: profileData.profile_data?.skills || [],
-      education: profileData.profile_data?.education || [],
-      experience: profileData.profile_data?.experience || [],
-      hobby: profileData.profile_data?.hobby || [],
-      literature: profileData.profile_data?.literature || []
-    };
-  }
-
-  loadProfile(): Observable<Person | null> {
-    return from(this.supabase.getFullProfile()).pipe(
-      map((profileData: any) => {
-        if (!profileData) {
-          console.log('No profile data found, creating empty profile');
-          return this.createEmptyProfile();
-        }
-        return this.transformSupabaseProfileToPerson(profileData);
-      }),
-      catchError(error => {
-        console.error('Error loading profile in ProfileService:', error);
-        this.errorHandler.showError('Ошибка загрузки профиля', 'ProfileService');
-        return of(this.createEmptyProfile()); // Возвращаем пустой профиль вместо null
-      })
-    );
-  }
-
-  saveProfile(person: Person): Observable<boolean> {
-    const validation = personSchema.safeParse({ person });
-    
-    if (!validation.success) {
-      console.warn('Validation warnings:', validation.error);
-    }
-
-    return from(this.supabase.saveFullProfile(person)).pipe(
-      map(result => !result.error),
-      catchError(error => {
-        this.errorHandler.showError('Ошибка сохранения профиля', 'ProfileService');
-        return of(false);
-      })
-    );
+    return profile;
   }
 }

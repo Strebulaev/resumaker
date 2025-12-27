@@ -1,22 +1,126 @@
 <div class="home-container">
-  <h1>{{ 'HOME.WELCOME' | translate }}</h1>
+  <h1>
+    Добро пожаловать в <span>Rezulution</span>
+  </h1>
 
-  <div *ngIf="!supabase.currentUser" class="auth-buttons">
-    <button [routerLink]="['/login']" class="login-btn">
-      {{ 'BUTTON.LOGIN' | translate }}
-    </button>
+  <div *ngIf="!supabase.currentUser" class="auth-section">
+    <div class="auth-buttons">
+      <button [routerLink]="['/login']" class="login-btn">
+        <i class="pi pi-sign-in"></i>
+        Войти в систему
+      </button>
+    </div>
   </div>
 
-  <div *ngIf="supabase.currentUser" class="user-actions">
-    <button routerLink="/profile/view" class="profile-btn">
-      {{ 'BUTTON.PROFILE' | translate }}
-    </button>
-    <button routerLink="/resume-generation" class="resume-btn">
-      {{ 'BUTTON.GENERATE_RESUME' | translate }}
-    </button>
-    <button routerLink="/github/analyze" class="github-btn">
-      <i class="pi pi-github"></i>
-      GitHub to Resume
-    </button>
+  <div *ngIf="supabase.currentUser" class="dashboard-section">
+    <div class="dashboard-card">
+      <h3>
+        <i class="pi pi-user"></i>
+        Профиль
+      </h3>
+      <div class="card-actions">
+        <button routerLink="/profile/view" class="profile-btn">
+          <i class="pi pi-eye"></i>
+          Просмотр
+        </button>
+        <button routerLink="/profile/edit" class="profile-btn">
+          <i class="pi pi-pencil"></i>
+          Редактировать
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>
+        <i class="pi pi-file-text"></i>
+        Резюме
+      </h3>
+      <div class="card-actions">
+        <button routerLink="/resume-generation" class="resume-btn">
+          <i class="pi pi-plus"></i>
+          Создать
+        </button>
+        <button routerLink="/github/analyze" class="github-btn">
+          <i class="pi pi-github"></i>
+          Из GitHub
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>
+        <i class="pi pi-users"></i>
+        Командная работа
+      </h3>
+      <div class="card-actions">
+        <button routerLink="/team-management" class="team-btn">
+          <i class="pi pi-users"></i>
+          Команды
+        </button>
+        <button routerLink="/task-management" class="task-btn">
+          <i class="pi pi-check-square"></i>
+          Задачи
+        </button>
+        <button routerLink="/learning-management" class="learning-btn">
+          <i class="pi pi-graduation-cap"></i>
+          Обучение
+        </button>
+        <button routerLink="/billing/subscription" class="profile-btn">
+          <i class="pi pi-credit-card"></i>
+          Подписка
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>
+        <i class="pi pi-search"></i>
+        Вакансии
+      </h3>
+      <div class="card-actions">
+        <button routerLink="/vacancy-search" class="resume-btn">
+          <i class="pi pi-search"></i>
+          Поиск
+        </button>
+        <button routerLink="/auth/callback" class="github-btn">
+          <i class="pi pi-external-link"></i>
+          Платформы
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>
+        <i class="pi pi-question-circle"></i>
+        Подготовка
+      </h3>
+      <div class="card-actions">
+        <button routerLink="/interview-prep" class="learning-btn">
+          <i class="pi pi-comments"></i>
+          Собеседования
+        </button>
+        <button routerLink="/cover-letter/generate" class="team-btn">
+          <i class="pi pi-envelope"></i>
+          Сопроводительное
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard-card">
+      <h3>
+        <i class="pi pi-bell"></i>
+        Уведомления
+      </h3>
+      <div class="card-actions">
+        <button routerLink="/notifications" class="task-btn">
+          <i class="pi pi-bell"></i>
+          Просмотр
+        </button>
+        <button routerLink="/notifications/settings" class="profile-btn">
+          <i class="pi pi-cog"></i>
+          Настройки
+        </button>
+      </div>
+    </div>
   </div>
 </div>

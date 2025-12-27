@@ -19,6 +19,9 @@ import { PrivacyPolicyComponent } from './components/Pages/privacy-policy/privac
 import { PublicOfferComponent } from './components/Pages/public-offer/public-offer.component';
 import { NotificationSettingsComponent } from './components/Notifications/notification-settings/notification-settings.component';
 import { NotificationsPageComponent } from './components/Notifications/notifications-page/notifications-page.component';
+import { TeamManagementComponent } from './components/team-management/team-management.component';
+import { TaskManagementComponent } from './components/task-management/task-management.component';
+import { LearningManagementComponent } from './components/learning-management/learning-management.component';
 
 export const routes: Routes = [
   {
@@ -122,8 +125,23 @@ export const routes: Routes = [
     component: NotificationSettingsComponent,
     canActivate: [AuthGuard]
   },
-  { 
-    path: '**', 
-    component: NotFoundComponent 
+  {
+    path: 'team-management',
+    component: TeamManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'task-management',
+    component: TaskManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'learning-management',
+    component: LearningManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: '**',
+    component: NotFoundComponent
   }
 ];

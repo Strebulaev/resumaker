@@ -1,20 +1,19 @@
 <div class="pricing-container">
   <div class="pricing-header">
-    <h1>{{ 'BILLING.PRICING_TITLE' | translate }}</h1>
-    <p>{{ 'BILLING.PRICING_SUBTITLE' | translate }}</p>
+    <h1 class="pricing-title">{{ 'BILLING.PRICING_TITLE' | translate }}</h1>
+    <p class="pricing-subtitle">{{ 'BILLING.PRICING_SUBTITLE' | translate }}</p>
   </div>
 
   <!-- Debug information -->
-  <div *ngIf="plans.length === 0" class="no-plans-warning">
+  <div *ngIf="plans.length === 0" class="debug-info">
     <p>{{ 'BILLING.NO_PLANS_LOADED' | translate }}</p>
   </div>
 
-  <div class="pricing-cards">
-    <p-card *ngFor="let plan of plans" 
-            [class]="plan.popular ? 'popular-plan' : ''"
-            [header]="plan.name"
-            class="plan-card">
-      
+  <div class="plans-grid">
+    <p-card *ngFor="let plan of plans"
+            [class]="'plan-card' + (plan.popular ? ' popular' : '')"
+            [header]="plan.name">
+
       <div class="plan-price">
         <span class="price-amount">{{ plan.price === 0 ? ('BILLING.FREE' | translate) : (plan.price + ' ₽') }}</span>
         <span *ngIf="plan.price > 0" class="price-period">{{ 'BILLING.PER_MONTH' | translate }}</span>
@@ -53,12 +52,11 @@
         </div>
       </div>
 
-      <button pButton 
+      <button pButton
               [label]="getButtonLabel(plan)"
-              [class]="getButtonClass(plan)"
+              class="plan-button"
               [loading]="isLoading"
-              (click)="selectPlan(plan)"
-              class="plan-button">
+              (click)="selectPlan(plan)">
       </button>
 
       <div *ngIf="plan.popular" class="popular-badge">
@@ -68,16 +66,16 @@
   </div>
 
   <!-- Диалог оплаты -->
-  <p-dialog [(visible)]="showPaymentDialog" 
-            [modal]="true" 
-            [style]="{ width: '500px' }"
+  <p-dialog [(visible)]="showPaymentDialog"
+            [modal]="true"
+            class="payment-dialog"
             (onHide)="closeDialog()">
-    
+
     <ng-template pTemplate="header">
-      <span class="text-xl font-bold">{{ 'BILLING.PAYMENT_DIALOG_TITLE' | translate }} {{ selectedPlan?.name }}</span>
+      <span class="dialog-header">{{ 'BILLING.PAYMENT_DIALOG_TITLE' | translate }} {{ selectedPlan?.name }}</span>
     </ng-template>
 
-    <div *ngIf="selectedPlan" class="payment-dialog-content">
+    <div *ngIf="selectedPlan" class="dialog-content">
       <p>{{ 'BILLING.PAYMENT_SUMMARY' | translate:{planName: selectedPlan.name} }}</p>
       <p>{{ 'BILLING.COST' | translate }} <strong>{{ selectedPlan.price }} ₽</strong></p>
       <p>{{ 'BILLING.PAYMENT_INFO' | translate }}</p>

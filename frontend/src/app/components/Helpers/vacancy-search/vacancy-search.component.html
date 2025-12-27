@@ -378,7 +378,7 @@
         <div class="description-content" [innerHTML]="formatDescription(selectedVacancy.description)"></div>
       </div>
 
-      <div class="detail-section" *ngIf="selectedVacancy.key_skills.length > 0">
+      <div class="detail-section" *ngIf="selectedVacancy.key_skills && selectedVacancy.key_skills.length > 0">
         <h5>{{ 'DETAILS.REQUIREMENTS' | translate }}</h5>
         <div class="skills-detail">
           <span *ngFor="let skill of selectedVacancy.key_skills" class="skill-tag large">

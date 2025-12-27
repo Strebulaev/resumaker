@@ -30,7 +30,7 @@ export class PersonalDataConsentComponent implements OnInit {
       localStorage.setItem('personal_data_consent_date', new Date().toISOString());
       this.showConsentModal = false;
       
-      console.log('Пользователь принял согласие на обработку ПД');
+      console.log('User accepted consent to personal data processing');
     }
   }
 
@@ -38,6 +38,6 @@ export class PersonalDataConsentComponent implements OnInit {
     localStorage.setItem('personal_data_consent', 'false');
     this.showConsentModal = false;
     
-    alert('Без согласия на обработку персональных данных некоторые функции сервиса могут быть недоступны.');
+    alert('Without consent to personal data processing, some service functions may be unavailable.');
   }
 }

@@ -11,34 +11,50 @@
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon">
-            <i class="pi pi-file"></i>
+            <i class="pi pi-brain"></i>
           </div>
-          <h3>{{ 'ABOUT.FEATURES.AI_RESUME' | translate }}</h3>
-          <p>{{ 'ABOUT.FEATURES.AI_RESUME_DESC' | translate }}</p>
+          <h3>AI-генерация резюме</h3>
+          <p>Создавайте профессиональные резюме с помощью искусственного интеллекта на основе ваших данных</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">
-            <i class="pi pi-envelope"></i>
+            <i class="pi pi-github"></i>
           </div>
-          <h3>{{ 'ABOUT.FEATURES.COVER_LETTERS' | translate }}</h3>
-          <p>{{ 'ABOUT.FEATURES.COVER_LETTERS_DESC' | translate }}</p>
+          <h3>Анализ GitHub</h3>
+          <p>Автоматически извлекайте информацию о проектах и навыках из ваших GitHub репозиториев</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">
-            <i class="pi pi-briefcase"></i>
+            <i class="pi pi-users"></i>
           </div>
-          <h3>{{ 'ABOUT.FEATURES.JOB_PLATFORMS_INTEGRATION' | translate }}</h3>
-          <p>{{ 'ABOUT.FEATURES.JOB_PLATFORMS_INTEGRATION_DESC' | translate }}</p>
+          <h3>Командная работа</h3>
+          <p>Управляйте командами, задачами и процессом обучения сотрудников в единой системе</p>
         </div>
 
         <div class="feature-card">
           <div class="feature-icon">
-            <i class="pi pi-download"></i>
+            <i class="pi pi-search"></i>
           </div>
-          <h3>{{ 'ABOUT.FEATURES.EXPORT' | translate }}</h3>
-          <p>{{ 'ABOUT.FEATURES.EXPORT_DESC' | translate }}</p>
+          <h3>Поиск вакансий</h3>
+          <p>Интеграция с ведущими job-платформами для поиска и отклика на вакансии</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-graduation-cap"></i>
+          </div>
+          <h3>Обучение команды</h3>
+          <p>Система обучения и развития с персонализированными курсами и отслеживанием прогресса</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-bell"></i>
+          </div>
+          <h3>Уведомления</h3>
+          <p>Персонализированные уведомления о новых вакансиях и обновлениях в системе</p>
         </div>
       </div>
     </div>
@@ -48,25 +64,32 @@
       <p>{{ 'ABOUT.CTA_DESCRIPTION' | translate }}</p>
       
       <div class="action-buttons">
-        <button pButton 
-                [label]="'BUTTON.GENERATE_RESUME' | translate" 
+        <button pButton
+                label="Создать резюме"
                 routerLink="/resume-generation"
                 icon="pi pi-file"
                 class="p-button-primary">
         </button>
-        
-        <button pButton 
-                [label]="'MAIN_MENU.JOB_PLATFORMS.name' | translate" 
-                routerLink="/auth/callback"
-                icon="pi pi-briefcase"
-                class="p-button-outlined">
+
+        <button pButton
+                label="Управление командой"
+                routerLink="/team-management"
+                icon="pi pi-users"
+                class="p-button-success">
         </button>
 
-        <button pButton 
-                [label]="'BUTTON.PROFILE' | translate" 
-                routerLink="/profile/view"
-                icon="pi pi-user"
-                class="p-button-secondary">
+        <button pButton
+                label="Поиск вакансий"
+                routerLink="/vacancy-search"
+                icon="pi pi-search"
+                class="p-button-info">
+        </button>
+
+        <button pButton
+                label="Обучение"
+                routerLink="/learning-management"
+                icon="pi pi-graduation-cap"
+                class="p-button-warning">
         </button>
       </div>
     </div>

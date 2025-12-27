@@ -1,0 +1,330 @@
+<div class="learning-management-container">
+  <div class="header">
+    <h1>{{ 'LEARNING_MANAGEMENT.TITLE' | translate }}</h1>
+    <p>{{ 'LEARNING_MANAGEMENT.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters">
+      <div class="filter-group">
+        <label>Категория:</label>
+        <p-select
+          [(ngModel)]="activeCategory"
+          [options]="getCategoryOptions()"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="filterMaterials()">
+        </p-select>
+      </div>
+
+      <div class="filter-group">
+        <label>Тип:</label>
+        <p-select
+          [(ngModel)]="activeType"
+          [options]="getTypeOptions()"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="filterMaterials()">
+        </p-select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button
+        pButton
+        (click)="showStatsDialog = true"
+        icon="pi pi-chart-bar"
+        [label]="'Статистика'"
+        class="p-button-outlined">
+      </button>
+      <button
+        pButton
+        (click)="createMaterial()"
+        icon="pi pi-plus"
+        [label]="'Добавить материал'"
+        class="p-button-primary">
+      </button>
+    </div>
+  </div>
+
+  <div class="materials-grid">
+    <p-card
+      *ngFor="let material of getFilteredMaterials()"
+      class="material-card"
+      [class.required]="material.isRequired">
+
+      <ng-template pTemplate="header">
+        <div class="material-header">
+          <div class="material-type">
+            <i [class]="getTypeIcon(material.type)"></i>
+            <span>{{ getTypeLabel(material.type) }}</span>
+          </div>
+          <div class="material-badges">
+            <p-badge
+              [value]="getDifficultyLabel(material.difficulty)"
+              [style]="{'background-color': getDifficultyColor(material.difficulty)}">
+            </p-badge>
+            <p-badge
+              *ngIf="material.isRequired"
+              value="Обязательный"
+              severity="danger">
+            </p-badge>
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="material-content">
+        <h3>{{ material.title }}</h3>
+        <p class="description">{{ material.description }}</p>
+
+        <div class="material-meta">
+          <div class="meta-item">
+            <i class="pi pi-clock"></i>
+            <span>{{ formatDuration(material.duration) }}</span>
+          </div>
+          <div class="meta-item">
+            <i class="pi pi-tag"></i>
+            <span>{{ material.category }}</span>
+          </div>
+        </div>
+
+        <div class="material-tags" *ngIf="(material.tags || []).length > 0">
+          <span *ngFor="let tag of material.tags" class="tag">{{ tag }}</span>
+        </div>
+
+        <div class="material-progress">
+          <div class="progress-info">
+            <span>Прогресс изучения:</span>
+            <span>{{ getUserProgressForMaterial(material.id).completed }}/{{ userProgress.length }} пользователей</span>
+          </div>
+          <p-progressBar
+            [value]="(getUserProgressForMaterial(material.id).completed / userProgress.length) * 100"
+            [showValue]="false">
+          </p-progressBar>
+        </div>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="material-actions">
+          <button
+            pButton
+            *ngIf="material.url"
+            (click)="openMaterialUrl(material.url)"
+            icon="pi pi-external-link"
+            [label]="'Открыть'"
+            class="p-button-outlined p-button-sm">
+          </button>
+          <button
+            pButton
+            (click)="editMaterial(material)"
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm">
+          </button>
+          <button
+            pButton
+            (click)="deleteMaterial(material)"
+            icon="pi pi-trash"
+            class="p-button-text p-button-sm p-button-danger">
+          </button>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Диалог создания/редактирования материала -->
+  <p-dialog
+    [header]="selectedMaterial ? 'Редактировать материал' : 'Создать материал'"
+    [(visible)]="showMaterialDialog"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+    [closable]="true">
+
+    <form [formGroup]="materialForm" (ngSubmit)="saveMaterial()">
+      <div class="form-field">
+        <label for="title">Название *</label>
+        <input
+          id="title"
+          pInputText
+          formControlName="title"
+          placeholder="Введите название материала"
+          class="w-full">
+      </div>
+
+      <div class="form-field">
+        <label for="description">Описание</label>
+        <textarea
+          id="description"
+          pInputTextarea
+          formControlName="description"
+          placeholder="Введите описание материала"
+          rows="3"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="type">Тип *</label>
+          <p-select
+            formControlName="type"
+            [options]="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Выберите тип">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label for="category">Категория *</label>
+          <p-select
+            formControlName="category"
+            [options]="categoryOptions"
+            placeholder="Выберите категорию">
+          </p-select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="difficulty">Сложность *</label>
+          <p-select
+            formControlName="difficulty"
+            [options]="difficultyOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Выберите сложность">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label for="duration">Длительность (мин) *</label>
+          <input
+            id="duration"
+            type="number"
+            pInputText
+            formControlName="duration"
+            placeholder="Длительность"
+            min="1"
+            class="w-full">
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="url">URL (для внешних материалов)</label>
+        <input
+          id="url"
+          type="url"
+          pInputText
+          formControlName="url"
+          placeholder="https://example.com"
+          class="w-full">
+      </div>
+
+      <div class="form-field">
+        <label for="content">Содержимое (для встроенных материалов)</label>
+        <textarea
+          id="content"
+          pInputTextarea
+          formControlName="content"
+          placeholder="Введите содержимое материала"
+          rows="5"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="tags">Теги</label>
+          <input
+            type="text"
+            pInputText
+            formControlName="tags"
+            placeholder="Теги через запятую"
+            class="w-full">
+        </div>
+
+        <div class="form-field">
+          <label for="isRequired">Обязательный материал</label>
+          <p-checkbox
+            formControlName="isRequired"
+            inputId="isRequired"
+            label="Да">
+          </p-checkbox>
+        </div>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        (click)="showMaterialDialog = false"
+        [label]="'CANCEL' | translate"
+        class="p-button-text">
+      </button>
+      <button
+        pButton
+        (click)="saveMaterial()"
+        [label]="selectedMaterial ? 'UPDATE' : 'CREATE'"
+        [disabled]="materialForm.invalid || isLoading"
+        [loading]="isLoading"
+        class="p-button-primary">
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Диалог статистики -->
+  <p-dialog
+    header="Статистика обучения"
+    [(visible)]="showStatsDialog"
+    [modal]="true"
+    [style]="{ width: '700px' }"
+    [closable]="true">
+
+    <div class="stats-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{ getLearningStats().totalMaterials }}</div>
+          <div class="stat-label">Всего материалов</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value">{{ getLearningStats().totalUsers }}</div>
+          <div class="stat-label">Участников</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value">{{ getLearningStats().averageProgress }}%</div>
+          <div class="stat-label">Средний прогресс</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-value">{{ getLearningStats().completionRate }}%</div>
+          <div class="stat-label">Завершили обучение</div>
+        </div>
+      </div>
+
+      <div class="popular-categories">
+        <h4>Популярные категории</h4>
+        <div class="categories-list">
+          <div *ngFor="let category of getLearningStats().popularCategories" class="category-item">
+            <span class="category-name">{{ category.category }}</span>
+            <span class="category-count">{{ category.count }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-performers">
+        <h4>Лучшие ученики</h4>
+        <div class="performers-list">
+          <div *ngFor="let performer of getLearningStats().topPerformers" class="performer-item">
+            <p-avatar [label]="performer.userAvatar"></p-avatar>
+            <div class="performer-info">
+              <span class="performer-name">{{ performer.userName }}</span>
+              <span class="performer-progress">{{ performer.totalProgress }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </p-dialog>
+</div>

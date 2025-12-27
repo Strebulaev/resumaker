@@ -1,0 +1,20 @@
+<div class="notification-item" [ngClass]="{'unread': !notification.isRead}">
+  <div class="notification-header">
+    <i class="fas fa-{{ getIconType(notification.type) }} notification-icon"></i>
+    <div class="notification-content">
+      <h4 class="notification-title">{{ notification.title }}</h4>
+      <p class="notification-message">{{ notification.message }}</p>
+      <small class="notification-time">
+        {{ notification.time | date:'shortTime' }}
+      </small>
+    </div>
+  </div>
+  <div class="notification-actions">
+    <button *ngIf="!notification.isRead" (click)="onMarkRead()" class="mark-read-btn">
+      <i class="fas fa-check"></i>
+    </button>
+    <a *ngIf="notification.metadata?.url" [href]="notification.metadata?.url" target="_blank" class="action-link">
+      Подробнее
+    </a>
+  </div>
+</div>

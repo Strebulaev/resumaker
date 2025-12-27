@@ -51,7 +51,7 @@ import { ConfigService } from './shared/config/config.service';
     NotificationBellComponent
 ],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrls: ['./app.scss'],
 })
 export class App implements OnInit {
   @ViewChild(ErrorToastComponent) errorToast!: ErrorToastComponent;
@@ -64,7 +64,7 @@ export class App implements OnInit {
   availableLanguages: any[] = [];
   showLanguageDropdown: boolean = false;
   showAIConfigModal = false;
-  currentAIProvider: string = 'Не настроен';
+  currentAIProvider: string = 'Not configured';
 
   constructor(
     public supabase: SupabaseService,
@@ -111,6 +111,7 @@ export class App implements OnInit {
   ngOnInit(): void {
     this.initializeLanguages();
     this.currentLang = this.translate.currentLang || this.languageService.getLanguage();
+    this.translate.use(this.currentLang);
     
     this.aiGuard.getCurrentProviderNameObservable().subscribe(provider => {
       this.currentAIProvider = provider;
@@ -142,13 +143,13 @@ export class App implements OnInit {
 
   private getPageTitle(url: string): string {
     const routes: {[key: string]: string} = {
-      '/': 'Главная',
-      '/resume-generation': 'Генерация резюме',
-      '/cover-letter/generate': 'Сопроводительное письмо',
-      '/interview-prep': 'Подготовка к собеседованию',
-      '/vacancy-search': 'Поиск вакансий',
-      '/billing/pricing': 'Тарифы',
-      '/profile/view': 'Профиль'
+      '/': 'Home',
+      '/resume-generation': 'Resume Generation',
+      '/cover-letter/generate': 'Cover Letter',
+      '/interview-prep': 'Interview Preparation',
+      '/vacancy-search': 'Vacancy Search',
+      '/billing/pricing': 'Pricing',
+      '/profile/view': 'Profile'
     };
     return routes[url] || 'Rezulution';
   }
@@ -254,58 +255,115 @@ export class App implements OnInit {
   private buildMenu(): MenuItem[] {
     return [
       {
-        label: this.translate.instant('MAIN_MENU.PROFILE.name'),
+        label: 'Профиль',
         items: [
-          { 
-            label: this.translate.instant('MAIN_MENU.PROFILE.VIEW'), 
+          {
+            label: 'Просмотр профиля',
             routerLink: '/profile/view'
           },
-          { 
-            label: this.translate.instant('MAIN_MENU.PROFILE.EDIT'), 
+          {
+            label: 'Редактировать профиль',
             routerLink: '/profile/edit'
           },
           {
-            label: this.translate.instant('BILLING.MANAGE_SUBSCRIPTION'),
+            label: 'Управление подпиской',
             routerLink: '/billing/subscription',
           }
         ]
       },
       {
-        label: this.translate.instant('MAIN_MENU.RESUME.name'),
+        label: 'Резюме',
         items: [
           {
-            label: this.translate.instant('MAIN_MENU.RESUME.GENERATE_RESUME'),
+            label: 'Генерация резюме',
             routerLink: '/resume-generation'
           },
           {
-            label: this.translate.instant('MAIN_MENU.RESUME.GITHUB_TO_RESUME'),
+            label: 'GitHub в резюме',
             routerLink: '/github/analyze'
           },
           {
-            label: this.translate.instant('MAIN_MENU.PROFILE.GENERATE_COVER_LETTER'),
+            label: 'Сопроводительное письмо',
             routerLink: '/cover-letter/generate'
           }
         ]
       },
       {
-        label: this.translate.instant('MAIN_MENU.JOB_PLATFORMS.name'),
-        routerLink: '/auth/callback'
+        label: 'Командная работа',
+        items: [
+          {
+            label: 'Управление командами',
+            routerLink: '/team-management'
+          },
+          {
+            label: 'Управление задачами',
+            routerLink: '/task-management'
+          },
+          {
+            label: 'Обучение команды',
+            routerLink: '/learning-management'
+          }
+        ]
       },
       {
-        label: this.translate.instant('MAIN_MENU.VACANCY_SEARCH.name'),
-        routerLink: '/vacancy-search'
+        label: 'Вакансии',
+        items: [
+          {
+            label: 'Поиск вакансий',
+            routerLink: '/vacancy-search'
+          },
+          {
+            label: 'Платформы',
+            routerLink: '/auth/callback'
+          }
+        ]
       },
       {
-        label: this.translate.instant('MAIN_MENU.INTERVIEW.name'),
-        routerLink: '/interview-prep'
+        label: 'Подготовка',
+        items: [
+          {
+            label: 'Подготовка к интервью',
+            routerLink: '/interview-prep'
+          },
+          {
+            label: 'Уведомления',
+            routerLink: '/notifications'
+          }
+        ]
       },
       {
-        label: this.translate.instant('MAIN_MENU.ABOUT.name'),
-        routerLink: '/about'
-      },
-      {
-        label: this.translate.instant('BILLING.TARIFS'),
-        routerLink: '/billing/pricing',
+        label: 'Информация',
+        items: [
+          {
+            label: 'О нас',
+            routerLink: '/about'
+          },
+          {
+            label: 'Тарифы',
+            routerLink: '/billing/pricing'
+          },
+          {
+            label: 'Документы',
+            items: [
+              {
+                label: 'Условия использования',
+                routerLink: '/terms-of-service'
+              },
+              {
+                label: 'Политика конфиденциальности',
+                routerLink: '/privacy-policy'
+              },
+              {
+                label: 'Публичная оферта',
+                routerLink: '/public-offer'
+              },
+              {
+                label: 'Реквизиты',
+                routerLink: '/requisites-page'
+              }
+            ]
+          }
+        ]
       }
     ];
   }

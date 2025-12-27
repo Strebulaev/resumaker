@@ -11,15 +11,15 @@ export class ErrorHandlerService {
 
   handleAIConnectionError(error: any, context: string = 'AI Service') {
     if (error.status === 0 || error.message?.includes('CORS')) {
-      this.showAIError('CORS ошибка: невозможно подключиться к AI API. Проверьте настройки провайдера.', context);
+      this.showAIError('CORS error: cannot connect to AI API. Check provider settings.', context);
     } else if (error.status === 401) {
-      this.showAIError('Неверный API ключ AI провайдера', context);
+      this.showAIError('Invalid AI provider API key', context);
     } else if (error.status === 403) {
-      this.showAIError('Доступ к AI сервису запрещен', context);
+      this.showAIError('Access to AI service denied', context);
     } else if (error.status === 429) {
-      this.showAIError('Превышен лимит запросов к AI сервису', context);
+      this.showAIError('AI service request limit exceeded', context);
     } else {
-      this.showAIError(`Ошибка AI сервиса: ${error.message}`, context);
+      this.showAIError(`AI service error: ${error.message}`, context);
     }
   }
 

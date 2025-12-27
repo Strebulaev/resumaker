@@ -1,0 +1,363 @@
+<div class="task-management-container">
+  <div class="header">
+    <h1>{{ 'TASK_MANAGEMENT.TITLE' | translate }}</h1>
+    <p>{{ 'TASK_MANAGEMENT.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="filter-buttons">
+      <button
+        pButton
+        [class.active]="activeFilter === 'all'"
+        (click)="setFilter('all')"
+        label="Все задачи">
+      </button>
+      <button
+        pButton
+        [class.active]="activeFilter === 'my'"
+        (click)="setFilter('my')"
+        label="Мои задачи">
+      </button>
+      <button
+        pButton
+        [class.active]="activeFilter === 'team'"
+        (click)="setFilter('team')"
+        label="Командные">
+      </button>
+      <button
+        pButton
+        [class.active]="activeFilter === 'overdue'"
+        (click)="setFilter('overdue')"
+        label="Просроченные">
+        <span *ngIf="getTaskStats().overdue > 0" class="overdue-count">{{ getTaskStats().overdue }}</span>
+      </button>
+    </div>
+
+    <div class="view-buttons">
+      <button
+        pButton
+        [class.active]="activeView === 'list'"
+        (click)="setView('list')"
+        icon="pi pi-list">
+      </button>
+      <button
+        pButton
+        [class.active]="activeView === 'board'"
+        (click)="setView('board')"
+        icon="pi pi-th-large">
+      </button>
+      <button
+        pButton
+        [class.active]="activeView === 'calendar'"
+        (click)="setView('calendar')"
+        icon="pi pi-calendar">
+      </button>
+    </div>
+
+    <div class="action-buttons">
+      <button
+        pButton
+        (click)="showStatsDialog = true"
+        icon="pi pi-chart-bar"
+        [label]="'Статистика'"
+        class="p-button-outlined">
+      </button>
+      <button
+        pButton
+        (click)="createTask()"
+        icon="pi pi-plus"
+        [label]="'Создать задачу'"
+        class="p-button-primary">
+      </button>
+    </div>
+  </div>
+
+  <!-- Представление списком -->
+  <div *ngIf="activeView === 'list'" class="tasks-list-view">
+    <div class="tasks-table-container">
+      <p-table
+        [value]="filteredTasks"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Показаны {first} - {last} из {totalRecords} задач"
+        [rowsPerPageOptions]="[5, 10, 25]"
+        sortMode="multiple">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="title">Задача <p-sortIcon field="title"></p-sortIcon></th>
+            <th pSortableColumn="assigneeName">Исполнитель <p-sortIcon field="assigneeName"></p-sortIcon></th>
+            <th pSortableColumn="priority">Приоритет <p-sortIcon field="priority"></p-sortIcon></th>
+            <th pSortableColumn="status">Статус <p-sortIcon field="status"></p-sortIcon></th>
+            <th pSortableColumn="dueDate">Срок <p-sortIcon field="dueDate"></p-sortIcon></th>
+            <th>Действия</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-task>
+          <tr [class.overdue]="isOverdue(task)">
+            <td>
+              <div class="task-title-cell">
+                <strong>{{ task.title }}</strong>
+                <div class="task-description">{{ task.description }}</div>
+                <div class="task-tags" *ngIf="task.tags?.length > 0">
+                  <span *ngFor="let tag of task.tags" class="tag">{{ tag }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="assignee-cell">
+                <p-avatar [label]="task.assigneeAvatar"></p-avatar>
+                <span>{{ task.assigneeName }}</span>
+              </div>
+            </td>
+            <td>
+              <span
+                class="priority-badge"
+                [style.background-color]="getPriorityColor(task.priority)">
+                {{ getPriorityLabel(task.priority) }}
+              </span>
+            </td>
+            <td>
+              <span class="status-cell">
+                <i [class]="getStatusIcon(task.status)"></i>
+                {{ getStatusLabel(task.status) }}
+              </span>
+            </td>
+            <td>
+              <span [class]="isOverdue(task) ? 'overdue-date' : ''">
+                {{ formatDate(task.dueDate) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  pButton
+                  (click)="editTask(task)"
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm">
+                </button>
+                <button
+                  pButton
+                  (click)="deleteTask(task)"
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <!-- Представление доской -->
+  <div *ngIf="activeView === 'board'" class="tasks-board-view">
+    <div class="board-columns">
+      <div *ngFor="let status of statusOptions" class="board-column">
+        <div class="column-header">
+          <h3>
+            <i [class]="status.icon"></i>
+            {{ status.label }}
+            <span class="task-count">{{ getTasksByStatus(status.value).length }}</span>
+          </h3>
+        </div>
+
+        <div class="column-content">
+          <div
+            *ngFor="let task of getTasksByStatus(status.value)"
+            class="task-card"
+            [class.overdue]="isOverdue(task)"
+            (click)="editTask(task)">
+
+            <div class="task-card-header">
+              <span
+                class="priority-badge"
+                [style.background-color]="getPriorityColor(task.priority)">
+                {{ getPriorityLabel(task.priority) }}
+              </span>
+              <span class="due-date" [class.overdue]="isOverdue(task)">
+                {{ formatDate(task.dueDate) }}
+              </span>
+            </div>
+
+            <div class="task-card-title">
+              <strong>{{ task.title }}</strong>
+            </div>
+
+            <div class="task-card-description">
+              {{ (task.description || '') | slice:0:100 }}{{ (task.description || '').length > 100 ? '...' : '' }}
+            </div>
+
+            <div class="task-card-footer">
+              <div class="assignee">
+                <p-avatar [label]="task.assigneeAvatar"></p-avatar>
+                <span>{{ task.assigneeName }}</span>
+              </div>
+              <div class="tags" *ngIf="(task.tags || []).length > 0">
+                <span *ngFor="let tag of task.tags.slice(0, 2)" class="mini-tag">{{ tag }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Диалог создания/редактирования задачи -->
+  <p-dialog
+    [header]="selectedTask ? 'Редактировать задачу' : 'Создать задачу'"
+    [(visible)]="showTaskDialog"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+    [closable]="true">
+
+    <form [formGroup]="taskForm" (ngSubmit)="saveTask()">
+      <div class="form-field">
+        <label for="taskTitle">Название задачи *</label>
+        <input
+          id="taskTitle"
+          pInputText
+          formControlName="title"
+          placeholder="Введите название задачи"
+          class="w-full">
+      </div>
+
+      <div class="form-field">
+        <label for="taskDescription">Описание</label>
+        <textarea
+          id="taskDescription"
+          pInputTextarea
+          formControlName="description"
+          placeholder="Введите описание задачи"
+          rows="3"
+          class="w-full">
+        </textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="assignee">Исполнитель *</label>
+          <p-select
+            formControlName="assignee"
+            [options]="assigneeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Выберите исполнителя">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label for="priority">Приоритет *</label>
+          <p-select
+            formControlName="priority"
+            [options]="priorityOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Выберите приоритет">
+          </p-select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="status">Статус *</label>
+          <p-select
+            formControlName="status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Выберите статус">
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label for="dueDate">Срок выполнения *</label>
+          <input
+            id="dueDate"
+            type="date"
+            pInputText
+            formControlName="dueDate"
+            class="w-full">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="estimatedHours">Оценка часов</label>
+          <input
+            id="estimatedHours"
+            type="number"
+            pInputText
+            formControlName="estimatedHours"
+            placeholder="Часы"
+            min="0"
+            step="0.5">
+        </div>
+
+        <div class="form-field">
+          <label for="tags">Теги</label>
+          <p-multiSelect
+            formControlName="tags"
+            [options]="['интервью', 'оффер', 'вакансия', 'кандидат', 'аналитика', 'отчет']"
+            placeholder="Выберите теги">
+          </p-multiSelect>
+        </div>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        (click)="showTaskDialog = false"
+        [label]="'CANCEL' | translate"
+        class="p-button-text">
+      </button>
+      <button
+        pButton
+        (click)="saveTask()"
+        [label]="selectedTask ? 'UPDATE' : 'CREATE'"
+        [disabled]="taskForm.invalid || isLoading"
+        [loading]="isLoading"
+        class="p-button-primary">
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Диалог статистики -->
+  <p-dialog
+    header="Статистика задач"
+    [(visible)]="showStatsDialog"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    [closable]="true">
+
+    <div class="stats-content">
+      <div class="stat-item">
+        <div class="stat-label">Всего задач</div>
+        <div class="stat-value">{{ getTaskStats().total }}</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-label">Выполнено</div>
+        <div class="stat-value completed">{{ getTaskStats().completed }}</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-label">В работе</div>
+        <div class="stat-value in-progress">{{ getTaskStats().inProgress }}</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-label">Просрочено</div>
+        <div class="stat-value overdue">{{ getTaskStats().overdue }}</div>
+      </div>
+
+      <div class="stat-item">
+        <div class="stat-label">Процент выполнения</div>
+        <div class="stat-value">{{ getTaskStats().completionRate }}%</div>
+      </div>
+    </div>
+  </p-dialog>
+</div>

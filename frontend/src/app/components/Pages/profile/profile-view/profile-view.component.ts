@@ -48,7 +48,7 @@ export class ProfileViewComponent implements OnInit {
     this.loading = true;
     this.profileService.loadProfile().subscribe({
       next: (profile) => {
-        this.userProfile = profile;
+        this.userProfile = profile as any;
         this.loading = false;
       },
       error: (error) => {

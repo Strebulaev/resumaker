@@ -7,7 +7,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
-import { NotificationPreferences, NotificationType } from '../../../shared/notifications/notification.models';
+import { NotificationPreferences, NotificationCategory } from '../../../shared/notifications/notification.models';
 import { NotificationService } from '../../../shared/notifications/notification.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
@@ -15,7 +15,6 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
   selector: 'app-notification-settings',
   templateUrl: './notification-settings.component.html',
   styleUrls: ['./notification-settings.component.scss'],
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -25,7 +24,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     SelectModule,
     InputTextModule,
     ProgressSpinnerModule
-]
+  ]
 })
 export class NotificationSettingsComponent implements OnInit {
   preferences: NotificationPreferences | null = null;
@@ -33,11 +32,11 @@ export class NotificationSettingsComponent implements OnInit {
   isSaving = false;
 
   notificationTypes = [
-    { label: 'Системные', value: NotificationType.SYSTEM },
-    { label: 'Биллинг', value: NotificationType.BILLING },
-    { label: 'Новые функции', value: NotificationType.FEATURE },
-    { label: 'Безопасность', value: NotificationType.SECURITY },
-    { label: 'Рекламные', value: NotificationType.PROMOTIONAL }
+    { label: 'Системные', value: NotificationCategory.SYSTEM },
+    { label: 'Биллинг', value: NotificationCategory.BILLING },
+    { label: 'Новые функции', value: NotificationCategory.FEATURE },
+    { label: 'Безопасность', value: NotificationCategory.SECURITY },
+    { label: 'Рекламные', value: NotificationCategory.PROMOTIONAL }
   ];
 
   timeOptions = this.generateTimeOptions();
@@ -113,24 +112,24 @@ export class NotificationSettingsComponent implements OnInit {
     return options;
   }
 
-  getNotificationTypeLabel(type: NotificationType): string {
-    const labels: { [key in NotificationType]: string } = {
-      [NotificationType.SYSTEM]: 'Системные',
-      [NotificationType.BILLING]: 'Биллинг',
-      [NotificationType.FEATURE]: 'Новые функции',
-      [NotificationType.SECURITY]: 'Безопасность',
-      [NotificationType.PROMOTIONAL]: 'Рекламные'
+  getNotificationTypeLabel(type: NotificationCategory): string {
+    const labels: { [key in NotificationCategory]: string } = {
+      [NotificationCategory.SYSTEM]: 'Системные',
+      [NotificationCategory.BILLING]: 'Биллинг',
+      [NotificationCategory.FEATURE]: 'Новые функции',
+      [NotificationCategory.SECURITY]: 'Безопасность',
+      [NotificationCategory.PROMOTIONAL]: 'Рекламные'
     };
     return labels[type];
   }
 
-  getTypeDescription(type: NotificationType): string {
-    const descriptions: { [key in NotificationType]: string } = {
-      [NotificationType.SYSTEM]: 'Важные системные уведомления и обновления',
-      [NotificationType.BILLING]: 'Информация о подписках, платежах и тарифах',
-      [NotificationType.FEATURE]: 'Уведомления о новых функциях и возможностях',
-      [NotificationType.SECURITY]: 'Уведомления о безопасности и изменениях доступа',
-      [NotificationType.PROMOTIONAL]: 'Рекламные рассылки и специальные предложения'
+  getTypeDescription(type: NotificationCategory): string {
+    const descriptions: { [key in NotificationCategory]: string } = {
+      [NotificationCategory.SYSTEM]: 'Важные системные уведомления и обновления',
+      [NotificationCategory.BILLING]: 'Информация о подписках, платежах и тарифах',
+      [NotificationCategory.FEATURE]: 'Уведомления о новых функциях и возможностях',
+      [NotificationCategory.SECURITY]: 'Уведомления о безопасности и изменениях доступа',
+      [NotificationCategory.PROMOTIONAL]: 'Рекламные рассылки и специальные предложения'
     };
     return descriptions[type];
   }

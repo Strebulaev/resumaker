@@ -1,0 +1,187 @@
+<div class="smart-resume-generator">
+  <div class="header">
+    <h2>Умный генератор резюме</h2>
+    <p>Создайте персонализированное резюме из нескольких профилей</p>
+  </div>
+
+  <div class="generator-form">
+    <div class="form-section">
+      <h3>Выберите профили</h3>
+      <div class="profiles-grid">
+        <div
+          class="profile-card"
+          *ngFor="let profile of profiles"
+          [class.selected]="isProfileSelected(profile.id)"
+          (click)="toggleProfileSelection(profile.id)">
+          <div class="profile-header">
+            <h4>{{ profile.name }}</h4>
+            <input type="checkbox" [checked]="isProfileSelected(profile.id)" readonly>
+          </div>
+          <p>{{ profile.name }}</p>
+          <div class="profile-stats">
+            <span>Опыт: {{ profile.data?.experience?.length || 0 }}</span>
+            <span>Проекты: {{ profile.data?.projects?.length || 0 }}</span>
+            <span>Навыки: {{ profile.data?.skills?.length || 0 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>Целевая позиция</h3>
+      <div class="form-group">
+        <label>Должность</label>
+        <input type="text" [(ngModel)]="targetPosition" placeholder="Senior Frontend Developer">
+      </div>
+      <div class="form-group">
+        <label>Компания (опционально)</label>
+        <input type="text" [(ngModel)]="companyName" placeholder="Google">
+      </div>
+      <div class="form-group">
+        <label>Описание вакансии (опционально)</label>
+        <textarea [(ngModel)]="vacancyDescription" rows="4" placeholder="Вставьте описание вакансии для оптимизации резюме"></textarea>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-header" (click)="showAdvanced = !showAdvanced">
+        <h3>Расширенные настройки</h3>
+        <span class="toggle-icon">{{ showAdvanced ? '▼' : '▶' }}</span>
+      </div>
+
+      <div class="advanced-settings" [class.expanded]="showAdvanced">
+        <div class="form-group">
+          <label>Акценты</label>
+          <div class="checkbox-grid">
+            <label *ngFor="let option of emphasisOptions" class="checkbox-item">
+              <input
+                type="checkbox"
+                [checked]="isEmphasisSelected(option.value)"
+                (change)="toggleEmphasis(option.value)">
+              {{ option.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Длина резюме</label>
+            <select [(ngModel)]="selectedLength">
+              <option *ngFor="let option of lengthOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Тон</label>
+            <select [(ngModel)]="selectedTone">
+              <option *ngFor="let option of toneOptions" [value]="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-generate" (click)="generateResume()" [disabled]="isGenerating || selectedProfiles.length === 0 || !targetPosition.trim()">
+        <span *ngIf="isGenerating">Генерация...</span>
+        <span *ngIf="!isGenerating">Сгенерировать резюме</span>
+      </button>
+      <button class="btn-reset" (click)="resetForm()">Сбросить</button>
+    </div>
+  </div>
+
+  <div class="generated-resume" *ngIf="generatedResume">
+    <div class="resume-header">
+      <h3>{{ generatedResume.title }}</h3>
+      <div class="resume-actions">
+        <button class="btn-optimize" (click)="optimizeForVacancy()" *ngIf="vacancyDescription">
+          Оптимизировать под вакансию
+        </button>
+        <div class="export-dropdown">
+          <button class="btn-export">Экспорт ▼</button>
+          <div class="export-options">
+            <button *ngFor="let format of exportFormats" (click)="exportResume(format.value)">
+              {{ format.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resume-content">
+      <div class="resume-section" *ngIf="generatedResume.content.summary">
+        <h4>📝 Резюме</h4>
+        <p>{{ generatedResume.content.summary }}</p>
+      </div>
+
+      <div class="resume-section" *ngIf="generatedResume.content.experience.length > 0">
+        <h4>💼 Опыт работы</h4>
+        <div class="experience-item" *ngFor="let exp of generatedResume.content.experience">
+          <div class="exp-header">
+            <h5>{{ exp.position }} - {{ exp.company }}</h5>
+            <span class="exp-dates">{{ exp.startDate }} - {{ exp.endDate || 'настоящее время' }}</span>
+          </div>
+          <p>{{ exp.description }}</p>
+          <ul *ngIf="exp.achievements.length > 0">
+            <li *ngFor="let achievement of exp.achievements">{{ achievement }}</li>
+          </ul>
+          <div class="exp-meta">
+            <span class="source-profile">Из профиля: {{ getProfileContribution(exp.sourceProfile)?.profileName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resume-section" *ngIf="generatedResume.content.projects.length > 0">
+        <h4>🚀 Проекты</h4>
+        <div class="project-item" *ngFor="let project of generatedResume.content.projects">
+          <div class="project-header">
+            <h5>{{ project.name }}</h5>
+            <span class="project-role">{{ project.role }}</span>
+          </div>
+          <p>{{ project.description }}</p>
+          <div class="project-tech">
+            <strong>Технологии:</strong> {{ project.technologies.join(', ') }}
+          </div>
+          <ul *ngIf="project.achievements.length > 0">
+            <li *ngFor="let achievement of project.achievements">{{ achievement }}</li>
+          </ul>
+          <div class="project-meta">
+            <span class="source-profile">Из профиля: {{ getProfileContribution(project.sourceProfile)?.profileName }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resume-section" *ngIf="generatedResume.content.skills.length > 0">
+        <h4>🛠️ Навыки</h4>
+        <div class="skills-grid">
+          <div class="skill-item" *ngFor="let skill of generatedResume.content.skills">
+            <span class="skill-name">{{ skill.name }}</span>
+            <span class="skill-level">{{ skill.level }}</span>
+            <span class="skill-exp">{{ skill.yearsOfExperience }} лет</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-contributions">
+      <h4>Вклад профилей</h4>
+      <div class="contributions-list">
+        <div class="contribution-item" *ngFor="let contribution of generatedResume.profiles">
+          <div class="contribution-header">
+            <span class="profile-name">{{ contribution.profileName }}</span>
+            <span class="contribution-weight">{{ contribution.weight }}%</span>
+          </div>
+          <div class="contribution-sections">
+            <span *ngFor="let section of contribution.sections" class="section-tag">
+              {{ getSectionIcon(section.sectionType) }} {{ section.sectionType }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

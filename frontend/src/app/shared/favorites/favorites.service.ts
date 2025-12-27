@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, from, map, catchError, of } from 'rxjs';
-import { Vacancy } from '../../vacancy-schema';
+import { Vacancy } from '../profile/profile.models';
 import { SupabaseService } from '../db/supabase.service';
 
 export interface FavoriteVacancy extends Vacancy {
@@ -9,6 +9,16 @@ export interface FavoriteVacancy extends Vacancy {
   developmentPlan?: string;
   generatedResume?: string;
   lastGenerated?: string;
+  isGeneratingLetter?: boolean;
+  isSending?: boolean;
+  employer?: any;
+  name?: string;
+  key_skills?: any[];
+  published_at?: string;
+  address?: any;
+  experience?: any;
+  employment?: any;
+  alternate_url?: string;
 }
 
 export interface FavoriteVacancyDB {

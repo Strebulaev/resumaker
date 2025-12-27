@@ -274,7 +274,7 @@ export class ResumeGenerationComponent {
   }
 
   private async prepareHHResumeData(): Promise<any> {
-    const profile = await this.profileService.loadProfile().toPromise();
+    const profile = await this.profileService.loadProfile().toPromise() as any;
     if (!profile) {
       this.router.navigate(['/profile/edit']);
       this.messageService.add({
@@ -305,9 +305,9 @@ export class ResumeGenerationComponent {
 
     const aboutText = await this.generateResumeSection(`
       Напиши профессиональное описание для раздела "О себе" используя:
-      Навыки: ${profile.skills.map(s => s.name).join(', ')}
+      Навыки: ${profile.skills.map((s: any) => s.name).join(', ')}
       Опыт: ${profile.experience.length} ${this.pluralize(profile.experience.length, ['год', 'года', 'лет'])}
-      Образование: ${profile.education.map(e => e.specialty).join(', ')}
+      Образование: ${profile.education.map((e: any) => e.specialty).join(', ')}
     `);
 
     const experienceTexts = await Promise.all(

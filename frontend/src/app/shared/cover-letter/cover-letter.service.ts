@@ -67,20 +67,11 @@ export class CoverLetterService {
           throw new Error(errorMsg);
         }
   
-        return forkJoin({
-          vacancy: this.getVacancyDetails(request.vacancy_id).pipe(
-            catchError(error => {
-              this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
-              throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
-            })
-          ),
-          profile: this.profileService.loadProfile().pipe(
-            catchError(error => {
-              this.errorHandler.showError('Ошибка загрузки профиля', 'CoverLetterService');
-              throw new Error(`Не удалось загрузить профиля: ${error.message}`);
-            })
-          )
-        }).pipe(
+        return from(Promise.all([
+          this.getVacancyDetails(request.vacancy_id),
+          this.profileService.loadProfile().toPromise()
+        ])).pipe(
+          map(([vacancy, profile]) => ({ vacancy, profile })),
           switchMap(({ vacancy, profile }) => {
             console.log('📊 Using full profile data:', profile);
             console.log('📋 Using full vacancy data:', vacancy);
@@ -234,13 +225,13 @@ export class CoverLetterService {
     return `Не работает генерация сопр. письма`;
   }
 
-  private getVacancyDetails(vacancyId: string): Observable<any> {
-    return this.vacancyService.getVacancy(vacancyId).pipe(
-      catchError(error => {
-        this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
-        throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
-      })
-    );
+  private async getVacancyDetails(vacancyId: string): Promise<any> {
+    try {
+      return await this.vacancyService.getVacancy(vacancyId);
+    } catch (error: any) {
+      this.errorHandler.showError('Ошибка загрузки вакансии', 'CoverLetterService');
+      throw new Error(`Не удалось загрузить вакансию: ${error.message}`);
+    }
   }
 
   private buildPrompt(vacancy: any, profile: any, style: string, tone: string): string {

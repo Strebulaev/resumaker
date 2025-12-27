@@ -70,7 +70,7 @@ export class AiConfigModalComponent implements OnInit {
         detail: 'Теперь используется выбранный AI провайдер'
       });
     } catch (error: any) {
-      this.errorHandler.showError('Ошибка смены провайдера: ' + error.message, 'AiConfigModalComponent');
+      this.errorHandler.showError('Error changing provider: ' + error.message, 'AiConfigModalComponent');
     }
   }
 
@@ -91,8 +91,8 @@ export class AiConfigModalComponent implements OnInit {
       if (success) {
         this.messageService.add({
           severity: 'success',
-          summary: 'Together AI подключен и активирован',
-          detail: 'Провайдер готов к использованию'
+          summary: 'Together AI connected and activated',
+          detail: 'Provider is ready for use'
         });
         
         // Автоматически тестируем подключение после настройки
@@ -101,7 +101,7 @@ export class AiConfigModalComponent implements OnInit {
         }, 1000);
       }
     } catch (error: any) {
-      this.errorHandler.showAIError('Ошибка подключения Together AI: ' + error.message, 'AiConfigModalComponent');
+      this.errorHandler.showAIError('Error connecting Together AI: ' + error.message, 'AiConfigModalComponent');
     } finally {
       this.isLoading = false;
     }
@@ -121,8 +121,8 @@ export class AiConfigModalComponent implements OnInit {
       
       this.messageService.add({
         severity: 'success',
-        summary: 'Настройки сохранены',
-        detail: `${provider.name} успешно настроен`
+        summary: 'Settings saved',
+        detail: `${provider.name} successfully configured`
       });
 
       // Автоматически тестируем подключение после сохранения
@@ -130,7 +130,7 @@ export class AiConfigModalComponent implements OnInit {
         this.testConnection(provider.id);
       }, 1000);
     } else {
-      this.errorHandler.showAIError('Не удалось сохранить настройки провайдера', 'AiConfigModalComponent');
+      this.errorHandler.showAIError('Failed to save provider settings', 'AiConfigModalComponent');
     }
     
     this.editingProvider = null;

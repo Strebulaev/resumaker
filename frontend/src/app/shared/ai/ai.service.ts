@@ -125,7 +125,7 @@ export class AIService {
       
     } catch (error) {
       console.error('Failed to initialize AI providers:', error);
-      this.errorHandler.showError('Ошибка инициализации AI провайдеров', 'AIService');
+      this.errorHandler.showError('Error initializing AI providers', 'AIService');
     }
   }
 
@@ -153,7 +153,7 @@ export class AIService {
       this.currentProviderSubject.next(this.currentProvider);
       this.providersSubject.next([...this.providers]);
     } else {
-      this.errorHandler.showError(`Провайдер ${providerId} не настроен или не найден`, 'AIService');
+      this.errorHandler.showError(`Provider ${providerId} not configured or not found`, 'AIService');
     }
   }
 
@@ -189,12 +189,12 @@ export class AIService {
         
         return true;
       } else {
-        this.errorHandler.showError('Together API ключ не найден в конфигурации', 'AIService');
+        this.errorHandler.showError('Together API key not found in configuration', 'AIService');
         return false;
       }
     } catch (error) {
       console.error('Failed to configure Together AI from config:', error);
-      this.errorHandler.showError('Ошибка настройки Together AI', 'AIService');
+      this.errorHandler.showError('Error configuring Together AI', 'AIService');
       return false;
     }
   }
@@ -207,7 +207,7 @@ export class AIService {
   generateText(request: AIRequest): Observable<string> {
     if (!this.currentProvider || !this.currentProvider.isConfigured) {
       const error = new Error('AI provider not configured');
-      this.errorHandler.showAIError('AI провайдер не настроен. Нажмите на кнопку AI в верхнем меню для настройки.', 'AIService');
+      this.errorHandler.showAIError('AI provider not configured. Click the AI button in the top menu to configure.', 'AIService');
       return throwError(() => error);
     }
   
@@ -228,21 +228,21 @@ export class AIService {
       catchError(error => {
         console.error('AI API error:', error);
         
-        let errorMessage = 'Ошибка подключения к AI сервису';
-        
+        let errorMessage = 'Error connecting to AI service';
+
         if (error.status === 0) {
-          // CORS ошибка
-          errorMessage = 'CORS ошибка: невозможно подключиться к AI API из браузера. Используйте Together AI или настройте прокси';
+          // CORS error
+          errorMessage = 'CORS error: cannot connect to AI API from browser. Use Together AI or set up a proxy';
         } else if (error.status === 401) {
-          errorMessage = 'Неверный API ключ AI провайдера';
+          errorMessage = 'Invalid AI provider API key';
         } else if (error.status === 403) {
-          errorMessage = 'Доступ к AI сервису запрещен. Проверьте настройки API ключа';
+          errorMessage = 'Access to AI service denied. Check API key settings';
         } else if (error.status === 429) {
-          errorMessage = 'Превышен лимит запросов к AI сервису. Попробуйте позже';
+          errorMessage = 'AI service request limit exceeded. Try again later';
         } else if (error.status >= 500) {
-          errorMessage = 'Временные проблемы с AI сервисом. Попробуйте позже';
+          errorMessage = 'Temporary AI service issues. Try again later';
         } else {
-          errorMessage = `Ошибка AI сервиса: ${error.status} ${error.statusText || error.message}`;
+          errorMessage = `AI service error: ${error.status} ${error.statusText || error.message}`;
         }
         
         this.errorHandler.showAIError(errorMessage, 'AIService');
@@ -255,7 +255,7 @@ export class AIService {
   testProviderConnection(providerId: string): Observable<boolean> {
     const provider = this.providers.find(p => p.id === providerId);
     if (!provider || !provider.isConfigured) {
-      this.errorHandler.showAIError(`Провайдер ${providerId} не настроен`, 'AIService');
+      this.errorHandler.showAIError(`Provider ${providerId} not configured`, 'AIService');
       return of(false);
     }
   
@@ -279,23 +279,23 @@ export class AIService {
       catchError(error => {
         console.error('AI connection test error:', error);
         
-        let errorMessage = 'Ошибка подключения к AI провайдеру';
-        
+        let errorMessage = 'Error connecting to AI provider';
+
         if (error.status === 0) {
-          // CORS ошибка или нет сети
+          // CORS error or no network
           if (error.error instanceof ErrorEvent) {
-            errorMessage = 'CORS ошибка: невозможно подключиться к AI API из браузера. Необходимо использовать прокси или серверную часть';
+            errorMessage = 'CORS error: cannot connect to AI API from browser. Need to use proxy or server side';
           } else {
-            errorMessage = 'Нет подключения к интернету или CORS ошибка';
+            errorMessage = 'No internet connection or CORS error';
           }
         } else if (error.status === 401) {
-          errorMessage = 'Неверный API ключ';
+          errorMessage = 'Invalid API key';
         } else if (error.status === 403) {
-          errorMessage = 'Доступ запрещен. Проверьте API ключ и права доступа';
+          errorMessage = 'Access denied. Check API key and permissions';
         } else if (error.status === 429) {
-          errorMessage = 'Превышен лимит запросов к AI сервису';
+          errorMessage = 'AI service request limit exceeded';
         } else {
-          errorMessage = `Ошибка подключения: ${error.status} ${error.statusText || error.message}`;
+          errorMessage = `Connection error: ${error.status} ${error.statusText || error.message}`;
         }
         
         this.errorHandler.showAIError(errorMessage, 'AIService');
@@ -315,5 +315,335 @@ export class AIService {
       currentProviderId: this.currentProvider?.id
     };
     localStorage.setItem('ai_providers_config', JSON.stringify(config));
+  }
+
+  async analyzeProfileCompleteness(profile: any): Promise<{
+    completeness: number;
+    missingFields: string[];
+    suggestions: string[];
+  }> {
+    const prompt = `Analyze the completeness of this job seeker profile and provide suggestions for improvement:
+
+Profile data: ${JSON.stringify(profile, null, 2)}
+
+Please provide:
+1. Completeness percentage (0-100)
+2. List of missing or incomplete fields
+3. Specific suggestions for improvement
+
+Format your response as JSON with keys: completeness, missingFields, suggestions`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 1000,
+      temperature: 0.3,
+      top_p: 0.9
+    };
+
+    try {
+      const response = await this.generateText(request).toPromise();
+      if (response) {
+        return JSON.parse(response);
+      }
+    } catch (error) {
+      console.error('Error analyzing profile:', error);
+    }
+
+    return {
+      completeness: 50,
+      missingFields: ['Unable to analyze'],
+      suggestions: ['Please check profile manually']
+    };
+  }
+
+  async generateResumeDescription(project: any): Promise<string> {
+    const prompt = `Generate a professional description for this project:
+
+Project details: ${JSON.stringify(project, null, 2)}
+
+Write a compelling 2-3 sentence description highlighting the project's impact, technologies used, and your role.`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 300,
+      temperature: 0.7,
+      top_p: 0.9
+    };
+
+    try {
+      const result = await this.generateText(request).toPromise();
+      return result || '';
+    } catch (error) {
+      console.error('Error generating project description:', error);
+      return '';
+    }
+  }
+
+  async optimizeResumeForJob(resume: any, jobDescription: string): Promise<{
+    optimizedResume: any;
+    keywordMatches: string[];
+    suggestions: string[];
+  }> {
+    const prompt = `Optimize this resume for the following job description:
+
+Job: ${jobDescription}
+
+Resume: ${JSON.stringify(resume, null, 2)}
+
+Provide:
+1. Optimized resume content
+2. Keywords that match the job
+3. Suggestions for further improvement
+
+Format as JSON with keys: optimizedResume, keywordMatches, suggestions`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 1500,
+      temperature: 0.4,
+      top_p: 0.9
+    };
+
+    return this.generateText(request).pipe(
+      map(response => {
+        try {
+          return JSON.parse(response);
+        } catch {
+          return {
+            optimizedResume: resume,
+            keywordMatches: [],
+            suggestions: ['Unable to optimize automatically']
+          };
+        }
+      })
+    ).toPromise() || {
+      optimizedResume: resume,
+      keywordMatches: [],
+      suggestions: []
+    };
+  }
+
+  async generateInterviewQuestions(jobDescription: string, candidateProfile: any): Promise<string[]> {
+    const prompt = `Generate 5-7 relevant interview questions for this candidate based on the job description:
+
+Job: ${jobDescription}
+
+Candidate profile: ${JSON.stringify(candidateProfile, null, 2)}
+
+Focus on technical skills, experience, and cultural fit.`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 500,
+      temperature: 0.6,
+      top_p: 0.9
+    };
+
+    try {
+      const response = await this.generateText(request).toPromise();
+      if (response) {
+        return response.split('\n').filter(q => q.trim().length > 0);
+      }
+    } catch (error) {
+      console.error('Error generating interview questions:', error);
+    }
+
+    return [];
+  }
+
+  async analyzeCandidateMatch(candidate: any, jobRequirements: string): Promise<{
+    matchScore: number;
+    strengths: string[];
+    gaps: string[];
+    recommendations: string[];
+  }> {
+    const prompt = `Analyze how well this candidate matches the job requirements:
+
+Job requirements: ${jobRequirements}
+
+Candidate: ${JSON.stringify(candidate, null, 2)}
+
+Provide match score (0-100), strengths, gaps, and recommendations.
+
+Format as JSON with keys: matchScore, strengths, gaps, recommendations`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 800,
+      temperature: 0.3,
+      top_p: 0.9
+    };
+
+    return this.generateText(request).pipe(
+      map(response => {
+        try {
+          return JSON.parse(response);
+        } catch {
+          return {
+            matchScore: 50,
+            strengths: [],
+            gaps: [],
+            recommendations: []
+          };
+        }
+      })
+    ).toPromise() || {
+      matchScore: 50,
+      strengths: [],
+      gaps: [],
+      recommendations: []
+    };
+  }
+
+  async improveVacancyDescription(vacancy: any): Promise<{
+    improvedDescription: string;
+    keywords: string[];
+    suggestions: string[];
+  }> {
+    const prompt = `Improve this job vacancy description to attract better candidates:
+
+Current vacancy: ${JSON.stringify(vacancy, null, 2)}
+
+Provide improved description, relevant keywords, and suggestions for the vacancy.
+
+Format as JSON with keys: improvedDescription, keywords, suggestions`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 1000,
+      temperature: 0.5,
+      top_p: 0.9
+    };
+
+    return this.generateText(request).pipe(
+      map(response => {
+        try {
+          return JSON.parse(response);
+        } catch {
+          return {
+            improvedDescription: vacancy.description || '',
+            keywords: [],
+            suggestions: []
+          };
+        }
+      })
+    ).toPromise() || {
+      improvedDescription: '',
+      keywords: [],
+      suggestions: []
+    };
+  }
+
+  async predictCareerGrowth(profile: any): Promise<{
+    predictedRoles: string[];
+    timeline: string;
+    requiredSkills: string[];
+    recommendations: string[];
+  }> {
+    const prompt = `Predict career growth for this professional:
+
+Profile: ${JSON.stringify(profile, null, 2)}
+
+Provide predicted career progression, timeline, required skills, and recommendations.
+
+Format as JSON with keys: predictedRoles, timeline, requiredSkills, recommendations`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 800,
+      temperature: 0.4,
+      top_p: 0.9
+    };
+
+    return this.generateText(request).pipe(
+      map(response => {
+        try {
+          return JSON.parse(response);
+        } catch {
+          return {
+            predictedRoles: [],
+            timeline: '',
+            requiredSkills: [],
+            recommendations: []
+          };
+        }
+      })
+    ).toPromise() || {
+      predictedRoles: [],
+      timeline: '',
+      requiredSkills: [],
+      recommendations: []
+    };
+  }
+
+  async generateCoverLetter(profile: any, jobDescription: string): Promise<string> {
+    const prompt = `Generate a professional cover letter for this job application:
+
+Job: ${jobDescription}
+
+Candidate profile: ${JSON.stringify(profile, null, 2)}
+
+Write a compelling cover letter that highlights relevant experience and skills.`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 600,
+      temperature: 0.7,
+      top_p: 0.9
+    };
+
+    try {
+      const result = await this.generateText(request).toPromise();
+      return result || '';
+    } catch (error) {
+      console.error('Error generating cover letter:', error);
+      return '';
+    }
+  }
+
+  async smartMatchCandidates(candidates: any[], jobRequirements: string): Promise<Array<{
+    candidateId: string;
+    matchScore: number;
+    reasoning: string;
+  }>> {
+    const prompt = `Rank these candidates for the job based on match quality:
+
+Job requirements: ${jobRequirements}
+
+Candidates: ${JSON.stringify(candidates, null, 2)}
+
+For each candidate, provide match score (0-100) and brief reasoning.
+
+Format as JSON array with objects having keys: candidateId, matchScore, reasoning`;
+
+    const request: AIRequest = {
+      model: this.currentProvider?.models[0] || 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+      prompt,
+      max_tokens: 1200,
+      temperature: 0.3,
+      top_p: 0.9
+    };
+
+    return this.generateText(request).pipe(
+      map(response => {
+        try {
+          return JSON.parse(response);
+        } catch {
+          return candidates.map(c => ({
+            candidateId: c.id || '',
+            matchScore: 50,
+            reasoning: 'Unable to analyze'
+          }));
+        }
+      })
+    ).toPromise() || [];
   }
 }

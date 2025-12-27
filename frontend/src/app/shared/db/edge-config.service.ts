@@ -20,9 +20,9 @@ export class EdgeConfigService {
 
   async getAIPrompts() {
     return await get('aiPrompts') || {
-      resume: "Сгенерируй профессиональное резюме...",
-      coverLetter: "Создай сопроводительное письмо...",
-      interview: "Подготовь план собеседования..."
+      resume: "Generate a professional resume...",
+      coverLetter: "Create a cover letter...",
+      interview: "Prepare an interview plan..."
     };
   }
 

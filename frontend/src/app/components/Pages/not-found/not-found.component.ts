@@ -8,6 +8,6 @@ import { TranslatePipe } from '@ngx-translate/core';
   standalone: true,
   imports: [ButtonModule, RouterModule, TranslatePipe],
   templateUrl: './not-found.component.html',
-  styleUrl: './not-found.component.scss'
+  styleUrls: ['./not-found.component.scss']
 })
 export class NotFoundComponent {}

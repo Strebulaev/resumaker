@@ -1,318 +1,251 @@
-// Общие стили для всех юридических страниц
+// Legal Pages Common Styles
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// Color variables
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$background-color: #f8f9fa;
+$text-color: #212529;
+$border-color: #dee2e6;
+$accent-color: #28a745;
+
+// Legal page container
 .legal-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: #2c3e50;
-    
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-      padding: 50px 0;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      position: relative;
-      overflow: hidden;
-      
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-      }
-      
-      h1 {
-        color: #2c3e50;
-        font-size: 2.8rem;
-        margin-bottom: 15px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      
-      .last-updated {
-        color: #7f8c8d;
-        font-size: 1.1rem;
-        font-style: italic;
-      }
-    }
-    
-    .content {
-      background: white;
-      border-radius: 15px;
-      padding: 50px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      margin-bottom: 40px;
-      
-      .section {
-        margin-bottom: 40px;
-        padding-bottom: 30px;
-        border-bottom: 1px solid #ecf0f1;
-        
-        &:last-child {
-          margin-bottom: 0;
-          padding-bottom: 0;
-          border-bottom: none;
-        }
-        
-        h2 {
-          color: #2c3e50;
-          font-size: 1.8rem;
-          margin-bottom: 20px;
-          padding-bottom: 10px;
-          border-bottom: 2px solid #3498db;
-          font-weight: 600;
-        }
-        
-        h3 {
-          color: #34495e;
-          font-size: 1.4rem;
-          margin: 25px 0 15px 0;
-          font-weight: 600;
-        }
-        
-        h4 {
-          color: #34495e;
-          font-size: 1.2rem;
-          margin: 20px 0 10px 0;
-          font-weight: 600;
-        }
-        
-        h5 {
-          color: #34495e;
-          font-size: 1.1rem;
-          margin: 15px 0 8px 0;
-          font-weight: 600;
-        }
-        
-        p {
-          line-height: 1.8;
-          margin-bottom: 15px;
-          color: #34495e;
-          font-size: 1.05rem;
-        }
-        
-        ul, ol {
-          margin: 15px 0;
-          padding-left: 25px;
-          
-          li {
-            line-height: 1.8;
-            margin-bottom: 8px;
-            color: #34495e;
-            font-size: 1.05rem;
-            
-            &::marker {
-              color: #667eea;
-            }
-          }
-        }
-        
-        ul {
-          li {
-            position: relative;
-            padding-left: 10px;
-            
-            &::before {
-              content: '•';
-              color: #667eea;
-              font-weight: bold;
-              position: absolute;
-              left: -15px;
-            }
-          }
-        }
-        
-        strong {
-          color: #2c3e50;
-          font-weight: 600;
-        }
-        
-        .requisites {
-          background: #f8f9fa;
-          padding: 20px;
-          border-radius: 8px;
-          border-left: 4px solid #667eea;
-          
-          p {
-            margin: 8px 0;
-            font-family: 'Courier New', monospace;
-          }
-        }
-        
-        .highlight {
-          background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
-          padding: 20px;
-          border-radius: 8px;
-          border: 1px solid #e0e0e0;
-          margin: 20px 0;
-          
-          p {
-            margin: 0;
-            font-weight: 500;
-          }
-        }
-        
-        .note {
-          background: #fff3cd;
-          border: 1px solid #ffeaa7;
-          border-left: 4px solid #fdcb6e;
-          padding: 15px;
-          border-radius: 6px;
-          margin: 15px 0;
-          
-          p {
-            margin: 0;
-            color: #856404;
-          }
-        }
-      }
-    }
-    
-    .footer {
-      text-align: center;
-      margin-top: 40px;
-      padding: 30px;
-      color: #7f8c8d;
-      font-size: 0.95rem;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-      
-      p {
-        margin: 0;
-      }
-    }
-    
-    // Навигация по странице
-    .page-navigation {
-      position: sticky;
-      top: 20px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-      
-      h3 {
-        color: #2c3e50;
-        margin-bottom: 15px;
-        font-size: 1.2rem;
-      }
-      
-      ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        
-        li {
-          margin-bottom: 8px;
-          
-          a {
-            color: #667eea;
-            text-decoration: none;
-            padding: 5px 0;
-            display: block;
-            transition: all 0.3s ease;
-            border-left: 3px solid transparent;
-            padding-left: 10px;
-            
-            &:hover {
-              color: #5a67d8;
-              border-left-color: #667eea;
-              background: #f8f9fa;
-              padding-left: 15px;
-            }
-          }
-        }
-      }
-    }
-    
-    // Блок с контактами
-    .contact-block {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      margin: 30px 0;
-      
-      h3 {
-        color: white;
-        margin-bottom: 15px;
-        font-size: 1.4rem;
-      }
-      
-      p {
-        margin: 8px 0;
-        font-size: 1.1rem;
-        
-        strong {
-          color: white;
-        }
-      }
-    }
-  }
-  
-  // Адаптивность
+  font-family: 'Inter', sans-serif;
+  line-height: 1.6;
+  color: $text-color;
+  background-color: $background-color;
+  padding: 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  min-height: 100vh;
+
+  // Responsive padding
   @media (max-width: 768px) {
-    .legal-page {
-      .container {
-        padding: 10px;
-      }
-      
-      .header {
-        padding: 30px 0;
-        
-        h1 {
-          font-size: 2.2rem;
-        }
-      }
-      
-      .content {
-        padding: 30px 20px;
-      }
-      
-      .page-navigation {
-        position: static;
-        margin-bottom: 20px;
+    padding: 1rem;
+  }
+
+  // Typography
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: $primary-color;
+    line-height: 1.3;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid $primary-color;
+    padding-bottom: 1rem;
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-top: 2rem;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -5px;
+      width: 50px;
+      height: 3px;
+      background-color: $accent-color;
+    }
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: $secondary-color;
+
+    @media (max-width: 768px) {
+      font-size: 1.25rem;
+    }
+  }
+
+  p {
+    margin-bottom: 1.5rem;
+    text-align: justify;
+  }
+
+  // Lists
+  ul, ol {
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+
+    li {
+      margin-bottom: 0.75rem;
+      position: relative;
+
+      &::marker {
+        color: $primary-color;
       }
     }
   }
-  
-  @media (max-width: 480px) {
-    .legal-page {
-      .header {
-        h1 {
-          font-size: 1.8rem;
-        }
-      }
-      
-      .content {
-        padding: 20px 15px;
-        
-        .section {
-          h2 {
-            font-size: 1.5rem;
-          }
-          
-          h3 {
-            font-size: 1.3rem;
-          }
-        }
+
+  // Sections
+  .section {
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid $border-color;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      padding: 1.5rem;
+    }
+  }
+
+  // Highlight boxes
+  .highlight {
+    background-color: rgba($accent-color, 0.1);
+    border: 1px solid rgba($accent-color, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid $accent-color;
+
+    p {
+      margin-bottom: 0;
+    }
+  }
+
+  // Contact information
+  .contact-info {
+    background-color: rgba($primary-color, 0.05);
+    border: 1px solid rgba($primary-color, 0.2);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+
+    strong {
+      color: $primary-color;
+    }
+  }
+
+  // Tables
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid $border-color;
+    }
+
+    th {
+      background-color: $primary-color;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: rgba($background-color, 0.5);
+    }
+
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+
+      th, td {
+        padding: 0.75rem;
       }
     }
   }
+
+  // Links
+  a {
+    color: $primary-color;
+    text-decoration: none;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: darken($primary-color, 10%);
+      text-decoration: underline;
+    }
+  }
+
+  // Blockquotes
+  blockquote {
+    border-left: 4px solid $primary-color;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: $secondary-color;
+  }
+
+  // Last updated notice
+  .last-updated {
+    text-align: center;
+    font-size: 0.9rem;
+    color: $secondary-color;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid $border-color;
+  }
+}
+
+// Dark mode support (if needed)
+@media (prefers-color-scheme: dark) {
+  .legal-page {
+    background-color: #1a1a1a;
+    color: #e9ecef;
+
+    .section {
+      background-color: #2d2d2d;
+      border-color: #404040;
+    }
+
+    .highlight {
+      background-color: rgba($accent-color, 0.2);
+      border-color: rgba($accent-color, 0.5);
+    }
+
+    .contact-info {
+      background-color: rgba($primary-color, 0.1);
+      border-color: rgba($primary-color, 0.3);
+    }
+
+    table {
+      background-color: #2d2d2d;
+
+      th {
+        background-color: $primary-color;
+      }
+
+      tr:nth-child(even) {
+        background-color: #333333;
+      }
+
+      th, td {
+        border-color: #404040;
+      }
+    }
+
+    .last-updated {
+      border-color: #404040;
+    }
+  }
+}

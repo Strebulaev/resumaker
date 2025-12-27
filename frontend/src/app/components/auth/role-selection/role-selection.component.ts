@@ -40,8 +40,8 @@ export class RoleSelectionComponent {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Роль выбрана',
-        detail: `Вы зарегистрированы как ${role === UserRole.EMPLOYER ? 'работодатель' : 'соискатель'}`
+        summary: 'Role selected',
+        detail: `You are registered as ${role === UserRole.EMPLOYER ? 'employer' : 'job seeker'}`
       });
 
       this.showDialog = false;
@@ -56,8 +56,8 @@ export class RoleSelectionComponent {
     } catch (error) {
       this.messageService.add({
         severity: 'error',
-        summary: 'Ошибка',
-        detail: 'Не удалось сохранить роль пользователя'
+        summary: 'Error',
+        detail: 'Failed to save user role'
       });
     } finally {
       this.isLoading = false;

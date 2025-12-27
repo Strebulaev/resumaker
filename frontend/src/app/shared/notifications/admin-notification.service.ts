@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SupabaseService } from '../db/supabase.service';
-import { NotificationType } from './notification.models';
+import { NotificationCategory } from './notification.models';
 import { ErrorHandlerService } from '../error-handler.service';
 
 @Injectable({ providedIn: 'root' })
@@ -15,7 +15,7 @@ export class AdminNotificationService {
   async broadcastToAllUsers(
     title: string,
     message: string,
-    type: NotificationType = NotificationType.SYSTEM,
+    type: NotificationCategory = NotificationCategory.SYSTEM,
     important: boolean = false
   ): Promise<void> {
     try {
@@ -38,7 +38,7 @@ export class AdminNotificationService {
     planId: string,
     title: string,
     message: string,
-    type: NotificationType = NotificationType.BILLING,
+    type: NotificationCategory = NotificationCategory.BILLING,
     important: boolean = true
   ): Promise<void> {
     try {
@@ -66,7 +66,7 @@ export class AdminNotificationService {
     const title = 'Изменения в условиях подписки';
     const message = `В вашем тарифе произошли изменения: ${changes}. Изменения вступят в силу с ${effectiveDate.toLocaleDateString('ru-RU')}.`;
     
-    await this.broadcastToPlanUsers(planId, title, message, NotificationType.BILLING, true);
+    await this.broadcastToPlanUsers(planId, title, message, NotificationCategory.BILLING, true);
   }
 
   // Уведомление об окончании пробного периода
@@ -74,7 +74,7 @@ export class AdminNotificationService {
     const title = 'Пробный период заканчивается';
     const message = `Ваш пробный период закончится через ${daysLeft} ${this.pluralizeDays(daysLeft)}. Рассмотрите переход на платный тариф для продолжения использования всех функций.`;
     
-    await this.broadcastToPlanUsers('free', title, message, NotificationType.BILLING, true);
+    await this.broadcastToPlanUsers('free', title, message, NotificationCategory.BILLING, true);
   }
 
   // Уведомление о новых функциях
@@ -87,15 +87,15 @@ export class AdminNotificationService {
     const message = featureDescription;
     
     if (userSegment === 'all') {
-      await this.broadcastToAllUsers(title, message, NotificationType.FEATURE, false);
+      await this.broadcastToAllUsers(title, message, NotificationCategory.FEATURE, false);
     } else {
-      await this.broadcastToPlanUsers(userSegment, title, message, NotificationType.FEATURE, false);
+      await this.broadcastToPlanUsers(userSegment, title, message, NotificationCategory.FEATURE, false);
     }
   }
 
   private async sendBulkNotification(
     userIds: string[],
-    type: NotificationType,
+    type: NotificationCategory,
     title: string,
     message: string,
     data: any,

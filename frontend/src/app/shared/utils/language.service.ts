@@ -19,7 +19,7 @@ export class LanguageService {
     }
 
     if (this.isLikelyRussianUser()) {
-      return 'ru';
+      return 'en';
     }
 
     return 'en';

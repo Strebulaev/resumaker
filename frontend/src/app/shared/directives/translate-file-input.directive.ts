@@ -30,7 +30,7 @@ export class TranslateFileInputDirective implements OnInit, OnDestroy {
     const currentLang = this.languageService.getCurrentLanguage();
     
     if (currentLang === 'ru') {
-      this.el.nativeElement.setAttribute('placeholder', 'Файл не выбран');
+      this.el.nativeElement.setAttribute('placeholder', 'No file chosen');
     } else {
       this.el.nativeElement.setAttribute('placeholder', 'No file chosen');
     }

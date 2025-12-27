@@ -1,0 +1,131 @@
+<div class="analytics-dashboard">
+  <div class="header">
+    <h2>Аналитика и отчеты</h2>
+    <div class="period-selector">
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod === 'week'"
+        (click)="changePeriod('week')">Неделя</button>
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod === 'month'"
+        (click)="changePeriod('month')">Месяц</button>
+      <button
+        class="period-btn"
+        [class.active]="selectedPeriod === 'quarter'"
+        (click)="changePeriod('quarter')">Квартал</button>
+    </div>
+  </div>
+
+  <div class="overview-cards" *ngIf="dashboardData$ | async as dashboard">
+    <div class="metric-card">
+      <div class="metric-value">{{ dashboard.overview.totalViews }}</div>
+      <div class="metric-label">Просмотров профиля</div>
+      <div class="metric-change positive">+12%</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ dashboard.overview.totalApplications }}</div>
+      <div class="metric-label">Заявок отправлено</div>
+      <div class="metric-change positive">+8%</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ (dashboard.overview.responseRate * 100).toFixed(1) }}%</div>
+      <div class="metric-label">Уровень отклика</div>
+      <div class="metric-change positive">+5%</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ dashboard.overview.averageResponseTime.toFixed(1) }}</div>
+      <div class="metric-label">Среднее время отклика (дни)</div>
+      <div class="metric-change negative">+2</div>
+    </div>
+  </div>
+
+  <div class="charts-section" *ngIf="dashboardData$ | async as dashboard">
+    <div class="chart-container" *ngFor="let chart of dashboard.charts">
+      <h3>{{ chart.title }}</h3>
+      <div class="chart-placeholder">
+        <div class="chart-icon">📊</div>
+        <p>График будет отображаться здесь</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="insights-section" *ngIf="dashboardData$ | async as dashboard">
+    <h3>Инсайты</h3>
+    <div class="insights-list">
+      <div class="insight-card" *ngFor="let insight of dashboard.insights">
+        <div class="insight-header">
+          <span class="insight-icon">{{ getInsightTypeIcon(insight.type) }}</span>
+          <span class="insight-type" [class]="'impact-' + insight.impact.toLowerCase()">{{ insight.impact }}</span>
+        </div>
+        <h4>{{ insight.title }}</h4>
+        <p>{{ insight.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="recommendations-section" *ngIf="dashboardData$ | async as dashboard">
+    <h3>Рекомендации</h3>
+    <div class="recommendations-list">
+      <div class="recommendation-card" *ngFor="let rec of dashboard.recommendations">
+        <div class="rec-header">
+          <h4>{{ rec.title }}</h4>
+          <span class="rec-priority" [class]="getPriorityClass(rec.priority.toLowerCase())">{{ rec.priority }}</span>
+        </div>
+        <p>{{ rec.description }}</p>
+        <div class="rec-actions">
+          <h5>Действия:</h5>
+          <ul>
+            <li *ngFor="let action of rec.actions">
+              <input type="checkbox" [checked]="action.completed" disabled>
+              {{ action.description }}
+            </li>
+          </ul>
+        </div>
+        <div class="rec-impact">
+          <strong>Ожидаемый эффект:</strong> {{ rec.expectedImpact }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alerts-section">
+    <h3>Уведомления</h3>
+    <div class="alerts-list">
+      <div class="alert-card" *ngFor="let alert of alerts" [class.unread]="!alert.read">
+        <div class="alert-header">
+          <span class="alert-severity" [class]="getAlertSeverityClass(alert.severity.toLowerCase())">{{ alert.severity }}</span>
+          <small>{{ alert.createdAt | date:'short' }}</small>
+        </div>
+        <h4>{{ alert.title }}</h4>
+        <p>{{ alert.message }}</p>
+        <button class="mark-read-btn" (click)="markAlertAsRead(alert)" *ngIf="!alert.read">
+          Отметить как прочитанное
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="reports-section">
+    <div class="reports-header">
+      <h3>Отчеты</h3>
+      <div class="report-actions">
+        <button class="generate-btn" (click)="generateReport('application_summary')">Создать отчет по заявкам</button>
+        <button class="generate-btn" (click)="generateReport('skill_analysis')">Анализ навыков</button>
+        <button class="generate-btn" (click)="generateReport('performance_report')">Отчет о производительности</button>
+      </div>
+    </div>
+    <div class="reports-list">
+      <div class="report-card" *ngFor="let report of reports">
+        <div class="report-info">
+          <h4>{{ report.title }}</h4>
+          <p>Период: {{ report.dateRange.start | date:'short' }} - {{ report.dateRange.end | date:'short' }}</p>
+          <small>Создан: {{ report.generatedAt | date:'short' }}</small>
+        </div>
+        <div class="report-actions">
+          <button class="download-btn">Скачать {{ report.format.toUpperCase() }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

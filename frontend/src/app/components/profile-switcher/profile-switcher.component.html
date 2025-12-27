@@ -1,0 +1,60 @@
+<div class="profile-switcher">
+  <div class="current-profile">
+    <div class="profile-info" *ngIf="currentProfile$ | async as currentProfile">
+      <span class="profile-icon">{{ getProfileTypeIcon(currentProfile.type) }}</span>
+      <div>
+        <span class="profile-name">{{ currentProfile.name }}</span>
+        <span class="profile-type">{{ getProfileTypeLabel(currentProfile.type) }}</span>
+      </div>
+    </div>
+    <button class="switch-btn" (click)="showCreateDialog = true">
+      <span>+</span>
+      <span>Создать профиль</span>
+    </button>
+  </div>
+
+  <div class="profiles-list">
+    <div class="profile-item"
+         *ngFor="let profile of profiles"
+         [class.active]="(currentProfile$ | async)?.id === profile.id"
+         (click)="switchProfile(profile)">
+      <div class="profile-item-content">
+        <div class="profile-info">
+          <span class="profile-icon">{{ getProfileTypeIcon(profile.type) }}</span>
+          <div>
+            <span class="profile-name">{{ profile.name }}</span>
+            <span class="profile-type">{{ getProfileTypeLabel(profile.type) }}</span>
+          </div>
+        </div>
+        <button class="delete-btn" (click)="deleteProfile(profile); $event.stopPropagation()">
+          <span>🗑️</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="create-dialog" *ngIf="showCreateDialog">
+    <div class="dialog-content">
+      <h3>Создать новый профиль</h3>
+      <div class="create-form">
+        <div class="form-group">
+          <label for="profileName">Название профиля</label>
+          <input id="profileName" type="text" [(ngModel)]="newProfileName" placeholder="Например: Frontend разработчик">
+        </div>
+
+        <div class="form-group">
+          <label for="profileType">Тип профиля</label>
+          <select id="profileType" [(ngModel)]="newProfileType">
+            <option *ngFor="let option of profileTypeOptions" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="cancel-btn" (click)="showCreateDialog = false">Отмена</button>
+        <button class="create-btn"
+                (click)="createProfile()" [disabled]="!newProfileName.trim()">Создать</button>
+      </div>
+    </div>
+  </div>
+</div>

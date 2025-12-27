@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, NgModule, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -18,19 +18,11 @@ import { Vacancy } from '../../../vacancy-schema';
 import { ErrorHandlerService } from '../../../shared/error-handler.service';
 import { VacancyService } from '../../../shared/vacancy/vacancy.service';
 import { VacancySelectorComponent } from "../vacancy-selector/vacancy-selector.component";
-import { FavoritesService } from '../../../shared/favorites/favorites.service';
+import { FavoritesService, FavoriteVacancy } from '../../../shared/favorites/favorites.service';
 import { ResumeGenerationService } from '../../../shared/resume/resume-generation.service';
 import { FavoriteVacancyCardComponent } from "../favorite-vacancy-card/favorite-vacancy-card.component";
 import { SuperJobAuthService } from '../../../shared/job-platforms/super-job/superjob-auth.service';
 import { PlatformTokensService } from '../../../shared/platform-tokens.service';
-
-interface FavoriteVacancy extends Vacancy {
-  isFavorite: boolean;
-  coverLetter?: string;
-  isGeneratingLetter?: boolean;
-  isSending?: boolean;
-  platform?: string;
-}
 
 @Component({
   selector: 'app-vacancy-search',
@@ -144,23 +136,17 @@ export class VacancySearchComponent implements OnInit {
         per_page: this.itemsPerPage
       };
   
-      const searchResults = await this.vacancyService.searchVacancies(params).toPromise();
-      
+      const searchResults = await this.vacancyService.searchVacancies(params);
+
       if (searchResults && searchResults.length > 0) {
-        const newVacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
-          if (result.results && result.results.items) {
-            return result.results.items.map((vacancy: any) => {
-              const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
-              return {
-                ...vacancy,
-                platform: result.platform,
-                isFavorite: isFavorite,
-                isGeneratingLetter: false,
-                isSending: false
-              } as FavoriteVacancy;
-            });
-          }
-          return [];
+        const newVacancies = searchResults.map((vacancy: any) => {
+          const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
+          return {
+            ...vacancy,
+            isFavorite: isFavorite,
+            isGeneratingLetter: false,
+            isSending: false
+          } as FavoriteVacancy;
         });
   
         this.vacancies = [...this.vacancies, ...newVacancies];
@@ -196,23 +182,17 @@ export class VacancySearchComponent implements OnInit {
     };
     
     try {
-      const searchResults = await this.vacancyService.searchVacancies(params).toPromise();
+      const searchResults = await this.vacancyService.searchVacancies(params);
       
       if (searchResults) {
-        this.vacancies = searchResults.flatMap((result: { platform: string; results: any }) => {
-          if (result.results && result.results.items) {
-            return result.results.items.map((vacancy: any) => {
-              const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
-              return {
-                ...vacancy,
-                platform: result.platform,
-                isFavorite: isFavorite,
-                isGeneratingLetter: false,
-                isSending: false
-              } as FavoriteVacancy;
-            });
-          }
-          return [];
+        this.vacancies = searchResults.map((vacancy: any) => {
+          const isFavorite = this.favoriteVacancies.some(fav => fav.id === vacancy.id);
+          return {
+            ...vacancy,
+            isFavorite: isFavorite,
+            isGeneratingLetter: false,
+            isSending: false
+          } as FavoriteVacancy;
         });
         
         this.sortVacancies();
@@ -515,15 +495,15 @@ export class VacancySearchComponent implements OnInit {
     }
   }
 
-  getSalaryText(vacancy: Vacancy): string {
+  getSalaryText(vacancy: any): string {
     if (!vacancy.salary) return this.translate.instant('SALARY.NOT_SPECIFIED');
-    
+
     const salary = vacancy.salary;
     let text = '';
-    
-    if (salary.from) text += `${this.translate.instant('SALARY.FROM')} ${salary.from} `;
-    if (salary.to) text += `${this.translate.instant('SALARY.TO')} ${salary.to} `;
-    
+
+    if (salary.min) text += `${this.translate.instant('SALARY.FROM')} ${salary.min} `;
+    if (salary.max) text += `${this.translate.instant('SALARY.TO')} ${salary.max} `;
+
     return text.trim();
   }
 
@@ -555,54 +535,54 @@ export class VacancySearchComponent implements OnInit {
       .replace(/\*(.*?)\*/g, '<em>$1</em>');
   }
   
-  private exportVacancyToText(vacancy: Vacancy, format: string): string {
+  private exportVacancyToText(vacancy: any, format: string): string {
     if (format === 'json') {
       return JSON.stringify(vacancy, null, 2);
     }
-  
+
     let text = `=== ${this.translate.instant('EXPORT.VACANCY_INFO')} ===\n\n`;
-    text += `${this.translate.instant('EXPORT.TITLE')}: ${vacancy.name}\n`;
+    text += `${this.translate.instant('EXPORT.TITLE')}: ${vacancy.title || vacancy.name}\n`;
     text += `${this.translate.instant('EXPORT.COMPANY')}: ${vacancy.employer?.name || this.translate.instant('EXPORT.NOT_SPECIFIED')}\n`;
     text += `${this.translate.instant('EXPORT.PLATFORM')}: ${this.getVacancyPlatform(vacancy)}\n\n`;
-    
+
     if (vacancy.salary) {
       text += `=== ${this.translate.instant('EXPORT.SALARY')} ===\n`;
       text += `${this.getSalaryText(vacancy)} ${vacancy.salary.currency || ''}\n\n`;
     }
-    
+
     if (vacancy.address) {
       text += `=== ${this.translate.instant('EXPORT.LOCATION')} ===\n`;
       text += `${this.getAddressText(vacancy.address)}\n\n`;
     }
-    
+
     text += `=== ${this.translate.instant('EXPORT.DESCRIPTION')} ===\n`;
     // Безопасная проверка description
     const description = vacancy.description || '';
     const cleanDescription = this.cleanHtml(description);
     const truncatedDescription = cleanDescription.substring(0, 500);
     text += `${truncatedDescription}${cleanDescription.length > 500 ? '...' : ''}\n\n`;
-    
+
     if (vacancy.key_skills?.length > 0) {
       text += `=== ${this.translate.instant('EXPORT.SKILLS')} ===\n`;
-      text += `${vacancy.key_skills.map(s => s.name).join(', ')}\n\n`;
+      text += `${vacancy.key_skills.map((s: any) => s.name || s).join(', ')}\n\n`;
     }
-    
+
     if (vacancy.experience) {
-      text += `${this.translate.instant('EXPORT.EXPERIENCE')}: ${vacancy.experience.name}\n`;
+      text += `${this.translate.instant('EXPORT.EXPERIENCE')}: ${vacancy.experience.name || vacancy.experience}\n`;
     }
-    
+
     if (vacancy.employment) {
-      text += `${this.translate.instant('EXPORT.EMPLOYMENT')}: ${vacancy.employment.name}\n`;
+      text += `${this.translate.instant('EXPORT.EMPLOYMENT')}: ${vacancy.employment.name || vacancy.employment}\n`;
     }
-    
+
     if (vacancy.published_at) {
       text += `${this.translate.instant('EXPORT.PUBLISHED')}: ${this.formatDate(vacancy.published_at)}\n`;
     }
-    
+
     if (vacancy.alternate_url) {
       text += `\n${this.translate.instant('EXPORT.ORIGINAL_LINK')}: ${vacancy.alternate_url}\n`;
     }
-    
+
     return text;
   }
 
@@ -613,12 +593,12 @@ export class VacancySearchComponent implements OnInit {
     return parts.join(', ');
   }
 
-  exportVacancy(vacancy: Vacancy, format: 'txt' | 'json' = 'txt'): void {
+  exportVacancy(vacancy: any, format: 'txt' | 'json' = 'txt'): void {
     const content = this.exportVacancyToText(vacancy, format);
     const filename = `vacancy_${this.getVacancyPlatform(vacancy)}_${vacancy.id}`;
-    
+
     this.downloadFile(content, filename, format);
-  
+
     this.messageService.add({
       severity: 'success',
       summary: this.translate.instant('MESSAGE.EXPORT_SUCCESS')
@@ -654,6 +634,7 @@ export class VacancySearchComponent implements OnInit {
       if (vacancy) {
         const favoriteVacancy: FavoriteVacancy = {
           ...vacancy,
+          employer: vacancy.employer || { name: 'Неизвестная компания' },
           isFavorite: this.favoriteVacancies.some(fav => fav.id === vacancy.id),
           isGeneratingLetter: false,
           isSending: false
@@ -709,9 +690,9 @@ export class VacancySearchComponent implements OnInit {
         case 'date_asc':
           return new Date(a.published_at || '').getTime() - new Date(b.published_at || '').getTime();
         case 'salary_desc':
-          return (b.salary?.from || 0) - (a.salary?.from || 0);
+          return (b.salary?.min || 0) - (a.salary?.min || 0);
         case 'salary_asc':
-          return (a.salary?.from || 0) - (b.salary?.from || 0);
+          return (a.salary?.min || 0) - (b.salary?.min || 0);
         case 'relevance':
         default:
           return new Date(b.published_at || '').getTime() - new Date(a.published_at || '').getTime();

@@ -702,17 +702,13 @@ export class ProfileEditComponent implements OnInit {
       const profileData = this.getProfileDataFromForm();
       
       this.profileService.saveProfile(profileData).subscribe({
-        next: (success) => {
+        next: () => {
           this.loading = false;
-          if (success) {
-            this.messageService.add({
-              severity: 'success',
-              summary: this.translate.instant('PROFILE.ACTIONS.SAVE_SUCCESS')
-            });
-            this.router.navigate(['/profile/view']);
-          } else {
-            this.showSaveError(new Error('Unknown save error'));
-          }
+          this.messageService.add({
+            severity: 'success',
+            summary: this.translate.instant('PROFILE.ACTIONS.SAVE_SUCCESS')
+          });
+          this.router.navigate(['/profile/view']);
         },
         error: (error) => {
           this.loading = false;
@@ -737,7 +733,7 @@ export class ProfileEditComponent implements OnInit {
         this.profileService.importFromYaml(content).subscribe({
           next: (profile) => {
             if (profile) {
-              this.patchFormValues(profile);
+              this.patchFormValues(profile as any);
               this.messageService.add({
                 severity: 'success',
                 summary: this.translate.instant('PROFILE.ACTIONS.IMPORT_SUCCESS')
@@ -809,7 +805,7 @@ export class ProfileEditComponent implements OnInit {
     this.profileService.loadProfile().subscribe({
       next: (profile) => {
         if (profile) {
-          this.patchFormValues(profile);
+          this.patchFormValues(profile as any);
         }
         this.loading = false;
       },

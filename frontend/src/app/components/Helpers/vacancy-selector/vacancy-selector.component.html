@@ -124,9 +124,9 @@
                     (click)="selectFavoriteVacancy(vacancy)">
                 
                 <div class="vacancy-preview">
-                <h5>{{ vacancy.name }}</h5>
+                <h5>{{ vacancy.title || vacancy.name }}</h5>
                 <div class="vacancy-meta">
-                    <span class="company">{{ vacancy.employer.name }}</span>
+                    <span class="company">{{ vacancy.employer?.name }}</span>
                     <span class="platform-badge" 
                         [class.hh-badge]="getVacancyPlatform(vacancy) === 'hh.ru'"
                         [class.sj-badge]="getVacancyPlatform(vacancy) === 'superjob.ru'">
@@ -155,10 +155,10 @@
         <h4>{{ 'VACANCY_SELECTOR.SELECTED_VACANCY' | translate }}</h4>
         <div class="vacancy-details">
             <div class="detail-row">
-            <strong>{{ selectedVacancy.name }}</strong>
+            <strong>{{ selectedVacancy.title || selectedVacancy.name }}</strong>
             </div>
             <div class="detail-row">
-            <span>{{ selectedVacancy.employer.name }}</span>
+            <span>{{ selectedVacancy.employer?.name }}</span>
             <span class="platform-badge" 
                     [class.hh-badge]="getVacancyPlatform(selectedVacancy) === 'hh.ru'"
                     [class.sj-badge]="getVacancyPlatform(selectedVacancy) === 'superjob.ru'">

@@ -9,7 +9,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   selector: 'app-translated-file-input',
   imports: [CommonModule, TranslatePipe],
   templateUrl: './translated-file-input.component.html',
-  styleUrl: './translated-file-input.component.scss',
+  styleUrls: ['./translated-file-input.component.scss'],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

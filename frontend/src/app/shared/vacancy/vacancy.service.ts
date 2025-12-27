@@ -1,345 +1,258 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, from, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { Vacancy } from '../../vacancy-schema';
-import { ErrorHandlerService } from '../error-handler.service';
+import { SupabaseService } from '../db/supabase.service';
+import { Vacancy } from '../profile/profile.models';
+import { BehaviorSubject, Observable } from 'rxjs';
 
-export interface VacancySearchParams {
-  text?: string;
-  area?: string;
-  experience?: string;
-  employment?: string;
-  schedule?: string;
-  salary?: number;
-  currency?: string;
-  only_with_salary?: boolean;
-  period?: number;
-  per_page?: number;
-  page?: number;
-  [key: string]: any;
-}
-
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class VacancyService {
-  private vacancyCache = new Map<string, any>();
-  
-  constructor(
-    private http: HttpClient,
-    private errorHandler: ErrorHandlerService
-  ) {}
+  private vacanciesSubject = new BehaviorSubject<Vacancy[]>([]);
+  public vacancies$ = this.vacanciesSubject.asObservable();
 
-  getVacancy(identifier: string): Observable<Vacancy> {
-    const platform = this.detectPlatform(identifier);
-    
-    if (platform === 'hh') {
-      const vacancyId = this.extractHHVacancyId(identifier);
-      return this.getHHVacancy(vacancyId || identifier);
-    } else if (platform === 'superjob') {
-      const vacancyId = this.extractSuperJobVacancyId(identifier);
-      return this.getSuperJobVacancy(vacancyId || identifier);
-    } else {
-      return this.tryAllPlatforms(identifier);
+  constructor(private supabaseService: SupabaseService) {}
+
+  async getVacancies(): Promise<Vacancy[]> {
+    const user = this.supabaseService.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await this.supabaseService.client
+      .from('vacancies')
+      .select('*')
+      .eq('createdBy', user.id)
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+    const vacancies = data || [];
+    this.vacanciesSubject.next(vacancies);
+    return vacancies;
+  }
+
+  async getVacancy(id: string): Promise<Vacancy> {
+    const { data, error } = await this.supabaseService.client
+      .from('vacancies')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async createVacancy(vacancy: Omit<Vacancy, 'id' | 'createdAt' | 'updatedAt'>): Promise<Vacancy> {
+    const user = this.supabaseService.currentUser;
+    if (!user) throw new Error('User not authenticated');
+
+    const newVacancy = {
+      ...vacancy,
+      createdBy: user.id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const { data, error } = await this.supabaseService.client
+      .from('vacancies')
+      .insert(newVacancy)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await this.getVacancies();
+    return data;
+  }
+
+  async updateVacancy(id: string, updates: Partial<Vacancy>): Promise<Vacancy> {
+    const { data, error } = await this.supabaseService.client
+      .from('vacancies')
+      .update({ ...updates, updatedAt: new Date() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await this.getVacancies();
+    return data;
+  }
+
+  async deleteVacancy(id: string): Promise<void> {
+    const { error } = await this.supabaseService.client
+      .from('vacancies')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    await this.getVacancies();
+  }
+
+  async searchVacancies(query: string, filters?: {
+    location?: string;
+    salaryMin?: number;
+    salaryMax?: number;
+    employmentType?: string;
+    level?: string;
+  }): Promise<Vacancy[]> {
+    let queryBuilder = this.supabaseService.client
+      .from('vacancies')
+      .select('*')
+      .eq('status', 'active');
+
+    if (query) {
+      queryBuilder = queryBuilder.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
     }
-  }
 
-  async getVacancyWithCache(identifier: string): Promise<Vacancy> {
-    const cacheKey = identifier;
-    
-    if (this.vacancyCache.has(cacheKey)) {
-      return this.vacancyCache.get(cacheKey);
+    if (filters?.location) {
+      queryBuilder = queryBuilder.ilike('location.city', `%${filters.location}%`);
     }
-    
-    try {
-      const vacancy = await this.getVacancy(identifier).toPromise();
-      if (vacancy) {
-        this.vacancyCache.set(cacheKey, vacancy);
-      }
-      return vacancy!;
-    } catch (error) {
-      this.errorHandler.showError('Ошибка получения вакансии', 'VacancyService');
-      throw error;
+
+    if (filters?.salaryMin) {
+      queryBuilder = queryBuilder.gte('salary.min', filters.salaryMin);
     }
+
+    if (filters?.salaryMax) {
+      queryBuilder = queryBuilder.lte('salary.max', filters.salaryMax);
+    }
+
+    if (filters?.employmentType) {
+      queryBuilder = queryBuilder.eq('employmentType', filters.employmentType);
+    }
+
+    if (filters?.level) {
+      queryBuilder = queryBuilder.eq('level', filters.level);
+    }
+
+    const { data, error } = await queryBuilder.order('createdAt', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   }
 
-  searchVacancies(params: VacancySearchParams): Observable<{ platform: string; results: any }[]> {
-    const searches = [
-      this.searchHHVacancies(params).pipe(
-        map(results => ({ platform: 'hh.ru', results })),
-        catchError(error => of({ platform: 'hh.ru', results: { error: error.message } }))
-      ),
-      this.searchSuperJobVacancies(params).pipe(
-        map(results => ({ platform: 'superjob.ru', results })),
-        catchError(error => of({ platform: 'superjob.ru', results: { error: error.message } }))
-      )
-    ];
+  async getVacanciesByCompany(companyId: string): Promise<Vacancy[]> {
+    const { data, error } = await this.supabaseService.client
+      .from('vacancies')
+      .select('*')
+      .eq('companyId', companyId)
+      .order('createdAt', { ascending: false });
 
-    return forkJoin(searches);
+    if (error) throw error;
+    return data || [];
   }
 
-  private getHHVacancy(id: string): Observable<Vacancy> {
-    return this.http.get<any>(`https://api.hh.ru/vacancies/${id}`, {
-      headers: {
-        'User-Agent': 'RezulutionApp/1.0',
-        'HH-User-Agent': 'RezulutionApp/1.0'
-      }
-    }).pipe(
-      map(response => this.mapHHVacancyToCommon(response)),
-      catchError(error => {
-        throw new Error(`Ошибка получения вакансии HH.ru: ${error.message}`);
-      })
-    );
+  async publishVacancy(id: string): Promise<Vacancy> {
+    return this.updateVacancy(id, { status: 'active' as any });
   }
 
-  private searchHHVacancies(params: VacancySearchParams): Observable<any> {
-    const queryParams = new URLSearchParams();
-    Object.keys(params).forEach(key => {
-      const value = params[key];
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value.toString());
-      }
+  async pauseVacancy(id: string): Promise<Vacancy> {
+    return this.updateVacancy(id, { status: 'paused' as any });
+  }
+
+  async closeVacancy(id: string): Promise<Vacancy> {
+    return this.updateVacancy(id, { status: 'closed' as any });
+  }
+
+  async duplicateVacancy(id: string): Promise<Vacancy> {
+    const originalVacancy = await this.getVacancy(id);
+    const { id: _, createdAt, updatedAt, ...vacancyData } = originalVacancy;
+
+    return this.createVacancy({
+      ...vacancyData,
+      title: `${vacancyData.title} (Копия)`,
+      status: 'draft' as any
     });
-
-    return this.http.get<any>(`https://api.hh.ru/vacancies?${queryParams}`, {
-      headers: {
-        'User-Agent': 'RezulutionApp/1.0',
-        'HH-User-Agent': 'RezulutionApp/1.0'
-      }
-    });
   }
 
-  detectPlatformFromUrl(url: string): string {
-    if (url.includes('hh.ru') || url.includes('hh.') || /\/vacancy\//.test(url)) {
-      return 'hh.ru';
-    } else if (url.includes('superjob.ru')) {
-      return 'superjob.ru';
+  async getVacancyStats(id: string): Promise<{
+    views: number;
+    applications: number;
+    shortlisted: number;
+    interviews: number;
+    offers: number;
+    hires: number;
+  }> {
+    const vacancy = await this.getVacancy(id);
+
+    return {
+      views: vacancy.views || 0,
+      applications: vacancy.applications || 0,
+      shortlisted: vacancy.shortlisted || 0,
+      interviews: vacancy.interviews || 0,
+      offers: vacancy.offers || 0,
+      hires: vacancy.hires || 0
+    };
+  }
+
+  async incrementVacancyViews(id: string): Promise<void> {
+    const vacancy = await this.getVacancy(id);
+    await this.updateVacancy(id, { views: (vacancy.views || 0) + 1 });
+  }
+
+  async incrementVacancyApplications(id: string): Promise<void> {
+    const vacancy = await this.getVacancy(id);
+    await this.updateVacancy(id, { applications: (vacancy.applications || 0) + 1 });
+  }
+
+  async getVacancyWithCache(url: string): Promise<Vacancy> {
+    const cacheKey = `vacancy_${btoa(url)}`;
+    const cached = localStorage.getItem(cacheKey);
+
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Date.now() - parsed.timestamp < 3600000) { // 1 hour cache
+        return parsed.vacancy;
+      }
     }
+
+    const vacancy = await this.parseVacancyFromUrl(url);
+
+    localStorage.setItem(cacheKey, JSON.stringify({
+      vacancy,
+      timestamp: Date.now()
+    }));
+
+    return vacancy;
+  }
+
+  private async parseVacancyFromUrl(url: string): Promise<Vacancy> {
+    if (url.includes('hh.ru')) {
+      return this.parseHHVacancy(url);
+    } else if (url.includes('habr')) {
+      return this.parseHabrVacancy(url);
+    } else if (url.includes('superjob')) {
+      return this.parseSuperjobVacancy(url);
+    }
+
+    throw new Error('Unsupported vacancy platform');
+  }
+
+  private async parseHHVacancy(url: string): Promise<Vacancy> {
+    const vacancyId = url.split('/').pop()?.split('?')[0];
+    if (!vacancyId) throw new Error('Invalid HH URL');
+
+    const vacancy = await this.getVacancy(vacancyId);
+    return vacancy;
+  }
+
+  private async parseHabrVacancy(url: string): Promise<Vacancy> {
+    throw new Error('Habr vacancy parsing not implemented');
+  }
+
+  private async parseSuperjobVacancy(url: string): Promise<Vacancy> {
+    throw new Error('SuperJob vacancy parsing not implemented');
+  }
+
+  getVacancyPlatform(vacancy: Vacancy): string {
     return 'unknown';
   }
-  
+
   getPlatformLabel(platform: string): string {
-    const platformLabels: { [key: string]: string } = {
-      'hh.ru': 'HH.ru',
-      'superjob.ru': 'SuperJob',
-      'hh': 'HH.ru', 
-      'superjob': 'SuperJob'
+    const labels = {
+      'hh': 'HH.ru',
+      'habr': 'Habr Career',
+      'superjob': 'SuperJob',
+      'unknown': 'Неизвестная платформа'
     };
-    return platformLabels[platform] || platform;
+    return labels[platform as keyof typeof labels] || platform;
   }
-
-  private getSuperJobVacancy(id: string): Observable<Vacancy> {
-    console.log('Fetching SuperJob vacancy with ID:', id);
-    
-    return this.http.post<any>('/api/cors-proxy', {
-      url: `https://api.superjob.ru/2.0/vacancies/${id}/`,
-      method: 'GET'
-    }).pipe(
-      map(response => {
-        console.log('Raw SuperJob API response:', response);
-        
-        if (response.error) {
-          throw new Error(`SuperJob API error: ${response.error}`);
-        }
-        
-        const mappedVacancy = this.mapSuperJobVacancyToCommon(response);
-        console.log('Mapped SuperJob vacancy:', mappedVacancy);
-        return mappedVacancy;
-      }),
-      catchError(error => {
-        console.error('SuperJob vacancy fetch error:', error);
-        throw new Error(`Ошибка получения вакансии SuperJob: ${error.message}`);
-      })
-    );
-  }
-
-  private searchSuperJobVacancies(params: VacancySearchParams): Observable<any> {
-    const queryParams = new URLSearchParams();
-    Object.keys(params).forEach(key => {
-      const value = params[key];
-      if (value !== undefined && value !== null && value !== '') {
-        queryParams.append(key, value.toString());
-      }
-    });
-
-    return this.http.post<any>('/api/cors-proxy', {
-      url: `https://api.superjob.ru/2.0/vacancies/?${queryParams}`,
-      method: 'GET'
-    });
-  }
-
-  private detectPlatform(url: string): string | null {
-    if (url.includes('hh.ru') || url.includes('hh.') || /\/vacancy\//.test(url)) {
-      return 'hh';
-    } else if (url.includes('superjob.ru')) {
-      return 'superjob';
-    }
-    return null;
-  }
-
-  private extractHHVacancyId(url: string): string | null {
-    const patterns = [
-      /\/vacancy\/(\d+)/,
-      /vacancy=(\d+)/,
-      /hh\.ru\/vacancy\/(\d+)/,
-      /(\d{5,10})/
-    ];
-
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    return null;
-  }
-
-  private extractSuperJobVacancyId(url: string): string | null {
-    const patterns = [
-      /superjob\.ru\/vakansii\/(\d+)\.html/,
-      /superjob\.ru\/vacancy\/(\d+)\.html/,
-      /superjob\.ru\/resume\/(\d+)\.html/,
-      /\/vacancy\/(\d+)\/?/,
-      /(\d{5,9})/
-    ];
-  
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match && match[1]) {
-        console.log('Extracted SuperJob ID:', match[1], 'from URL:', url);
-        return match[1];
-      }
-    }
-    
-    console.warn('Could not extract SuperJob ID from URL:', url);
-    return null;
-  }
-
-  private tryAllPlatforms(identifier: string): Observable<Vacancy> {
-    return this.getHHVacancy(identifier).pipe(
-      catchError(() => {
-        return this.getSuperJobVacancy(identifier).pipe(
-          catchError(error => {
-            throw new Error(`Не удалось найти вакансию на поддерживаемых платформах: ${error.message}`);
-          })
-        );
-      })
-    );
-  }
-
-  extractKeySkills(vacancy: any): string[] {
-    return vacancy.key_skills?.map((skill: any) => skill.name) || [];
-  }
-  
-  extractRequirements(vacancy: any): string {
-    return this.cleanHtml(vacancy.snippet?.requirement || '');
-  }
-
-  private cleanHtml(text: string): string {
-    if (!text) return '';
-    const safeText = text || '';
-    return safeText
-      .replace(/<[^>]*>/g, '')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&amp;/g, '&')
-      .replace(/\s+/g, ' ')
-      .trim();
-  }
-
-  exportVacancy(vacancy: Vacancy, format: 'txt' | 'json' = 'txt'): string {
-    if (format === 'json') {
-      return JSON.stringify(vacancy, null, 2);
-    }
-
-    let text = `=== ИНФОРМАЦИЯ О ВАКАНСИИ ===\n\n`;
-    text += `Платформа: ${vacancy.platform || 'Неизвестно'}\n`;
-    text += `Вакансия: ${vacancy.name}\n`;
-    text += `Компания: ${vacancy.employer?.name || 'Не указана'}\n`;
-    
-    if (vacancy.salary) {
-      text += `Зарплата: `;
-      if (vacancy.salary.from) text += `от ${vacancy.salary.from} `;
-      if (vacancy.salary.to) text += `до ${vacancy.salary.to} `;
-      text += `${vacancy.salary.currency || ''}\n`;
-    }
-    
-    if (vacancy.address?.city) {
-      text += `Город: ${vacancy.address.city}\n`;
-    }
-    
-    if (vacancy.description) {
-      text += `=== ОПИСАНИЕ ===\n`;
-      const description = vacancy.description || '';
-      text += `${this.cleanHtml(description.substring(0, 500))}${description.length > 500 ? '...' : ''}\n\n`;
-      
-    }
-    
-    if (vacancy.key_skills && vacancy.key_skills.length > 0) {
-      text += `Навыки: ${vacancy.key_skills.map(s => s.name).join(', ')}\n`;
-    }
-    
-    text += `Ссылка: ${vacancy.alternate_url || 'Не указана'}\n`;
-    
-    return text;
-  }
-
-  private mapHHVacancyToCommon(vacancy: any): Vacancy {
-    return {
-      id: vacancy.id,
-      name: vacancy.name,
-      description: vacancy.description || '',
-      key_skills: vacancy.key_skills?.map((skill: any) => ({ name: skill.name })) || [],
-      employer: {
-        name: vacancy.employer?.name,
-        logo_urls: { original: vacancy.employer?.logo_urls?.original }
-      },
-      salary: vacancy.salary ? {
-        from: vacancy.salary.from,
-        to: vacancy.salary.to,
-        currency: vacancy.salary.currency
-      } : null,
-      address: vacancy.address ? {
-        city: vacancy.address.city,
-        street: vacancy.address.street,
-        building: vacancy.address.building
-      } : null,
-      experience: vacancy.experience ? { name: vacancy.experience.name } : undefined,
-      employment: vacancy.employment ? { name: vacancy.employment.name } : undefined,
-      alternate_url: vacancy.alternate_url,
-      published_at: vacancy.published_at,
-      snippet: vacancy.snippet ? {
-        requirement: vacancy.snippet.requirement,
-        responsibility: vacancy.snippet.responsibility
-      } : undefined,
-      platform: 'hh.ru'
-    };
-  }
-  
-  private mapSuperJobVacancyToCommon(vacancy: any): Vacancy {
-    return {
-      id: vacancy.id.toString(),
-      name: vacancy.profession,
-      description: vacancy.vacancyRichText || '',
-      key_skills: vacancy.catalogues?.map((c: any) => ({ name: c.title })) || [],
-      employer: {
-        name: vacancy.firm_name,
-        logo_urls: { original: '' }
-      },
-      salary: (vacancy.payment_from || vacancy.payment_to) ? {
-        from: vacancy.payment_from,
-        to: vacancy.payment_to,
-        currency: vacancy.currency || 'RUR'
-      } : null,
-      address: vacancy.town ? { city: vacancy.town.title } : null,
-      experience: vacancy.experience ? { name: vacancy.experience.title } : undefined,
-      employment: vacancy.type_of_work ? { name: vacancy.type_of_work.title } : undefined,
-      alternate_url: vacancy.link || `https://www.superjob.ru/vacancy/${vacancy.id}.html`,
-      published_at: vacancy.date_published ? new Date(vacancy.date_published * 1000).toISOString() : undefined,
-      platform: 'superjob.ru'
-    };
-  }
-  
-  getVacancyPlatform(vacancy: any): string {
-    return vacancy.platform || 'unknown';
-  }
-
 }

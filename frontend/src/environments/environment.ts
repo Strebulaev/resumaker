@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  supabaseUrl: 'your-supabase-url',
+  supabaseUrl: 'https://dummy.supabase.co',
   supabaseKey: 'your-supabase-key',
   togetherApiKey: 'your-together-api-key',
   hh: {

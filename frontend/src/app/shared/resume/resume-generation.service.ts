@@ -48,8 +48,9 @@ export class ResumeGenerationService {
             if (!profile) {
               return of('Ошибка: Профиль пользователя не найден. Пожалуйста, заполните профиль сначала.');
             }
-  
-            const validationErrors = this.validateProfileForResume(profile);
+
+            const profileData = profile as any;
+            const validationErrors = this.validateProfileForResume(profileData);
             if (validationErrors.length > 0) {
               const errorMsg = `Для генерации качественного резюме необходимо заполнить: ${validationErrors.join(', ')}`;
               this.messageService.add({
@@ -58,10 +59,10 @@ export class ResumeGenerationService {
                 detail: errorMsg,
                 life: 7000
               });
-              return of(this.createFallbackResume(profile));
+              return of(this.createFallbackResume(profileData));
             }
-  
-            const prompt = this.buildResumePrompt(profile, coverLetterContent);
+
+            const prompt = this.buildResumePrompt(profileData, coverLetterContent);
             
             console.log('Generating resume with prompt length:', prompt.length);
   
@@ -87,7 +88,7 @@ export class ResumeGenerationService {
               catchError(error => {
                 console.error('Resume generation error:', error);
                 this.errorHandler.showError(this.translate.instant('ERROR.GENERATE_RESUME'), 'ResumeGenerationService');
-                return of(this.createFallbackResume(profile));
+                return of(this.createFallbackResume(profile as any));
               })
             );
           }),
@@ -104,7 +105,7 @@ export class ResumeGenerationService {
     );
   }
   
-  private validateProfileForResume(profile: Person): string[] {
+  private validateProfileForResume(profile: any): string[] {
     const errors: string[] = [];
     
     if (!profile.name || profile.name.trim().length < 2) {
@@ -130,7 +131,7 @@ export class ResumeGenerationService {
     return errors;
   }
 
-  private buildResumePrompt(profile: Person, coverLetter?: string): string {
+  private buildResumePrompt(profile: any, coverLetter?: string): string {
     const userName = profile.name || 'Кандидат';
     const userEmail = profile.contact.email;
     const userPhone = profile.contact.phone || '';
@@ -141,9 +142,9 @@ export class ResumeGenerationService {
     const desiredPositions = profile.desiredPositions?.join(', ') || 'Не указаны';
     const desiredSalary = 'Не указана'; 
     
-    const experienceText = profile.experience?.map((exp, index) => {
+    const experienceText = profile.experience?.map((exp: any, index: any) => {
       const duration = this.calculateExperienceDuration(exp.startDate, exp.endDate || undefined);
-      const achievements = exp.achievements?.map(ach => 
+      const achievements = exp.achievements?.map((ach: any) =>
         `✓ ${ach.name}${ach.initial_value ? `: ${ach.initial_value} → ${ach.final_value}${ach.uom ? ` ${ach.uom}` : ''}` : ''}`
       ).join('\n       ') || 'Достижения не указаны'
       
@@ -158,14 +159,14 @@ export class ResumeGenerationService {
   
     const skillsByArea = this.groupSkillsByPriority(profile.skills || []);
 
-    const educationText = profile.education?.map(edu => 
+    const educationText = profile.education?.map((edu: any) =>
       `### ${edu.institution}
   **Специальность:** ${edu.specialty}
   **Степень:** ${edu.degree || 'Не указана'}
   **Год окончания:** ${edu.year || 'Не указан'}`
     ).join('\n\n') || 'Образование не указано';
-  
-    const languagesText = profile.languages?.map(lang =>
+
+    const languagesText = profile.languages?.map((lang: any) =>
       `- ${lang.language}: ${this.getLanguageLevel(lang.level)}`
     ).join('\n') || 'Языки не указаны';
   
@@ -183,7 +184,7 @@ export class ResumeGenerationService {
   ${this.currentVacancy.description?.substring(0, 800) || 'Описание не указано'}...
   ` : '';
   
-    const vacancyMatchAnalysis = this.currentVacancy ? this.analyzeVacancyMatch(profile, this.currentVacancy) : '';
+    const vacancyMatchAnalysis = this.currentVacancy ? this.analyzeVacancyMatch(profile as any, this.currentVacancy) : '';
   
     const promptText = `# ЗАДАЧА: Сгенерировать профессиональное резюме мирового уровня
   
@@ -362,22 +363,22 @@ export class ResumeGenerationService {
     return levelMap[level.toLowerCase()] || level;
   }
   
-  private analyzeVacancyMatch(profile: Person, vacancy: any): string {
+  private analyzeVacancyMatch(profile: any, vacancy: any): string {
     const vacancySkills = this.vacancyService.extractKeySkills(vacancy);
-    const profileSkills = profile.skills?.map(s => s.name.toLowerCase()) || [];
-    
-    const matchingSkills = vacancySkills.filter(skill => 
-      profileSkills.some(profileSkill => 
+    const profileSkills = profile.skills?.map((s: any) => s.name.toLowerCase()) || [];
+
+    const matchingSkills = vacancySkills.filter(skill =>
+      profileSkills.some((profileSkill: any) =>
         profileSkill.includes(skill.toLowerCase()) || skill.toLowerCase().includes(profileSkill)
       )
     );
-    
-    const matchPercentage = vacancySkills.length > 0 
-      ? Math.round((matchingSkills.length / vacancySkills.length) * 100) 
+
+    const matchPercentage = vacancySkills.length > 0
+      ? Math.round((matchingSkills.length / vacancySkills.length) * 100)
       : 0;
-    
-    const missingSkills = vacancySkills.filter(skill => 
-      !profileSkills.some(profileSkill => 
+
+    const missingSkills = vacancySkills.filter(skill =>
+      !profileSkills.some((profileSkill: any) =>
         profileSkill.includes(skill.toLowerCase()) || skill.toLowerCase().includes(profileSkill)
       )
     );
@@ -441,7 +442,7 @@ export class ResumeGenerationService {
     return cleaned;
   }
 
-  private createFallbackResume(profile: Person | null): string {
+  private createFallbackResume(profile: any): string {
     if (!profile) {
       return `# Резюме
 
@@ -477,15 +478,15 @@ export class ResumeGenerationService {
 Профессионал с опытом работы в ${profile.experience?.length || 0} компаниях.
 
 ## Навыки
-${profile.skills?.slice(0, 5).map(s => `- ${s.name}`).join('\n') || '- Навыки не указаны'}
+${profile.skills?.slice(0, 5).map((s: any) => `- ${s.name}`).join('\n') || '- Навыки не указаны'}
 
 ## Опыт работы
-${profile.experience?.slice(0, 3).map(exp => 
+${profile.experience?.slice(0, 3).map((exp: any) =>
   `- ${exp.company}: ${exp.position}`
 ).join('\n') || '- Опыт не указан'}
 
 ## Образование
-${profile.education?.map(edu => 
+${profile.education?.map((edu: any) =>
   `- ${edu.institution}: ${edu.specialty}`
 ).join('\n') || '- Образование не указано'}`;
   }

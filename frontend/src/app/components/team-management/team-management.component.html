@@ -1,0 +1,410 @@
+<div class="team-management-container">
+  <div class="header">
+    <h1>{{ 'TEAM_MANAGEMENT.TITLE' | translate }}</h1>
+    <p>{{ 'TEAM_MANAGEMENT.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="navigation-tabs">
+    <button
+      pButton
+      [class.active]="activeTab === 'teams'"
+      (click)="showSection('teams')"
+      icon="pi pi-users"
+      [label]="'TEAM_MANAGEMENT.TEAMS_TAB' | translate">
+    </button>
+    <button
+      pButton
+      [class.active]="activeTab === 'workspaces'"
+      (click)="showSection('workspaces')"
+      icon="pi pi-building"
+      [label]="'TEAM_MANAGEMENT.WORKSPACES_TAB' | translate">
+    </button>
+  </div>
+
+  <!-- Вкладка команд -->
+  <div *ngIf="activeTab === 'teams'" class="teams-section">
+    <div class="section-header">
+      <h2>{{ 'TEAM_MANAGEMENT.TEAMS' | translate }}</h2>
+      <button
+        pButton
+        (click)="createTeam()"
+        icon="pi pi-plus"
+        [label]="'TEAM_MANAGEMENT.CREATE_TEAM' | translate"
+        class="p-button-primary">
+      </button>
+    </div>
+
+    <div class="teams-grid">
+      <p-card *ngFor="let team of teams" class="team-card">
+        <ng-template pTemplate="header">
+          <div class="team-header">
+            <div class="team-info">
+              <h3>{{ team.name }}</h3>
+              <p>{{ team.description }}</p>
+            </div>
+            <div class="team-actions">
+              <button
+                pButton
+                (click)="editTeam(team)"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm">
+              </button>
+              <button
+                pButton
+                (click)="deleteTeam(team)"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger">
+              </button>
+            </div>
+          </div>
+        </ng-template>
+
+        <div class="team-stats">
+          <div class="stat-item">
+            <i class="pi pi-users"></i>
+            <span class="stat-value">{{ team.members.length || 0 }}</span>
+            <span class="stat-label">участников</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-calendar"></i>
+            <span class="stat-value">{{ team.createdAt | date:'dd.MM.yyyy' }}</span>
+            <span class="stat-label">создана</span>
+          </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+          <div class="team-members-preview">
+            <div class="members-list">
+              <p-avatar
+                *ngFor="let member of team.members.slice(0, 5)"
+                [label]="member.avatar"
+                styleClass="member-avatar"
+                pTooltip="{{ member.name }} ({{ getRoleLabel(member.role) }})">
+              </p-avatar>
+              <span *ngIf="(team.members.length || 0) > 5" class="more-members">
+                +{{ (team.members.length || 0) - 5 }}
+              </span>
+            </div>
+            <button
+              pButton
+              (click)="addMember(team)"
+              icon="pi pi-plus"
+              [label]="'TEAM_MANAGEMENT.ADD_MEMBER' | translate"
+              class="p-button-outlined p-button-sm">
+            </button>
+          </div>
+        </ng-template>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Вкладка рабочих пространств -->
+  <div *ngIf="activeTab === 'workspaces'" class="workspaces-section">
+    <div class="section-header">
+      <h2>{{ 'TEAM_MANAGEMENT.WORKSPACES' | translate }}</h2>
+      <button
+        pButton
+        (click)="createWorkspace()"
+        icon="pi pi-plus"
+        [label]="'TEAM_MANAGEMENT.CREATE_WORKSPACE' | translate"
+        class="p-button-primary">
+      </button>
+    </div>
+
+    <div class="workspaces-grid">
+      <p-card *ngFor="let workspace of workspaces" class="workspace-card">
+        <ng-template pTemplate="header">
+          <div class="workspace-header">
+            <div class="workspace-info">
+              <h3>{{ workspace.name }}</h3>
+              <p-badge
+                [value]="getWorkspaceTypeLabel(workspace.type)"
+                [severity]="workspace.type === 'main' ? 'success' : 'info'">
+              </p-badge>
+            </div>
+            <div class="workspace-actions">
+              <button
+                pButton
+                (click)="editWorkspace(workspace)"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm">
+              </button>
+              <button
+                pButton
+                (click)="deleteWorkspace(workspace)"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger">
+              </button>
+            </div>
+          </div>
+        </ng-template>
+
+        <div class="workspace-stats">
+          <div class="stat-item">
+            <i class="pi pi-users"></i>
+            <span class="stat-value">{{ workspace.members.length || 0 }}</span>
+            <span class="stat-label">участников</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-briefcase"></i>
+            <span class="stat-value">{{ workspace.vacancies.length || 0 }}</span>
+            <span class="stat-label">вакансий</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-dollar"></i>
+            <span class="stat-value">{{ formatBudget(workspace.budget) }}</span>
+            <span class="stat-label">бюджет</span>
+          </div>
+        </div>
+
+        <div class="workspace-settings">
+          <div class="setting-item">
+            <i class="pi pi-shield"></i>
+            <span>Изолированные данные</span>
+            <i class="pi" [class]="workspace.settings.isolatedData ? 'pi-check setting-enabled' : 'pi-times setting-disabled'"></i>
+          </div>
+          <div class="setting-item">
+            <i class="pi pi-file"></i>
+            <span>Кастомные шаблоны</span>
+            <i class="pi" [class]="workspace.settings.customTemplates ? 'pi-check setting-enabled' : 'pi-times setting-disabled'"></i>
+          </div>
+          <div class="setting-item">
+            <i class="pi pi-cog"></i>
+            <span>Автоматизация</span>
+            <i class="pi" [class]="workspace.settings.automation.aiScreening ? 'pi-check setting-enabled' : 'pi-times setting-disabled'"></i>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Диалог создания/редактирования команды -->
+  <p-dialog
+    [header]="selectedTeam ? 'Редактировать команду' : 'Создать команду'"
+    [(visible)]="showTeamDialog"
+    [modal]="true"
+    [style]="{ width: '500px' }"
+    [closable]="true">
+
+    <form [formGroup]="teamForm" (ngSubmit)="saveTeam()">
+      <div class="form-field">
+        <label for="teamName">Название команды *</label>
+        <input
+          id="teamName"
+          pInputText
+          formControlName="name"
+          placeholder="Введите название команды"
+          class="w-full">
+      </div>
+
+      <div class="form-field">
+        <label for="teamDescription">Описание</label>
+        <textarea
+          id="teamDescription"
+          pInputTextarea
+          formControlName="description"
+          placeholder="Введите описание команды"
+          rows="3"
+          class="w-full">
+        </textarea>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        (click)="showTeamDialog = false"
+        [label]="'CANCEL' | translate"
+        class="p-button-text">
+      </button>
+      <button
+        pButton
+        (click)="saveTeam()"
+        [label]="selectedTeam ? 'UPDATE' : 'CREATE'"
+        [disabled]="teamForm.invalid || isLoading"
+        [loading]="isLoading"
+        class="p-button-primary">
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Диалог создания/редактирования рабочего пространства -->
+  <p-dialog
+    [header]="selectedWorkspace ? 'Редактировать пространство' : 'Создать пространство'"
+    [(visible)]="showWorkspaceDialog"
+    [modal]="true"
+    [style]="{ width: '600px' }"
+    [closable]="true">
+
+    <form [formGroup]="workspaceForm" (ngSubmit)="saveWorkspace()">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="workspaceName">Название *</label>
+          <input
+            id="workspaceName"
+            pInputText
+            formControlName="name"
+            placeholder="Введите название пространства"
+            class="w-full">
+        </div>
+
+        <div class="form-field">
+          <label for="workspaceType">Тип *</label>
+          <p-select
+            formControlName="type"
+            [options]="workspaceTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Выберите тип">
+          </p-select>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="budget">Бюджет (₽)</label>
+        <input
+          id="budget"
+          type="number"
+          pInputText
+          formControlName="budget"
+          placeholder="Введите бюджет"
+          class="w-full">
+      </div>
+
+      <div class="settings-section">
+        <h4>Настройки приватности</h4>
+        <div class="checkbox-grid">
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="isolatedData"
+              inputId="isolatedData">
+            </p-checkbox>
+            <label for="isolatedData">Изолированные данные от других пространств</label>
+          </div>
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="customTemplates"
+              inputId="customTemplates">
+            </p-checkbox>
+            <label for="customTemplates">Собственные шаблоны сообщений</label>
+          </div>
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="individualPipeline"
+              inputId="individualPipeline">
+            </p-checkbox>
+            <label for="individualPipeline">Индивидуальные настройки pipeline</label>
+          </div>
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="separateAnalytics"
+              inputId="separateAnalytics">
+            </p-checkbox>
+            <label for="separateAnalytics">Отдельная аналитика</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h4>Автоматизация</h4>
+        <div class="checkbox-grid">
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="aiScreening"
+              inputId="aiScreening">
+            </p-checkbox>
+            <label for="aiScreening">AI-скрининг резюме</label>
+          </div>
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="autoInvitations"
+              inputId="autoInvitations">
+            </p-checkbox>
+            <label for="autoInvitations">Авто-рассылка приглашений</label>
+          </div>
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="smartDistribution"
+              inputId="smartDistribution">
+            </p-checkbox>
+            <label for="smartDistribution">Умное распределение кандидатов</label>
+          </div>
+          <div class="checkbox-item">
+            <p-checkbox
+              formControlName="dailyReports"
+              inputId="dailyReports">
+            </p-checkbox>
+            <label for="dailyReports">Автоматические отчеты (ежедневно)</label>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        (click)="showWorkspaceDialog = false"
+        [label]="'CANCEL' | translate"
+        class="p-button-text">
+      </button>
+      <button
+        pButton
+        (click)="saveWorkspace()"
+        [label]="selectedWorkspace ? 'UPDATE' : 'CREATE'"
+        [disabled]="workspaceForm.invalid || isLoading"
+        [loading]="isLoading"
+        class="p-button-primary">
+      </button>
+    </ng-template>
+  </p-dialog>
+
+  <!-- Диалог добавления участника -->
+  <p-dialog
+    header="Добавить участника"
+    [(visible)]="showMemberDialog"
+    [modal]="true"
+    [style]="{ width: '400px' }"
+    [closable]="true">
+
+    <form [formGroup]="memberForm" (ngSubmit)="saveMember()">
+      <div class="form-field">
+        <label for="memberEmail">Email *</label>
+        <input
+          id="memberEmail"
+          type="email"
+          pInputText
+          formControlName="email"
+          placeholder="Введите email участника"
+          class="w-full">
+      </div>
+
+      <div class="form-field">
+        <label for="memberRole">Роль *</label>
+        <p-select
+          formControlName="role"
+          [options]="roleOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Выберите роль">
+        </p-select>
+      </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        (click)="showMemberDialog = false"
+        [label]="'CANCEL' | translate"
+        class="p-button-text">
+      </button>
+      <button
+        pButton
+        (click)="saveMember()"
+        [label]="'INVITE' | translate"
+        [disabled]="memberForm.invalid || isLoading"
+        [loading]="isLoading"
+        class="p-button-primary">
+      </button>
+    </ng-template>
+  </p-dialog>
+</div>

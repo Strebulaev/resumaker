@@ -169,19 +169,12 @@
 }
 
 
-
-
-
-
-
-
-
-
-
-
 .p-dialog {
   &.p-component {
     z-index: 10000 !important;
+    background: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
   }
 
   .p-dialog-header {
@@ -190,7 +183,7 @@
     background: white;
     border-bottom: 1px solid #e5e7eb;
     padding: 1.5rem;
-    
+
     .p-dialog-title {
       font-weight: 600;
       color: #374151;
@@ -211,17 +204,17 @@
       color: #6b7280 !important;
       border-radius: 50% !important;
       transition: all 0.2s ease !important;
-      
+
       &:hover {
         background: #f3f4f6 !important;
         color: #374151 !important;
       }
-      
+
       &:focus {
         outline: none !important;
         box-shadow: 0 0 0 2px #3b82f6 !important;
       }
-      
+
       .p-dialog-header-close-icon {
         font-size: 1.25rem !important;
         line-height: 1 !important;
@@ -235,6 +228,7 @@
     padding: 1.5rem;
     max-height: 60vh;
     overflow-y: auto;
+    background: white;
   }
 
   .p-dialog-footer {

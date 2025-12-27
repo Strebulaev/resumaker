@@ -215,7 +215,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       console.error('HH.ru connection error:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Ошибка подключения к HH.ru',
+        summary: 'Error connecting to HH.ru',
         detail: error.message
       });
     }
@@ -228,7 +228,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       console.error('Habr connection error:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Ошибка подключения к Habr Career',
+        summary: 'Error connecting to Habr Career',
         detail: error.message
       });
     }
@@ -243,7 +243,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       await this.superJobAuthService.waitForConfig();
       
       if (!this.superJobAuthService.clientId || !this.superJobAuthService.clientSecret) {
-        throw new Error('Конфигурация SuperJob не настроена');
+        throw new Error('SuperJob configuration not set up');
       }
       
       const state = `superjob_${this.generateState()}`;
@@ -267,7 +267,7 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       
       this.messageService.add({
         severity: 'error',
-        summary: 'Ошибка подключения к SuperJob',
+        summary: 'Error connecting to SuperJob',
         detail: error.message
       });
     }
@@ -331,13 +331,13 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       });
       
       if (!state || state !== savedState) {
-        throw new Error('Неверный параметр state. Возможно, сессия устарела.');
+        throw new Error('Invalid state parameter. Session may have expired.');
       }
   
       console.log('Exchanging code for SuperJob token...');
       await this.superJobAuthService.exchangeCodeForToken(code);
       
-      this.successMessage = 'Успешное подключение к SuperJob!';
+      this.successMessage = 'Successfully connected to SuperJob!';
       this.checkConnectionStatus();
       
       // Очищаем состояние ДО редиректа
@@ -352,13 +352,13 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       
       this.messageService.add({
         severity: 'success',
-        summary: 'Успешное подключение',
-        detail: 'Аккаунт SuperJob успешно подключен'
+        summary: 'Successful connection',
+        detail: 'SuperJob account successfully connected'
       });
   
     } catch (error: any) {
       console.error('SuperJob Auth error:', error);
-      this.errorMessage = error.message || 'Ошибка подключения к SuperJob';
+      this.errorMessage = error.message || 'Error connecting to SuperJob';
       
       // Очищаем состояние при ошибке
       sessionStorage.removeItem('superjob_oauth_state');
@@ -370,8 +370,8 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       
       this.messageService.add({
         severity: 'error',
-        summary: 'Ошибка подключения',
-        detail: error.message || 'Не удалось подключиться к SuperJob'
+        summary: 'Connection error',
+        detail: error.message || 'Failed to connect to SuperJob'
       });
     } finally {
       this.isLoading = false;
@@ -398,14 +398,14 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
       });
       
       if (!state || state !== savedState) {
-        throw new Error('Неверный параметр state. Возможно, сессия устарела.');
+        throw new Error('Invalid state parameter. Session may have expired.');
       }
 
       // Обмениваем код на токен
       console.log(`Exchanging code for ${platform} token...`);
       await authService.exchangeCodeForToken(code);
       
-      this.successMessage = `Успешное подключение к ${platform.toUpperCase()}!`;
+      this.successMessage = `Successfully connected to ${platform.toUpperCase()}!`;
       this.checkConnectionStatus();
       
       this.router.navigate(['/auth/callback'], { 
@@ -414,18 +414,18 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Успешное подключение',
-        detail: `Аккаунт ${platform.toUpperCase()} успешно подключен`
+        summary: 'Successful connection',
+        detail: `Account ${platform.toUpperCase()} successfully connected`
       });
 
     } catch (error: any) {
       console.error(`${platform} Auth error:`, error);
-      this.errorMessage = error.message || `Ошибка подключения к ${platform.toUpperCase()}`;
+      this.errorMessage = error.message || `Error connecting to ${platform.toUpperCase()}`;
       
       this.messageService.add({
         severity: 'error',
-        summary: 'Ошибка подключения',
-        detail: error.message || `Не удалось подключиться к ${platform.toUpperCase()}`
+        summary: 'Connection error',
+        detail: error.message || `Failed to connect to ${platform.toUpperCase()}`
       });
     } finally {
       this.isLoading = false;
@@ -449,12 +449,12 @@ export class JobPlatformsComponent implements OnInit, OnDestroy {
   private disconnectPlatform(authService: any, platformName: string): void {
     authService.clearTokens();
     this.checkConnectionStatus();
-    this.successMessage = `Отключено от ${platformName}`;
+    this.successMessage = `Disconnected from ${platformName}`;
     
     this.messageService.add({
       severity: 'info',
-      summary: 'Отключено',
-      detail: `Соединение с ${platformName} разорвано`
+      summary: 'Disconnected',
+      detail: `Connection to ${platformName} broken`
     });
   }
 }

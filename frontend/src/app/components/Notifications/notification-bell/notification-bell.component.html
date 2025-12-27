@@ -55,7 +55,7 @@
               <div class="notification-content" (click)="markAsRead(notification)">
                 <div class="notification-title">{{ notification.title }}</div>
                 <div class="notification-message">{{ notification.message }}</div>
-                <div class="notification-time">{{ formatNotificationDate(notification.createdAt) }}</div>
+                <div class="notification-time">{{ formatNotificationDate(notification.time) }}</div>
               </div>
   
               <div class="notification-actions">
